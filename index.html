@@ -170,36 +170,33 @@
           </div>
         </div>
 
-        <!-- Guest Select Prompt (Shown only when in Public Overview & not logged in as a specific guest) -->
-        <div id="home-select-profile-banner" class="bg-white rounded-3xl p-5 sm:p-6 border border-amber-200 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 class="text-base sm:text-lg font-extrabold text-red-950">👋 Tap Your Name to Open Your Personal Trip Checklist</h3>
-            <p class="text-xs text-stone-600 mt-0.5">Select your name below to confirm travel dates, tick your packing bag, pick starters & spirits, or log expenses.</p>
-          </div>
-        </div>
-
         <!-- Accepted Guest's Personal Trip Details & Cheeky Packing Checklist on Home Page -->
         <div id="home-guest-details-section" class="hidden bg-white rounded-3xl p-5 sm:p-8 border-2 border-emerald-500 shadow-xl space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amber-100">
             <div>
               <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">✅ Invite Accepted • #DhummuLeputunnam</span>
-              <h3 id="home-pref-heading" class="text-xl sm:text-2xl font-extrabold text-red-950 mt-2">My Trip Confirmation & Packing Checklist</h3>
-              <p class="text-xs text-stone-600 mt-0.5">Confirm your departure/arrival cities, travel dates, and check off your travel essentials as you pack!</p>
+              <h3 id="home-pref-heading" class="text-xl sm:text-2xl font-extrabold text-red-950 mt-2">Step 1: Confirm Your Travel Details</h3>
+              <p class="text-xs text-stone-600 mt-0.5">Fill out your departure city, arrival hub, and dates first—submit to unlock your cheeky packing checklist!</p>
             </div>
-            <button type="button" onclick="saveGuestPreferences('home')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm shadow-lg transition">
-              💾 Save Confirmation
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="home-active-guest-select" onchange="handleRoleSwitch(this.value)" class="px-3.5 py-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
+                <!-- Populated dynamically -->
+              </select>
+              <button type="button" onclick="saveGuestPreferences('home')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm shadow-lg transition">
+                💾 Submit Travel Details
+              </button>
+            </div>
           </div>
 
-          <!-- 1. Travel & Route Details (From City, To City, Arrival Date, Departure Date) -->
-          <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
+          <!-- Travel Route & Dates Inputs on Home -->
+          <div class="bg-parchment/70 p-4 sm:p-5 rounded-2xl border border-amber-200 space-y-4">
             <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
-              <span>🚆</span><span>1. Travel Route & Dates Confirmation</span>
+              <span>🚆</span><span>Travel Route & Dates</span>
             </h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">From City (Departure)</label>
-                <input id="home-pref-from-city" type="text" placeholder="e.g., Hyderabad, Vijayawada..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+                <input id="home-pref-from-city" type="text" placeholder="e.g., Hyderabad" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
               </div>
               <div>
                 <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">To City (Arrival Hub)</label>
@@ -223,16 +220,22 @@
                 <input id="home-pref-return-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
               </div>
             </div>
+            <div class="flex justify-end pt-1">
+              <button type="button" onclick="saveGuestPreferences('home')" class="px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm shadow-lg transition">
+                💾 Submit Travel Details & Unlock Packing List
+              </button>
+            </div>
           </div>
 
-          <!-- 2. Cheeky Travel Essentials Packing Checklist -->
-          <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
+          <!-- Cheeky Packing Checklist (Revealed after submitting travel details) -->
+          <div id="home-packing-wrapper" class="hidden bg-parchment/70 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 space-y-4 animate-pop">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
-                  <span>🎒</span><span>2. Essentials to Carry (Packing Checklist)</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[11px] font-black uppercase">Step 2 Unlocked</span>
+                <h4 class="text-base sm:text-lg font-extrabold text-red-950 flex items-center gap-2 mt-1">
+                  <span>🎒</span><span>Travel Essentials Packing Checklist</span>
                 </h4>
-                <p class="text-xs text-stone-600 mt-0.5">Tick items off as you throw them in your bag—so nobody asks to borrow toothpaste or a charger at 2 AM!</p>
+                <p class="text-xs text-stone-600 mt-0.5">Tick items off as you pack—so nobody borrows toothpaste or a charger at 2 AM!</p>
               </div>
               <span id="home-packing-progress" class="px-3 py-1 rounded-full bg-amber-200 text-red-950 text-xs font-black self-start sm:self-center">
                 0 / 0 Packed
@@ -247,91 +250,6 @@
               <input id="home-custom-pack-input" type="text" placeholder="Add your own item (e.g., Power bank, Extra socks...)" onkeydown="if(event.key==='Enter') addCustomPackingItem('home')" class="flex-grow px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950" />
               <button type="button" onclick="addCustomPackingItem('home')" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition shrink-0">
                 + Add to Checklist
-              </button>
-            </div>
-          </div>
-
-          <div class="flex justify-end">
-            <button type="button" onclick="saveGuestPreferences('home')" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm sm:text-base shadow-xl transition">
-              💾 Save & Confirm My Details
-            </button>
-          </div>
-        </div>
-
-        <!-- Guest Interactive Section: Starters & Spirits Wishlist + Quick Expense Logger -->
-        <div id="home-guest-action-cards" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <!-- Left (7 cols): Pick Your Starters & Spirits Wishlist -->
-          <div id="home-cravings-section" class="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-300 shadow-lg space-y-5">
-            <div class="pb-3 border-b border-amber-100">
-              <span class="text-xs font-extrabold uppercase tracking-wider text-orange-600">Feast & Bar Wishlist</span>
-              <h3 class="text-xl font-extrabold text-red-950">🍗🍻 What Should We Stock for You?</h3>
-              <p class="text-xs text-stone-600 mt-0.5">Tap your favorite starters & spirits below so the squad knows what to order!</p>
-            </div>
-
-            <!-- Starters Picker -->
-            <div class="bg-parchment/70 p-4 rounded-2xl border border-amber-200 space-y-3">
-              <div class="text-xs font-extrabold uppercase text-red-950">🍗 Pick Starters</div>
-              <div class="flex flex-wrap gap-1.5" id="home-starter-chips">
-                <!-- Rendered dynamically -->
-              </div>
-              <div class="flex gap-2">
-                <input id="home-custom-starter-input" type="text" placeholder="Custom starter (e.g., Natukodi Fry)..." onkeydown="if(event.key==='Enter') addCustomWishItem('starters')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950" />
-                <button type="button" onclick="addCustomWishItem('starters')" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-extrabold">+ Add</button>
-              </div>
-              <div id="home-selected-starters" class="flex flex-wrap gap-1.5 pt-1"></div>
-            </div>
-
-            <!-- Spirits Picker -->
-            <div class="bg-parchment/70 p-4 rounded-2xl border border-amber-200 space-y-3">
-              <div class="text-xs font-extrabold uppercase text-red-950">🍻 Pick Spirits / Drinks</div>
-              <div class="flex flex-wrap gap-1.5" id="home-spirit-chips">
-                <!-- Rendered dynamically -->
-              </div>
-              <div class="flex gap-2">
-                <input id="home-custom-spirit-input" type="text" placeholder="Custom drink (e.g., Jameson, Budweiser)..." onkeydown="if(event.key==='Enter') addCustomWishItem('alcohol')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950" />
-                <button type="button" onclick="addCustomWishItem('alcohol')" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold">+ Add</button>
-              </div>
-              <div id="home-selected-spirits" class="flex flex-wrap gap-1.5 pt-1"></div>
-            </div>
-          </div>
-
-          <!-- Right (5 cols): Quick Expense Logger Right on Home -->
-          <div id="home-quick-expense-section" class="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-300 shadow-lg space-y-4">
-            <div class="pb-3 border-b border-amber-100 flex items-center justify-between">
-              <div>
-                <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Paid for Something?</span>
-                <h3 class="text-xl font-extrabold text-red-950">💸 Quick Expense Logger</h3>
-              </div>
-              <button type="button" onclick="switchMainTab('expenses')" class="text-xs font-extrabold text-orange-700 hover:underline">Full Splitwise →</button>
-            </div>
-
-            <div class="space-y-3">
-              <div>
-                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Category</label>
-                <select id="home-exp-category" onchange="handleHomeExpenseCatChange()" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-extrabold text-red-950">
-                  <option value="Fuel">⛽ Fuel</option>
-                  <option value="Starters">🍗 Starters & Food</option>
-                  <option value="Spirits">🍻 Spirits & Alcohol</option>
-                  <option value="Essentials">🥤 Essentials (Water, Plates, Tissues)</option>
-                  <option value="Stay">🏨 Stay & Accommodation</option>
-                  <option value="Other">🧾 Other Expense</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Item / Option</label>
-                <select id="home-exp-option" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
-              </div>
-              <div>
-                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Note (Optional)</label>
-                <input id="home-exp-note" type="text" placeholder="e.g., Toll gate / Water cases" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/40 border border-amber-300 text-sm font-bold text-red-950" />
-              </div>
-              <div>
-                <label class="block text-xs font-extrabold uppercase text-emerald-900 mb-1">Amount Paid (₹ INR)</label>
-                <input id="home-exp-amount" type="number" min="1" step="any" placeholder="e.g., 1500" class="w-full px-3.5 py-2.5 rounded-xl bg-emerald-50/60 border-2 border-emerald-400 text-sm font-black text-red-950" />
-              </div>
-              <button type="button" onclick="saveQuickHomeExpense()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-red-800 hover:from-orange-500 hover:to-red-700 text-white font-extrabold text-sm shadow-lg transition">
-                💾 Log Expense & Split Equally
               </button>
             </div>
           </div>
@@ -1023,13 +941,16 @@
             <div class="lg:col-span-7 space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="text-lg font-extrabold text-red-950">Add Squad Member & Phone Directory</h3>
-                <button type="button" onclick="pickContactFromMobile('admin')" class="px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition">
-                  <span>📱</span><span>Pick from Mobile Contacts</span>
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="button" onclick="pickContactFromMobile('admin')" class="px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition">
+                    <span>📱</span><span>Pick / Import Contact</span>
+                  </button>
+                  <input id="vcf-contact-input" type="file" accept=".vcf,text/vcard" onchange="handleVcfUpload(event)" class="hidden" />
+                </div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-parchment p-4 rounded-2xl border border-amber-200">
-                <input id="admin-new-guest-name" type="text" placeholder="Guest Name (e.g., Karthik)" class="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
-                <input id="admin-new-guest-phone" type="tel" placeholder="Phone (e.g., 9876543210)" class="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+                <input id="admin-new-guest-name" name="name" autocomplete="name" type="text" placeholder="Guest Name (e.g., Karthik)" class="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+                <input id="admin-new-guest-phone" name="tel" autocomplete="tel" type="tel" placeholder="Phone (e.g., 9876543210)" class="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
                 <button onclick="adminAddGuest()" class="py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-extrabold shadow transition">
                   + Add Guest
                 </button>
@@ -1112,7 +1033,10 @@
 
   <!-- 2. Welcome Celebration Modal (After Accepting Invite) -->
   <div id="welcome-rsvp-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-cream max-w-md w-full rounded-3xl p-6 sm:p-8 border-2 border-emerald-500 shadow-2xl text-center space-y-5 animate-pop">
+    <div class="relative bg-cream max-w-md w-full rounded-3xl p-6 sm:p-8 border-2 border-emerald-500 shadow-2xl text-center space-y-5 animate-pop">
+      <button type="button" onclick="closeWelcomeModal()" aria-label="Close welcome message" class="absolute top-4 right-4 w-9 h-9 rounded-xl bg-stone-200/80 hover:bg-stone-300 text-stone-800 font-black flex items-center justify-center transition">
+        ✕
+      </button>
       <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl shadow-inner">
         🎉
       </div>
@@ -1123,6 +1047,9 @@
       <p class="text-sm sm:text-base text-stone-700 font-semibold leading-relaxed">
         Good friends, endless laughs, bonfires, and unforgettable Sankranti memories await!
       </p>
+      <div class="text-xs font-bold text-amber-800 bg-amber-100/80 px-3 py-1.5 rounded-xl inline-block">
+        ⏳ Auto-closing in <span id="welcome-countdown-sec" class="font-black text-red-900">15</span>s
+      </div>
       <button type="button" onclick="closeWelcomeModal()" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm sm:text-base shadow-lg transition">
         Fill My Trip Details →
       </button>
@@ -1246,18 +1173,18 @@
 
     function scrollToHomeSection(sectionId) {
       switchMainTab('home');
-      const target = document.getElementById(sectionId);
+      let target = document.getElementById(sectionId);
       if (target && target.classList.contains('hidden')) {
-        const banner = document.getElementById('home-select-profile-banner');
-        const roleSel = document.getElementById('role-switcher');
-        showToast('Select your name in Active View Mode above (or accept your invite) to open your checklist!');
-        if (banner) {
-          banner.classList.add('ring-4', 'ring-orange-400', 'bg-amber-50');
-          banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => banner.classList.remove('ring-4', 'ring-orange-400', 'bg-amber-50'), 2200);
+        const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
+        const fallbackGuest = confirmed[0] || appState.guests[0];
+        if (!fallbackGuest) {
+          showToast('No guests added yet.', 'error');
+          return;
         }
-        roleSel?.focus();
-        return;
+        currentRole = fallbackGuest.id;
+        selectedRsvpGuestId = fallbackGuest.id;
+        renderAllUI();
+        target = document.getElementById(sectionId);
       }
       setTimeout(() => {
         target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1333,6 +1260,8 @@
     let editingExpenseId = null;
     let editingLogId = null;
     let lastModalTextSummary = '';
+    let welcomeAutoCloseTimer = null;
+    let welcomeCountdownInterval = null;
 
     function saveAppState(logEntry = null) {
       if (logEntry) {
@@ -1515,8 +1444,28 @@
 
       const welcomeTitle = document.getElementById('welcome-guest-name');
       if (welcomeTitle) welcomeTitle.textContent = `Welcome aboard! ${guest.name}`;
+      const secEl = document.getElementById('welcome-countdown-sec');
+      let remaining = 15;
+      if (secEl) secEl.textContent = String(remaining);
+
+      if (welcomeAutoCloseTimer) clearTimeout(welcomeAutoCloseTimer);
+      if (welcomeCountdownInterval) clearInterval(welcomeCountdownInterval);
+
       document.getElementById('welcome-rsvp-modal')?.classList.remove('hidden');
       switchMainTab('home');
+
+      welcomeCountdownInterval = setInterval(() => {
+        remaining -= 1;
+        if (secEl) secEl.textContent = String(Math.max(0, remaining));
+        if (remaining <= 0) {
+          clearInterval(welcomeCountdownInterval);
+          welcomeCountdownInterval = null;
+        }
+      }, 1000);
+
+      welcomeAutoCloseTimer = setTimeout(() => {
+        closeWelcomeModal();
+      }, 15000);
     }
 
     function declineInviteFromGate(guestId) {
@@ -1533,6 +1482,14 @@
     }
 
     function closeWelcomeModal() {
+      if (welcomeAutoCloseTimer) {
+        clearTimeout(welcomeAutoCloseTimer);
+        welcomeAutoCloseTimer = null;
+      }
+      if (welcomeCountdownInterval) {
+        clearInterval(welcomeCountdownInterval);
+        welcomeCountdownInterval = null;
+      }
       document.getElementById('welcome-rsvp-modal')?.classList.add('hidden');
       scrollToHomeSection('home-guest-details-section');
     }
@@ -1586,13 +1543,41 @@
             }
           }
         } else {
-          showToast('Direct phonebook picker works on mobile Chrome/Android. Enter number manually here.');
-          const targetInput = context === 'admin' ? document.getElementById('admin-new-guest-phone') : document.getElementById('rsvp-phone-input');
-          targetInput?.focus();
+          window._pendingVcfContext = context;
+          showToast('iPhone blocks direct web contact access—pick a .vcf contact card or use iOS keyboard autofill!');
+          const vcfInput = document.getElementById('vcf-contact-input');
+          if (vcfInput) vcfInput.click();
         }
       } catch (e) {
-        showToast('Could not read contacts—enter phone manually.', 'error');
+        showToast('Enter phone manually or pick a .vcf contact card.', 'error');
       }
+    }
+
+    function handleVcfUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = String(reader.result || '');
+        const fnMatch = text.match(/^FN[^:]*:(.*)$/m);
+        const telMatch = text.match(/^TEL[^:]*:(.*)$/m);
+        const cName = fnMatch ? fnMatch[1].trim() : '';
+        const cTel = telMatch ? formatIndianPhone(telMatch[1].trim()) : '';
+        if (window._pendingVcfContext === 'admin') {
+          if (cName) document.getElementById('admin-new-guest-name').value = cName;
+          if (cTel) document.getElementById('admin-new-guest-phone').value = cTel;
+          showToast(`Imported ${cName || 'contact'} from vCard! 📇`);
+        } else {
+          const g = appState.guests.find(x => x.id === selectedRsvpGuestId);
+          if (g && cTel) {
+            g.phone = cTel;
+            saveAppState({ actor: 'Host Admin', category: 'RSVP', action: 'Saved Phone', msg: `Imported phone for ${g.name}.` });
+            showToast(`Saved ${cTel} for ${g.name}! 📇`);
+          }
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
     }
 
     function selectGuestForRsvp(guestId) {
@@ -1693,6 +1678,13 @@
           }
         }
       }
+      if (prefix === 'home') {
+        const packWrap = document.getElementById('home-packing-wrapper');
+        if (packWrap) {
+          if (guest.travelSubmitted) packWrap.classList.remove('hidden');
+          else packWrap.classList.add('hidden');
+        }
+      }
       renderPackingGrid(guest, prefix);
     }
 
@@ -1706,10 +1698,15 @@
       const tDate = document.getElementById(prefix === 'home' ? 'home-pref-travel-date' : 'pref-travel-date')?.value || '2027-01-14';
       const rDate = document.getElementById(prefix === 'home' ? 'home-pref-return-date' : 'pref-return-date')?.value || '2027-01-17';
 
+      if (!fromVal) {
+        return showToast('Please enter your From City (Departure) first!', 'error');
+      }
+
       guest.fromCity = fromVal;
       guest.arrivalCity = arrSel === 'Others' && custCity ? custCity : arrSel;
       guest.travelDate = tDate;
       guest.returnDate = rDate;
+      guest.travelSubmitted = true;
 
       saveAppState({
         actor: guest.name,
@@ -1717,7 +1714,10 @@
         action: 'Saved Travel Details',
         msg: `${guest.name} confirmed route: ${guest.fromCity || 'TBD'} → ${guest.arrivalCity} (${guest.travelDate} to ${guest.returnDate}).`
       });
-      showToast(`Saved travel & packing confirmation for ${guest.name}! 🎉`);
+      showToast(`Travel details confirmed! Your packing checklist is unlocked below 🎒`);
+      setTimeout(() => {
+        document.getElementById('home-packing-wrapper')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 80);
     }
 
     function renderRsvpSection() {
@@ -2595,14 +2595,19 @@
       // Home Guest Personal Hub (visible when viewing as an accepted guest)
       const homeGuestSec = document.getElementById('home-guest-details-section');
       const homeActionCards = document.getElementById('home-guest-action-cards');
-      const selectProfileBanner = document.getElementById('home-select-profile-banner');
       const bannerTitle = document.getElementById('home-welcome-banner-title');
-      const activeGuest = getActiveGuest();
+      const homeGuestSel = document.getElementById('home-active-guest-select');
+      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
+      const activeGuest = getActiveGuest() || confirmed[0] || null;
 
-      if (activeGuest && activeGuest.rsvp === 'accepted') {
+      if (activeGuest && (activeGuest.rsvp === 'accepted' || currentRole === activeGuest.id)) {
+        currentRole = activeGuest.id;
         selectedRsvpGuestId = activeGuest.id;
         if (bannerTitle) bannerTitle.textContent = `Welcome, ${activeGuest.name}! Ready for Sankranti 2027?`;
-        selectProfileBanner?.classList.add('hidden');
+        if (homeGuestSel) {
+          const listForSelect = confirmed.length ? confirmed : appState.guests;
+          homeGuestSel.innerHTML = listForSelect.map(g => `<option value="${g.id}" ${g.id === activeGuest.id ? 'selected' : ''}>👤 ${g.name}</option>`).join('');
+        }
         homeGuestSec?.classList.remove('hidden');
         homeActionCards?.classList.remove('hidden');
         populatePreferenceFormForGuest(activeGuest, 'home');
@@ -2610,13 +2615,11 @@
         handleHomeExpenseCatChange();
       } else {
         if (bannerTitle) bannerTitle.textContent = `Three Days of Bonfires, Feasts & Road Trips!`;
-        selectProfileBanner?.classList.remove('hidden');
         homeGuestSec?.classList.add('hidden');
         homeActionCards?.classList.add('hidden');
       }
 
       // Admin KPI Dashlets Data
-      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
       const cities = new Set(confirmed.map(g => g.arrivalCity).filter(Boolean));
       const starterCount = appState.expenses.filter(e => e.category === 'Starters').length +
         confirmed.reduce((acc, g) => acc + (g.starters?.length || 0), 0);

@@ -1663,7 +1663,14 @@
 
     function switchMainTab(tabName) {
       const validTabs = ['home', 'wishlist', 'expenses', 'gallery', 'rsvp', 'logs', 'admin'];
-      const targetTab = validTabs.includes(tabName) ? tabName : 'home';
+      const adminOnlyTabs = ['rsvp', 'logs', 'admin'];
+      let targetTab = validTabs.includes(tabName) ? tabName : 'home';
+
+      // Enforce Admin-only access on Manage Invites, Activity Logs & Host Control Panel
+      if (adminOnlyTabs.includes(targetTab) && !isAdminUnlocked) {
+        targetTab = 'home';
+        showToast('🔒 Host Admin PIN required to open that section.', 'info');
+      }
 
       try {
         sessionStorage.setItem('sankranti_2027_active_tab', targetTab);
@@ -2412,139 +2419,214 @@
     }
 
     // ==================== MASTER UI ORCHESTRATOR ====================
-    async function renderAllUI() {
-      // Admin vs Guest Header & Nav visibility
-      const lockIcon = document.getElementById('admin-lock-icon');
-      const toggleLabel = document.getElementById('admin-toggle-label');
-      if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🛡️' : '🔒';
-      if (toggleLabel) toggleLabel.textContent = isAdminUnlocked ? 'Host Admin' : 'Guest Mode';
+    function updateSankrantiCountdown() {
+      const target = new Date('2027-01-14T06:00:00+05:30').getTime();
+      const now = Date.now();
+      const diff = Math.max(0, target - now);
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const el = document.getElementById('sankranti-countdown');
+      if (el) el.textContent = `${days}d ${hours}h`;
+    }
 
-      document.getElementById('nav-tab-rsvp')?.classList.toggle('hidden', !isAdminUnlocked);
-      document.getElementById('nav-tab-logs')?.classList.toggle('hidden', !isAdminUnlocked);
-      document.getElementById('nav-tab-admin')?.classList.toggle('hidden', !isAdminUnlocked);
-      document.getElementById('admin-home-dashlets')?.classList.toggle('hidden', !isAdminUnlocked);
-      document.getElementById('home-manage-invites-btn')?.classList.toggle('hidden', !isAdminUnlocked);
-
-      // Admin KPI Dashlets
-      if (isAdminUnlocked) {
-        const kpiGrid = document.getElementById('admin-kpi-grid');
-        const accepted = appState.guests.filter(g => g.rsvp === 'accepted').length;
-        const pending = appState.guests.filter(g => g.rsvp === 'pending').length;
-        const declined = appState.guests.filter(g => g.rsvp === 'declined').length;
-        const totalSpend = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-        if (kpiGrid) {
-          kpiGrid.innerHTML = `
-            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200"><div class="text-[10px] font-black uppercase text-emerald-800">Confirmed</div><div class="text-xl font-black text-emerald-950">${accepted}</div></div>
-            <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200"><div class="text-[10px] font-black uppercase text-amber-800">Pending</div><div class="text-xl font-black text-amber-950">${pending}</div></div>
-            <div class="p-3 rounded-2xl bg-red-50 border border-red-200"><div class="text-[10px] font-black uppercase text-red-800">Declined</div><div class="text-xl font-black text-red-950">${declined}</div></div>
-            <div class="p-3 rounded-2xl bg-orange-50 border border-orange-200"><div class="text-[10px] font-black uppercase text-orange-800">Feast Items</div><div class="text-xl font-black text-orange-950">${(appState.feastOrders || []).length}</div></div>
-            <div class="p-3 rounded-2xl bg-indigo-50 border border-indigo-200"><div class="text-[10px] font-black uppercase text-indigo-800">Total Spend</div><div class="text-xl font-black text-indigo-950">₹${totalSpend.toLocaleString('en-IN')}</div></div>
-            <div class="p-3 rounded-2xl bg-stone-50 border border-stone-200"><div class="text-[10px] font-black uppercase text-stone-700">Logs</div><div class="text-xl font-black text-stone-950">${appState.logs.length}</div></div>
-          `;
+    function checkIncomingInviteLink() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const inviteId = params.get('invite');
+        if (!inviteId) return;
+        const guest = appState.guests.find(g => g.id === inviteId);
+        if (guest) {
+          currentRole = guest.id;
+          if (guest.rsvp !== 'accepted') {
+            openInviteGateForGuest(guest);
+          }
         }
-      }
+      } catch (e) {}
+    }
 
-      // Confirmed Squad Strip
-      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+    function openDashletModal(type) {
+      const titleEl = document.getElementById('dashlet-modal-title');
+      const bodyEl = document.getElementById('dashlet-modal-body');
+      if (!titleEl || !bodyEl) return;
+
+      if (type === 'guests') {
+        titleEl.textContent = '🙌 Squad RSVP Breakdown';
+        bodyEl.innerHTML = appState.guests.length
+          ? appState.guests.map(g => `<div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex justify-between font-bold"><span>${g.name}</span><span class="uppercase text-xs">${g.rsvp || 'pending'}</span></div>`).join('')
+          : '<p class="italic text-stone-500">No guests added yet.</p>';
+      } else if (type === 'spend') {
+        titleEl.textContent = '💸 Expense Breakdown';
+        bodyEl.innerHTML = appState.expenses.length
+          ? appState.expenses.map(e => `<div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex justify-between font-bold"><span>${e.item} (${e.category})</span><span>₹${Number(e.amount || 0).toLocaleString()}</span></div>`).join('')
+          : '<p class="italic text-stone-500">No expenses logged yet.</p>';
+      } else {
+        titleEl.textContent = '🍗 Feast, Bar & Essentials';
+        const groups = getConsolidatedFeastGroups();
+        bodyEl.innerHTML = groups.length
+          ? groups.map(grp => `<div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex justify-between font-bold"><span>${grp.itemName}</span><span>${grp.totalLabel}</span></div>`).join('')
+          : '<p class="italic text-stone-500">No items added yet.</p>';
+      }
+      document.getElementById('dashlet-modal')?.classList.remove('hidden');
+    }
+
+    function openSyncModal() {
+      const ta = document.getElementById('sync-json-textarea');
+      if (ta) ta.value = JSON.stringify(appState, null, 2);
+      document.getElementById('sync-modal')?.classList.remove('hidden');
+    }
+
+    function copySyncJson() {
+      const ta = document.getElementById('sync-json-textarea');
+      if (!ta) return;
+      ta.select();
+      document.execCommand('copy');
+      showToast('📋 Trip JSON copied to clipboard!');
+    }
+
+    function importSyncJson() {
+      const ta = document.getElementById('sync-json-textarea');
+      if (!ta) return;
+      try {
+        const parsed = JSON.parse(ta.value);
+        if (!parsed || typeof parsed !== 'object') throw new Error('Invalid JSON');
+        appState = {
+          adminPin: parsed.adminPin || appState.adminPin || '0089',
+          guests: Array.isArray(parsed.guests) ? parsed.guests : appState.guests,
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : appState.expenses,
+          feastOrders: Array.isArray(parsed.feastOrders) ? parsed.feastOrders : appState.feastOrders,
+          logs: Array.isArray(parsed.logs) ? parsed.logs : appState.logs
+        };
+        saveAppState({ actor: 'Host Admin', category: 'Sync', action: 'Imported JSON', msg: 'Imported trip state snapshot.' }, { fullSync: true });
+        closeModal('sync-modal');
+        showToast('✅ Trip state imported & synced!');
+        renderAllUI();
+      } catch (e) {
+        showToast('❌ Invalid JSON format.', 'error');
+      }
+    }
+
+    function copyLogsReport() {
+      const text = (appState.logs || []).map(l => `[${l.time}] ${l.actor} • ${l.action}: ${l.msg}`).join('\n');
+      const ta = document.createElement('textarea');
+      ta.value = text || 'No activity logs yet.';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('📋 Activity log report copied!');
+    }
+
+    function exportLogsCsv() {
+      const rows = [['Time', 'Actor', 'Category', 'Action', 'Message']];
+      (appState.logs || []).forEach(l => {
+        rows.push([l.time || '', l.actor || '', l.category || '', l.action || '', (l.msg || '').replace(/"/g, '""')]);
+      });
+      const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sankranti_2027_activity_logs.csv';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function renderConfirmedSquad() {
+      const accepted = appState.guests.filter(g => g.rsvp === 'accepted');
       const countEl = document.getElementById('confirmed-squad-count');
-      const squadListEl = document.getElementById('home-confirmed-squad-list');
-      if (countEl) countEl.textContent = String(confirmedGuests.length);
-      if (squadListEl) {
-        squadListEl.innerHTML = confirmedGuests.length
-          ? confirmedGuests.map(g => `<span class="px-3.5 py-1.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-950">✅ ${g.name}</span>`).join('')
-          : `<span class="text-xs text-stone-500 italic">No confirmed guests yet. Share invite links to build the squad!</span>`;
+      const listEl = document.getElementById('home-confirmed-squad-list');
+      if (countEl) countEl.textContent = String(accepted.length);
+      if (!listEl) return;
+
+      if (!accepted.length) {
+        listEl.innerHTML = `<span class="text-xs text-stone-500 italic">No accepted guests yet. Share invite links or switch to an added guest to test!</span>`;
+        return;
       }
 
-      renderHomeGuestForms();
-      renderFeastOrdersList();
-      renderRsvpList();
-      renderExpensesSection();
-      renderLogsSection();
-      if (!document.getElementById('tab-gallery')?.classList.contains('hidden')) {
-        await renderGallerySection();
-      }
+      listEl.innerHTML = accepted.map(g => {
+        const route = (g.fromCity || g.toCity)
+          ? ` • ${g.fromCity || '?'} → ${g.toCity || '?'}`
+          : '';
+        return `
+          <div class="px-3.5 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-extrabold text-emerald-950 flex items-center gap-1.5">
+            <span>✅</span>
+            <span>${g.name}</span>
+            <span class="text-emerald-700 font-semibold">${route}</span>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderHomeGuestForms() {
       const activeGuest = getActiveGuestObj();
-      const guestHeading = document.getElementById('home-guest-name-heading');
-      const wishlistBadge = document.getElementById('wishlist-active-guest-badge');
-      if (guestHeading) guestHeading.textContent = activeGuest ? activeGuest.name : 'Guest';
-      if (wishlistBadge) wishlistBadge.textContent = activeGuest ? activeGuest.name : (isAdminUnlocked ? 'Host Admin' : 'Guest');
+      const selects = [
+        document.getElementById('home-active-guest-select'),
+        document.getElementById('wishlist-active-guest-select')
+      ];
 
-      // Switcher dropdowns (only visible when Admin is unlocked)
-      const homeSelect = document.getElementById('home-active-guest-select');
-      const wishSelect = document.getElementById('wishlist-active-guest-select');
-      const optionsHtml = appState.guests.length
-        ? appState.guests.map(g => `<option value="${g.id}" ${activeGuest?.id === g.id ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`).join('')
-        : `<option value="public">No guests yet</option>`;
+      selects.forEach(sel => {
+        if (!sel) return;
+        if (!appState.guests.length) {
+          sel.innerHTML = `<option value="public">No guests added yet</option>`;
+        } else {
+          sel.innerHTML = appState.guests.map(g =>
+            `<option value="${g.id}" ${activeGuest && g.id === activeGuest.id ? 'selected' : ''}>${g.name} (${g.rsvp || 'pending'})</option>`
+          ).join('');
+        }
+      });
 
-      if (homeSelect) {
-        homeSelect.innerHTML = optionsHtml;
-        homeSelect.classList.toggle('hidden', !isAdminUnlocked || appState.guests.length === 0);
-      }
-      if (wishSelect) {
-        wishSelect.innerHTML = optionsHtml;
-        wishSelect.classList.toggle('hidden', !isAdminUnlocked || appState.guests.length === 0);
-      }
-
+      const headingEl = document.getElementById('home-guest-name-heading');
+      const wishBadgeEl = document.getElementById('wishlist-active-guest-badge');
       const declineBtn = document.getElementById('home-decline-after-accept-btn');
+
+      if (headingEl) headingEl.textContent = activeGuest ? activeGuest.name : 'Guest';
+      if (wishBadgeEl) wishBadgeEl.textContent = activeGuest ? activeGuest.name : (isAdminUnlocked ? 'Host Admin' : 'Squad Member');
       if (declineBtn) {
-        declineBtn.classList.toggle('hidden', !(activeGuest && activeGuest.rsvp === 'accepted'));
+        const showDecline = Boolean(activeGuest && activeGuest.rsvp === 'accepted');
+        declineBtn.classList.toggle('hidden', !showDecline);
       }
 
-      // Travel Form vs Minimized Summary Bar
       const summaryBar = document.getElementById('home-travel-summary-bar');
       const inputsGrid = document.getElementById('home-travel-inputs-grid');
-      if (activeGuest && activeGuest.travelSubmitted && !isEditingTravelDetails) {
-        if (summaryBar) summaryBar.classList.remove('hidden');
-        if (inputsGrid) inputsGrid.classList.add('hidden');
-        const routeEl = document.getElementById('summary-route-text');
-        const datesEl = document.getElementById('summary-dates-text');
-        if (routeEl) routeEl.textContent = `🛫 ${activeGuest.fromCity || 'Origin'} → 🛬 ${activeGuest.toCity || 'Arrival Hub'}`;
-        if (datesEl) datesEl.textContent = `📅 ${activeGuest.arrivalDate || '2027-01-13'} to ${activeGuest.departureDate || '2027-01-17'}`;
-      } else {
-        if (summaryBar) summaryBar.classList.add('hidden');
-        if (inputsGrid) inputsGrid.classList.remove('hidden');
-        if (activeGuest) {
-          const fromEl = document.getElementById('home-from-city');
-          const toEl = document.getElementById('home-to-city');
-          const arrEl = document.getElementById('home-arrival-date');
-          const depEl = document.getElementById('home-departure-date');
-          if (fromEl && document.activeElement !== fromEl) fromEl.value = activeGuest.fromCity || '';
-          if (toEl && document.activeElement !== toEl) toEl.value = activeGuest.toCity || '';
-          if (arrEl && document.activeElement !== arrEl) arrEl.value = activeGuest.arrivalDate || '2027-01-13';
-          if (depEl && document.activeElement !== depEl) depEl.value = activeGuest.departureDate || '2027-01-17';
+      const fromInput = document.getElementById('home-from-city');
+      const toInput = document.getElementById('home-to-city');
+      const arrInput = document.getElementById('home-arrival-date');
+      const depInput = document.getElementById('home-departure-date');
+
+      if (fromInput) fromInput.value = activeGuest?.fromCity || '';
+      if (toInput) toInput.value = activeGuest?.toCity || '';
+      if (arrInput) arrInput.value = activeGuest?.arrivalDate || '2027-01-13';
+      if (depInput) depInput.value = activeGuest?.departureDate || '2027-01-17';
+
+      const showSummary = Boolean(activeGuest && activeGuest.travelSubmitted && !isEditingTravelDetails);
+      if (summaryBar && inputsGrid) {
+        summaryBar.classList.toggle('hidden', !showSummary);
+        inputsGrid.classList.toggle('hidden', showSummary);
+        if (showSummary) {
+          document.getElementById('summary-route-text').textContent =
+            `🛫 ${activeGuest.fromCity || 'Origin'} → 🛬 ${activeGuest.toCity || 'Arrival Hub'}`;
+          document.getElementById('summary-dates-text').textContent =
+            `📅 ${activeGuest.arrivalDate || '2027-01-13'} to ${activeGuest.departureDate || '2027-01-17'}`;
         }
       }
 
       // Packing Checklist
-      const packingGrid = document.getElementById('packing-checklist-grid');
-      const packingProgress = document.getElementById('packing-progress-text');
-      const allPackingItems = [...DEFAULT_PACKING_ITEMS, ...(activeGuest?.customPackingItems || [])];
-      const packedSet = new Set(activeGuest?.packedItems || []);
-      if (packingProgress) packingProgress.textContent = `${packedSet.size} / ${allPackingItems.length}`;
-      if (packingGrid) {
-        packingGrid.innerHTML = allPackingItems.map(item => {
-          const checked = packedSet.has(item.id);
-          return `
-            <button type="button" onclick="togglePackingItem('${item.id}')" class="p-3 rounded-2xl border text-left text-xs font-bold flex items-center gap-2.5 transition ${checked ? 'bg-emerald-50 border-emerald-400 text-emerald-950 line-through opacity-80' : 'bg-amber-50/60 border-amber-200 text-red-950 hover:bg-amber-100'}">
-              <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${checked ? 'bg-emerald-600 text-white' : 'bg-white border border-amber-300 text-transparent'}">✓</span>
-              <span>${item.label}</span>
-            </button>
-          `;
-        }).join('');
-      }
+      const customItems = Array.isArray(activeGuest?.customPackingItems) ? activeGuest.customPackingItems : [];
+      const allPackItems = [...DEFAULT_PACKING_ITEMS, ...customItems];
+      const packedIds = Array.isArray(activeGuest?.packedItems) ? activeGuest.packedItems : [];
+      const progressEl = document.getElementById('packing-progress-text');
+      const gridEl = document.getElementById('packing-checklist-grid');
 
-      // Spirits chips in Feast & Bar
-      const spiritsWrap = document.getElementById('quick-spirits-chips');
-      const guestSpirits = new Set(activeGuest?.spirits || []);
-      if (spiritsWrap) {
-        spiritsWrap.innerHTML = QUICK_SPIRIT_CHOICES.map(drink => {
-          const active = guestSpirits.has(drink);
+      if (progressEl) progressEl.textContent = `${packedIds.length} / ${allPackItems.length}`;
+      if (gridEl) {
+        gridEl.innerHTML = allPackItems.map(item => {
+          const checked = packedIds.includes(item.id);
           return `
-            <button type="button" onclick="toggleCravingChip('spirits', '${drink.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ${active ? 'bg-red-900 text-amber-100 border-red-900 shadow-xs' : 'bg-white text-red-950 border-amber-200 hover:bg-amber-100'}">
-              ${active ? '✓ ' : '+ '}${drink}
+            <button type="button" onclick="togglePackingItem('${item.id}')" class="p-3 rounded-2xl border text-left text-xs font-bold flex items-center gap-2.5 transition ${checked
+              ? 'bg-emerald-50 border-emerald-400 text-emerald-950'
+              : 'bg-amber-50/60 border-amber-200 text-red-950 hover:bg-amber-100/70'}">
+              <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black ${checked ? 'bg-emerald-600 text-white' : 'bg-white border border-amber-300 text-transparent'}">✓</span>
+              <span class="${checked ? 'line-through opacity-75' : ''}">${item.label}</span>
             </button>
           `;
         }).join('');
@@ -2554,39 +2636,31 @@
     function renderRsvpList() {
       const container = document.getElementById('rsvp-guest-cards');
       if (!container) return;
-      if (appState.guests.length === 0) {
-        container.innerHTML = `<p class="text-xs text-stone-500 italic">No guests added yet. Add a friend above to generate their WhatsApp invite link!</p>`;
+      if (!appState.guests.length) {
+        container.innerHTML = `<p class="text-xs text-stone-500 italic">No squad members added yet. Add someone above to generate their invite link!</p>`;
         return;
       }
-      container.innerHTML = appState.guests.map(g => {
-        const badge = g.rsvp === 'accepted'
-          ? '<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[11px] font-black">✅ Accepted</span>'
-          : g.rsvp === 'declined'
-            ? '<span class="px-2.5 py-0.5 rounded-full bg-red-100 text-red-900 text-[11px] font-black">❌ Declined</span>'
-            : '<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-black">⏳ Pending</span>';
 
+      container.innerHTML = appState.guests.map(g => {
+        const badgeStyle = g.rsvp === 'accepted'
+          ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+          : g.rsvp === 'declined'
+            ? 'bg-red-100 text-red-900 border-red-300'
+            : 'bg-amber-100 text-amber-900 border-amber-300';
         return `
-          <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div class="flex items-center gap-2">
-                <span class="font-black text-red-950 text-sm sm:text-base">${g.name}</span>
-                ${badge}
+                <span class="text-sm font-black text-red-950">${g.name}</span>
+                <span class="px-2.5 py-0.5 rounded-full border text-[10px] font-black uppercase ${badgeStyle}">${g.rsvp || 'pending'}</span>
               </div>
-              <p class="text-xs text-stone-600 mt-0.5">${g.phone ? '📞 +' + g.phone : 'No phone saved (opens WhatsApp contact picker)'}</p>
+              <p class="text-xs text-stone-600 mt-0.5">${g.phone ? '📱 +' + g.phone : 'No phone number'} ${g.fromCity ? '• ' + g.fromCity + ' → ' + (g.toCity || 'Hub') : ''}</p>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button type="button" onclick="openWhatsAppInvite('${g.id}')" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-xs transition">
-                💬 Send WhatsApp Invite
-              </button>
-              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-3 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold transition">
-                🔗 Copy Link
-              </button>
-              <button type="button" onclick="resetAndReinviteGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-extrabold transition">
-                🔄 Reset
-              </button>
-              <button type="button" onclick="removeGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-extrabold transition">
-                🗑️
-              </button>
+              <button type="button" onclick="openWhatsAppInvite('${g.id}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">💬 WhatsApp</button>
+              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-3 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold">🔗 Copy Link</button>
+              <button type="button" onclick="resetAndReinviteGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-red-950 text-xs font-extrabold">🔄 Reset</button>
+              <button type="button" onclick="removeGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">✕</button>
             </div>
           </div>
         `;
@@ -2595,124 +2669,122 @@
 
     function renderExpensesSection() {
       const paidBySelect = document.getElementById('exp-paid-by');
-      const customSplitList = document.getElementById('exp-custom-split-list');
-      const totalSpendEl = document.getElementById('total-trip-spend');
-      const transfersEl = document.getElementById('settlement-transfers-list');
-      const ledgerEl = document.getElementById('expenses-ledger-list');
-
-      const guests = appState.guests;
       if (paidBySelect) {
-        const prev = paidBySelect.value;
-        paidBySelect.innerHTML = guests.length
-          ? guests.map(g => `<option value="${g.id}" ${prev === g.id ? 'selected' : ''}>${g.name}</option>`).join('')
-          : `<option value="">Add guests first</option>`;
+        if (!appState.guests.length) {
+          paidBySelect.innerHTML = `<option value="">Add guests first</option>`;
+        } else {
+          const prevVal = paidBySelect.value;
+          paidBySelect.innerHTML = appState.guests.map(g =>
+            `<option value="${g.id}" ${g.id === prevVal ? 'selected' : ''}>${g.name}</option>`
+          ).join('');
+        }
       }
 
-      if (customSplitList) {
-        customSplitList.innerHTML = guests.map(g => `
-          <label class="px-3 py-1.5 rounded-xl bg-white border border-amber-200 text-xs font-bold text-red-950 flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" value="${g.id}" checked class="custom-split-cb accent-emerald-700" />
+      const customList = document.getElementById('exp-custom-split-list');
+      if (customList) {
+        customList.innerHTML = appState.guests.map(g => `
+          <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950 cursor-pointer">
+            <input type="checkbox" value="${g.id}" checked class="custom-split-cb rounded text-emerald-700" />
             <span>${g.name}</span>
           </label>
-        `).join('');
+        `).join('') || `<span class="text-xs text-stone-500">Add guests first.</span>`;
       }
 
-      const totalSpend = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-      if (totalSpendEl) totalSpendEl.textContent = `₹${totalSpend.toLocaleString('en-IN')}`;
+      const totalSpend = appState.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const totalEl = document.getElementById('total-trip-spend');
+      if (totalEl) totalEl.textContent = `₹${Math.round(totalSpend).toLocaleString()}`;
 
+      const transfersEl = document.getElementById('settlement-transfers-list');
       if (transfersEl) {
         const transfers = calculateSettlements();
-        if (transfers.length === 0) {
-          transfersEl.innerHTML = `<p class="text-xs text-stone-500 italic">All settled up! Log expenses to see who owes whom.</p>`;
+        if (!transfers.length) {
+          transfersEl.innerHTML = `<p class="text-xs text-stone-500 italic">All settled up or no expenses with amounts logged yet.</p>`;
         } else {
           transfersEl.innerHTML = transfers.map(t => {
-            const fromName = guests.find(g => g.id === t.fromId)?.name || 'Member';
-            const toName = guests.find(g => g.id === t.toId)?.name || 'Member';
+            const fromName = appState.guests.find(g => g.id === t.fromId)?.name || 'Member';
+            const toName = appState.guests.find(g => g.id === t.toId)?.name || 'Member';
             return `
-              <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs font-extrabold">
-                <span><strong class="text-red-900">${fromName}</strong> → <strong class="text-emerald-900">${toName}</strong></span>
-                <span class="px-2.5 py-1 rounded-xl bg-emerald-700 text-white">₹${t.amount.toLocaleString('en-IN')}</span>
+              <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs sm:text-sm font-extrabold text-red-950">
+                <span><strong class="text-red-800">${fromName}</strong> pays <strong class="text-emerald-800">${toName}</strong></span>
+                <span class="px-3 py-1 rounded-xl bg-emerald-700 text-white font-black">₹${t.amount.toLocaleString()}</span>
               </div>
             `;
           }).join('');
         }
       }
 
+      const ledgerEl = document.getElementById('expenses-ledger-list');
       if (ledgerEl) {
-        if (appState.expenses.length === 0) {
-          ledgerEl.innerHTML = `<p class="text-xs text-stone-500 italic">No expenses recorded yet.</p>`;
+        if (!appState.expenses.length) {
+          ledgerEl.innerHTML = `<p class="text-xs text-stone-500 italic">No expenses logged yet. Add a starter/spirit/essential or log a squad expense above.</p>`;
         } else {
           ledgerEl.innerHTML = appState.expenses.map(exp => {
-            const payer = guests.find(g => g.id === exp.paidBy)?.name || 'TBD';
-            const sharedSet = new Set(exp.splitAmong || []);
-            const splitCount = sharedSet.size;
-            const amt = Number(exp.amount) || 0;
-            const perHead = (amt > 0 && splitCount > 0) ? Math.round(amt / splitCount) : 0;
+            const payerName = appState.guests.find(g => g.id === exp.paidBy)?.name || (Number(exp.amount) > 0 ? 'Member' : 'Unassigned');
+            const sharersNames = (exp.splitAmong || [])
+              .map(id => appState.guests.find(g => g.id === id)?.name)
+              .filter(Boolean);
+            const perHead = (Number(exp.amount) > 0 && (exp.splitAmong || []).length > 0)
+              ? Math.round(Number(exp.amount) / exp.splitAmong.length)
+              : 0;
             const isExpanded = expandedExpenseId === exp.id;
-            const sharedNames = guests.filter(g => sharedSet.has(g.id)).map(g => g.name).join(', ') || 'None';
 
-            const payerOptions = guests.length
-              ? guests.map(g => `<option value="${g.id}" ${exp.paidBy === g.id ? 'selected' : ''}>${g.name}</option>`).join('')
-              : `<option value="">Add guests first</option>`;
-
-            const guestPillsHtml = guests.length
-              ? guests.map(g => {
-                  const isSelected = sharedSet.has(g.id);
-                  return `
-                    <button type="button" onclick="toggleGuestOnExpense('${exp.id}', '${g.id}')" class="px-2.5 py-1 rounded-xl text-xs font-extrabold border transition flex items-center gap-1 ${isSelected ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-stone-600 border-amber-200 hover:bg-amber-100'}">
-                      <span>${isSelected ? '✓' : '+'}</span>
-                      <span>${g.name}</span>
-                    </button>
-                  `;
-                }).join('')
-              : `<span class="text-xs text-stone-500 italic">Add guests to assign split</span>`;
+            const memberPills = appState.guests.map(g => {
+              const active = (exp.splitAmong || []).includes(g.id);
+              return `
+                <button type="button" onclick="toggleGuestOnExpense('${exp.id}', '${g.id}')" class="px-2.5 py-1 rounded-xl text-[11px] font-extrabold border transition ${active
+                  ? 'bg-emerald-600 text-white border-emerald-700'
+                  : 'bg-white text-stone-600 border-stone-300'}">
+                  ${active ? '✓ ' : '+ '}${g.name}
+                </button>
+              `;
+            }).join('');
 
             return `
-              <div class="rounded-2xl bg-white border ${isExpanded ? 'border-orange-400 shadow-md' : 'border-amber-200'} overflow-hidden transition">
-                <div class="p-3.5 bg-amber-50/60 flex flex-wrap items-center justify-between gap-3">
-                  <div class="min-w-0 flex-1">
+              <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-2.5">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
                     <div class="flex flex-wrap items-center gap-2">
-                      <span class="text-xs sm:text-sm font-black text-red-950">${exp.item}</span>
-                      <span class="text-[11px] font-bold text-orange-800">(${exp.category})</span>
-                      ${amt === 0 ? `<span class="px-2 py-0.5 rounded-full bg-amber-200 text-red-950 text-[10px] font-black uppercase">Amount Pending</span>` : ''}
+                      <span class="text-sm font-black text-red-950">${exp.item}</span>
+                      <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold">${exp.category}</span>
+                      ${Number(exp.amount) > 0
+                        ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black">₹${Number(exp.amount).toLocaleString()}</span>`
+                        : `<span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-[10px] font-extrabold">₹0 • Tap Edit to add amount</span>`}
                     </div>
-                    <div class="text-[11px] text-stone-600 mt-0.5">
-                      Paid by <strong>${payer}</strong> • Split (${splitCount}): <span class="font-semibold text-red-950">${sharedNames}</span>${perHead > 0 ? ` • <strong>₹${perHead}/head</strong>` : ''}
-                    </div>
+                    <p class="text-[11px] text-stone-600 mt-0.5">
+                      Paid by <strong>${payerName}</strong> • Split (${sharersNames.length}): <strong>${sharersNames.join(', ') || 'None'}</strong>
+                      ${perHead > 0 ? ` (~₹${perHead}/person)` : ''}
+                    </p>
                   </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <span class="text-sm font-black ${amt > 0 ? 'text-emerald-900' : 'text-stone-400'}">₹${amt.toLocaleString('en-IN')}</span>
-                    <button type="button" onclick="toggleExpenseEditDrawer('${exp.id}')" class="px-3 py-1.5 rounded-xl ${isExpanded ? 'bg-red-900 text-white' : 'bg-amber-100 hover:bg-amber-200 text-red-950'} text-xs font-extrabold transition">
-                      ${isExpanded ? '▲ Close' : '✏️ Amount & Split'}
+                  <div class="flex items-center gap-2 self-start sm:self-center">
+                    <button type="button" onclick="toggleExpenseEditDrawer('${exp.id}')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold">
+                      ${isExpanded ? 'Close' : '✏️ Amount & Split'}
                     </button>
-                    <button type="button" onclick="deleteExpense('${exp.id}')" class="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold">🗑️</button>
+                    <button type="button" onclick="deleteExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">✕</button>
                   </div>
                 </div>
 
                 ${isExpanded ? `
-                  <div class="p-4 border-t border-amber-200 bg-amber-50/90 space-y-3 animate-panel">
-                    <div class="space-y-1.5">
-                      <div class="text-[11px] font-extrabold uppercase tracking-wider text-red-900">👥 Select Guests Sharing This Item:</div>
-                      <div class="flex flex-wrap gap-1.5">
-                        ${guestPillsHtml}
-                      </div>
-                    </div>
-                    <div class="pt-2 border-t border-amber-200/70 grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                      <div class="sm:col-span-5">
-                        <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Paid By</label>
-                        <select id="exp-edit-paidby-${exp.id}" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
-                          ${payerOptions}
+                  <div class="p-3 rounded-2xl bg-white border border-amber-300 space-y-3 animate-panel">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label class="block text-[10px] font-extrabold uppercase text-stone-500 mb-1">Who Paid?</label>
+                        <select id="exp-edit-paidby-${exp.id}" class="w-full px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold text-red-950">
+                          ${appState.guests.map(g => `<option value="${g.id}" ${g.id === exp.paidBy ? 'selected' : ''}>${g.name}</option>`).join('')}
                         </select>
                       </div>
-                      <div class="sm:col-span-4">
-                        <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Amount (₹)</label>
-                        <input id="exp-edit-amt-${exp.id}" type="number" min="1" value="${amt > 0 ? amt : ''}" placeholder="e.g., 650" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-black text-red-950 outline-none focus:border-orange-500" />
+                      <div>
+                        <label class="block text-[10px] font-extrabold uppercase text-stone-500 mb-1">Item / Bill Amount (₹)</label>
+                        <input id="exp-edit-amt-${exp.id}" type="number" min="1" value="${exp.amount || ''}" placeholder="Enter amount in ₹" class="w-full px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs font-black text-red-950" />
                       </div>
-                      <div class="sm:col-span-3">
-                        <button type="button" onclick="saveExpenseInlineEdit('${exp.id}')" class="w-full py-2 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow transition">
-                          💾 Save Split
-                        </button>
-                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-extrabold uppercase text-stone-500 mb-1.5">Toggle Sharing Guests:</label>
+                      <div class="flex flex-wrap gap-1.5">${memberPills}</div>
+                    </div>
+                    <div class="flex justify-end">
+                      <button type="button" onclick="saveExpenseInlineEdit('${exp.id}')" class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold">
+                        💾 Save Split
+                      </button>
                     </div>
                   </div>
                 ` : ''}
@@ -2727,22 +2799,23 @@
       const grid = document.getElementById('hd-gallery-grid');
       if (!grid) return;
       const photos = await getAllHdPhotos();
-      if (photos.length === 0) {
-        grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center text-xs text-stone-600">No photos shared yet. Tap <strong>⬆️ Upload HD Photos</strong> above—every photo you upload is automatically visible to everyone in the squad!</div>`;
+      if (!photos.length) {
+        grid.innerHTML = `<p class="col-span-full text-xs text-stone-500 italic">No squad photos uploaded yet. Tap "Upload Photos" above to share memories!</p>`;
         return;
       }
+
       grid.innerHTML = photos.map(p => {
-        const url = p.resolvedBlob ? URL.createObjectURL(p.resolvedBlob) : p.sharedDataUrl;
-        if (!url) return '';
-        const caption = `${p.name} • Shared by ${p.uploadedBy}`;
+        const srcUrl = p.sharedDataUrl || (p.resolvedBlob ? URL.createObjectURL(p.resolvedBlob) : '');
+        const safeCaption = `${p.name || 'Memory'} • by ${p.uploadedBy || 'Squad'}`;
         return `
-          <div class="rounded-2xl overflow-hidden bg-stone-100 border border-amber-200 shadow-xs flex flex-col">
-            <img src="${url}" alt="${p.name}" onclick="openLightbox('${url}', '${caption.replace(/'/g, "\\'")}')" class="w-full h-40 object-cover cursor-pointer hover:opacity-95 transition" />
-            <div class="p-2.5 bg-white flex items-center justify-between gap-1 text-[11px]">
-              <span class="font-bold text-red-950 truncate">📸 ${p.uploadedBy}</span>
-              <div class="flex gap-1">
-                <button type="button" onclick="downloadHdPhoto('${p.id}')" class="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold">⬇️</button>
-                <button type="button" onclick="deleteHdPhoto('${p.id}')" class="px-2 py-1 rounded-lg bg-red-100 text-red-800 font-extrabold">🗑️</button>
+          <div class="rounded-2xl overflow-hidden bg-amber-50 border border-amber-200 shadow-2xs flex flex-col justify-between">
+            <img src="${srcUrl}" alt="${safeCaption}" onclick="openLightbox('${srcUrl}', '${safeCaption.replace(/'/g, "\\'")}')" class="w-full h-44 object-cover cursor-pointer bg-stone-200" />
+            <div class="p-2.5 space-y-2">
+              <div class="text-[11px] font-extrabold text-red-950 truncate">${p.name || 'Sankranti Photo'}</div>
+              <div class="text-[10px] text-stone-500 font-semibold truncate">By ${p.uploadedBy || 'Squad'}</div>
+              <div class="flex items-center justify-between gap-1.5 pt-1">
+                <button type="button" onclick="downloadHdPhoto('${p.id}')" class="flex-1 py-1.5 px-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-extrabold">⬇️ Save</button>
+                <button type="button" onclick="deleteHdPhoto('${p.id}')" class="py-1.5 px-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-[11px] font-extrabold">🗑️</button>
               </div>
             </div>
           </div>
@@ -2751,127 +2824,116 @@
     }
 
     function renderLogsSection() {
-      const list = document.getElementById('activity-logs-list');
-      if (!list) return;
+      const listEl = document.getElementById('activity-logs-list');
+      if (!listEl) return;
       if (!appState.logs.length) {
-        list.innerHTML = `<p class="text-xs text-stone-500 italic">No activity logged yet.</p>`;
+        listEl.innerHTML = `<p class="text-xs text-stone-500 italic">No activity recorded yet.</p>`;
         return;
       }
-      list.innerHTML = appState.logs.map(l => `
-        <div class="p-3 rounded-2xl bg-amber-50/50 border border-amber-200 text-xs flex flex-wrap items-center justify-between gap-2">
+      listEl.innerHTML = appState.logs.map(l => `
+        <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-start justify-between gap-3 text-xs">
           <div>
-            <span class="px-2 py-0.5 rounded-full bg-amber-200 text-red-950 font-black text-[10px] mr-1.5">${l.category}</span>
-            <strong class="text-red-950">${l.msg}</strong>
+            <span class="font-black text-red-950">${l.actor}</span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold ml-1">${l.category}</span>
+            <p class="text-stone-700 mt-0.5">${l.msg}</p>
           </div>
-          <span class="text-[11px] text-stone-500">${l.time}</span>
+          <span class="text-[10px] font-bold text-stone-400 shrink-0">${l.time}</span>
         </div>
       `).join('');
     }
 
-    function copyLogsReport() {
-      const text = appState.logs.map(l => `[${l.time}] (${l.category}) ${l.msg}`).join('\n');
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast('📋 Activity log copied!');
-    }
+    async function renderAllUI() {
+      // Admin vs Guest Header & Nav visibility (strictly hide admin panels for guests)
+      const lockIcon = document.getElementById('admin-lock-icon');
+      const toggleLabel = document.getElementById('admin-toggle-label');
+      if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🛡️' : '🔒';
+      if (toggleLabel) toggleLabel.textContent = isAdminUnlocked ? 'Host Admin' : 'Guest Mode';
 
-    function exportLogsCsv() {
-      const rows = [['Time', 'Actor', 'Category', 'Action', 'Details'], ...appState.logs.map(l => [l.time, l.actor, l.category, l.action, l.msg])];
-      const csv = rows.map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Sankranti2027_Logs.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function openSyncModal() {
-      const ta = document.getElementById('sync-json-textarea');
-      if (ta) ta.value = JSON.stringify(appState, null, 2);
-      document.getElementById('sync-modal')?.classList.remove('hidden');
-    }
-
-    function copySyncJson() {
-      const ta = document.getElementById('sync-json-textarea');
-      if (!ta) return;
-      ta.select();
-      document.execCommand('copy');
-      showToast('📋 Trip JSON copied!');
-    }
-
-    function importSyncJson() {
-      const ta = document.getElementById('sync-json-textarea');
-      try {
-        const parsed = JSON.parse(ta?.value || '{}');
-        if (Array.isArray(parsed.guests)) appState.guests = parsed.guests;
-        if (Array.isArray(parsed.expenses)) appState.expenses = parsed.expenses;
-        if (Array.isArray(parsed.feastOrders)) appState.feastOrders = parsed.feastOrders;
-        saveAppState({ actor: 'Host Admin', category: 'Sync', action: 'Imported JSON', msg: 'Merged trip data from JSON snapshot.' }, { fullSync: true });
-        closeModal('sync-modal');
-        showToast('✅ Trip data imported & synced!');
-        renderAllUI();
-      } catch (e) {
-        showToast('❌ Invalid JSON format.', 'error');
-      }
-    }
-
-    // ==================== COUNTDOWN & INCOMING INVITE CHECK ====================
-    function updateSankrantiCountdown() {
-      const el = document.getElementById('sankranti-countdown');
-      if (!el) return;
-      const target = new Date('2027-01-14T06:00:00+05:30').getTime();
-      const diff = target - Date.now();
-      if (diff <= 0) {
-        el.textContent = '🔥 Happy Bhogi!';
-        return;
-      }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      el.textContent = `${days}d ${hours}h`;
-    }
-
-    function checkIncomingInviteLink() {
-      const params = new URLSearchParams(window.location.search);
-      const inviteId = params.get('invite');
-      const inviteName = params.get('name');
-      if (!inviteId) return;
-
-      let guest = appState.guests.find(g => g.id === inviteId);
-      if (!guest && inviteName) {
-        guest = {
-          id: inviteId,
-          name: inviteName,
-          phone: '',
-          rsvp: 'pending',
-          fromCity: '',
-          toCity: '',
-          arrivalDate: '2027-01-13',
-          departureDate: '2027-01-17',
-          travelSubmitted: false,
-          packedItems: [],
-          customPackingItems: [],
-          starters: [],
-          spirits: []
-        };
-        appState.guests.push(guest);
-        saveAppState(null, { guest });
-      }
-
-      if (guest) {
-        currentRole = guest.id;
-        if (guest.rsvp !== 'accepted') {
-          openInviteGateForGuest(guest);
+      const adminOnlyIds = ['nav-tab-rsvp', 'nav-tab-logs', 'nav-tab-admin', 'admin-home-dashlets', 'home-manage-invites-btn'];
+      adminOnlyIds.forEach(elId => {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (isAdminUnlocked) {
+          el.classList.remove('hidden');
+          el.style.removeProperty('display');
+        } else {
+          el.classList.add('hidden');
+          el.style.setProperty('display', 'none', 'important');
         }
+      });
+
+      // If currently viewing an admin-only section when locked, return to Home
+      const adminOnlyTabs = ['rsvp', 'logs', 'admin'];
+      if (!isAdminUnlocked) {
+        adminOnlyTabs.forEach(tabKey => {
+          const panel = document.getElementById(`tab-${tabKey}`);
+          if (panel && !panel.classList.contains('hidden')) {
+            switchMainTab('home');
+          }
+        });
+      }
+
+      renderConfirmedSquad();
+      renderHomeGuestForms();
+      renderFeastOrdersList();
+      renderRsvpList();
+      renderExpensesSection();
+      renderLogsSection();
+      if (!document.getElementById('tab-gallery')?.classList.contains('hidden')) {
+        await renderGallerySection();
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+    // Expose functions globally for inline HTML event handlers inside <script type="module">
+    Object.assign(window, {
+      switchMainTab,
+      diagnoseCloudSync,
+      openAdminPinModal,
+      scrollToHomeSection,
+      handleRoleSwitch,
+      declineAfterAccept,
+      editTravelDetails,
+      saveGuestPreferences,
+      togglePackingItem,
+      addCustomPackingItem,
+      toggleFeastOtherInput,
+      toggleSoftDrinkOtherInput,
+      toggleChipsOtherInput,
+      toggleFeastCustomQtyInput,
+      addFeastBarOrder,
+      deleteFeastOrder,
+      toggleCustomSplitCheckboxes,
+      saveExpenseForm,
+      toggleExpenseEditDrawer,
+      toggleGuestOnExpense,
+      saveExpenseInlineEdit,
+      deleteExpense,
+      handleHdPhotoUpload,
+      downloadHdPhoto,
+      deleteHdPhoto,
+      openLightbox,
+      pickContactFromMobile,
+      addGuestFromForm,
+      handleVcfUpload,
+      openWhatsAppInvite,
+      copyInviteLink,
+      resetAndReinviteGuest,
+      removeGuest,
+      closeWelcomeModal,
+      verifyAdminPin,
+      logoutAdmin,
+      changeAdminPin,
+      resetAllTripData,
+      openSyncModal,
+      copySyncJson,
+      importSyncJson,
+      copyLogsReport,
+      exportLogsCsv,
+      closeModal,
+      openDashletModal
+    });
+
+    function initAppBoot() {
       updateSankrantiCountdown();
       setInterval(updateSankrantiCountdown, 60000);
       checkIncomingInviteLink();
@@ -2890,56 +2952,13 @@
       } else {
         switchMainTab(initialTab);
       }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', initAppBoot);
+    } else {
+      initAppBoot();
+    }
 
     // Expose functions globally for inline HTML event handlers inside <script type="module">
-    Object.assign(window, {
-      switchMainTab,
-      diagnoseCloudSync,
-      openAdminPinModal,
-      verifyAdminPin,
-      logoutAdmin,
-      changeAdminPin,
-      resetAllTripData,
-      scrollToHomeSection,
-      handleRoleSwitch,
-      editTravelDetails,
-      saveGuestPreferences,
-      togglePackingItem,
-      addCustomPackingItem,
-      toggleCravingChip,
-      toggleFeastOtherInput,
-      toggleSoftDrinkOtherInput,
-      toggleChipsOtherInput,
-      toggleFeastCustomQtyInput,
-      addFeastBarOrder,
-      deleteFeastOrder,
-      addGuestFromForm,
-      pickContactFromMobile,
-      handleVcfUpload,
-      openWhatsAppInvite,
-      copyInviteLink,
-      resetAndReinviteGuest,
-      removeGuest,
-      declineAfterAccept,
-      closeWelcomeModal,
-      toggleCustomSplitCheckboxes,
-      toggleExpenseEditDrawer,
-      toggleGuestOnExpense,
-      saveExpenseInlineEdit,
-      saveExpenseForm,
-      deleteExpense,
-      handleHdPhotoUpload,
-      downloadHdPhoto,
-      deleteHdPhoto,
-      openLightbox,
-      copyLogsReport,
-      exportLogsCsv,
-      openSyncModal,
-      copySyncJson,
-      importSyncJson,
-      closeModal
-    });
-  </script>
-</body>
-</html>
+// ... existing code ... -->

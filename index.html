@@ -55,6 +55,9 @@
   <!-- Top Festive Border -->
   <div class="w-full h-2.5 bg-gradient-to-r from-red-800 via-amber-500 to-emerald-700"></div>
 
+  <!-- Main App Shell (Hidden when Invitation Gate is active) -->
+  <div id="app-shell" class="flex-grow flex flex-col">
+
   <!-- ===================================================================== -->
   <!-- HEADER & ROLE SWITCHER BAR                                            -->
   <!-- ===================================================================== -->
@@ -1269,6 +1272,28 @@
     <p class="mt-1">#DhummuLeputunnam • Built for the Sankranti 2027 Squad</p>
   </footer>
 
+  </div><!-- End #app-shell -->
+
+  <!-- ===================================================================== -->
+  <!-- DASHLET BREAKDOWN DETAIL MODAL                                        -->
+  <!-- ===================================================================== -->
+  <div id="dashlet-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border-2 border-amber-300 animate-pop space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-amber-100">
+        <div class="flex items-center gap-2.5">
+          <span id="modal-icon" class="text-2xl">📊</span>
+          <h3 id="modal-title" class="text-lg font-extrabold text-red-950">Details</h3>
+        </div>
+        <button type="button" onclick="closeDashletModal()" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
+      </div>
+      <div id="modal-body" class="space-y-2.5 max-h-80 overflow-y-auto pr-1 text-xs sm:text-sm"></div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-amber-100">
+        <button type="button" onclick="copyModalSummary()" class="px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-extrabold">📋 Copy Summary</button>
+        <button type="button" onclick="closeDashletModal()" class="px-4 py-2 rounded-xl bg-red-800 hover:bg-red-700 text-white text-xs font-extrabold">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===================================================================== -->
   <!-- APPLICATION STATE, INDEXEDDB & INTERACTIVE LOGIC                      -->
   <!-- ===================================================================== -->
@@ -1645,9 +1670,11 @@
     // 4. RSVP, INVITES & GUEST PREFERENCES
     // =========================================================================
     function openInviteGateForGuest(guest) {
+      const appShell = document.getElementById('app-shell');
       const modal = document.getElementById('invite-gate-modal');
       const title = document.getElementById('invite-gate-title');
       const body = document.getElementById('invite-gate-body');
+      if (appShell) appShell.classList.add('hidden');
       title.textContent = `Hey ${guest.name}!`;
 
       if (guest.rsvp === 'exited' || guest.rsvp === 'declined') {
@@ -1795,6 +1822,7 @@
       currentRole = guest.id;
       selectedRsvpGuestId = guest.id;
       document.getElementById('invite-gate-modal')?.classList.add('hidden');
+      document.getElementById('app-shell')?.classList.remove('hidden');
       saveAppState({
         actor: isAdminUnlocked ? 'Host Admin' : guest.name,
         category: 'RSVP',
@@ -3156,25 +3184,51 @@
     // =========================================================================
     // 8. INITIALIZATION ON PAGE LOAD
     // =========================================================================
-    window.addEventListener('DOMContentLoaded', () => {
+    function initSankrantiApp() {
       const params = new URLSearchParams(window.location.search);
-      const inviteId = params.get('invite');
+      const inviteId = (params.get('invite') || '').trim();
       if (inviteId) {
-        const invitedGuest = appState.guests.find(g => g.id.toLowerCase() === inviteId.toLowerCase());
-        if (invitedGuest) {
-          currentRole = invitedGuest.id;
-          selectedRsvpGuestId = invitedGuest.id;
-          renderAllUI();
-          switchMainTab('home');
-          if (invitedGuest.rsvp !== 'accepted') {
-            openInviteGateForGuest(invitedGuest);
-          }
+        const invitedGuest = appState.guests.find(
+          g => g.id.toLowerCase() === inviteId.toLowerCase() || g.name.toLowerCase() === inviteId.toLowerCase()
+        ) || { id: inviteId.toLowerCase(), name: inviteId, rsvp: 'pending' };
+
+        if (!appState.guests.some(g => g.id === invitedGuest.id)) {
+          appState.guests.push({
+            id: invitedGuest.id,
+            name: invitedGuest.name,
+            phone: '',
+            rsvp: 'pending',
+            fromCity: '',
+            travelDate: '',
+            arrivalCity: 'Jangareddygudem',
+            returnDate: '',
+            diet: 'Non-Veg',
+            starters: [],
+            alcohol: [],
+            essentials: [],
+            cigarettes: []
+          });
+        }
+
+        currentRole = invitedGuest.id;
+        selectedRsvpGuestId = invitedGuest.id;
+        renderAllUI();
+        switchMainTab('home');
+        if (invitedGuest.rsvp !== 'accepted') {
+          openInviteGateForGuest(invitedGuest);
           return;
         }
       }
+      document.getElementById('app-shell')?.classList.remove('hidden');
       renderAllUI();
       switchMainTab('home');
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSankrantiApp);
+    } else {
+      initSankrantiApp();
+    }
   </script>
 </body>
 </html>

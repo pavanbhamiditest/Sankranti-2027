@@ -596,7 +596,7 @@
               <div>
                 <label class="block text-[10px] font-extrabold uppercase text-stone-500">Who Paid the Bill?</label>
                 <select id="auto-bill-payer" class="px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
-                  <!-- Populated dynamically -->
+                  <option value="">-- No Confirmed Guests Yet --</option>
                 </select>
               </div>
               <button type="button" onclick="autoGenerateIndividualBills()" class="self-end px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white text-xs sm:text-sm font-extrabold shadow-md transition">
@@ -657,7 +657,7 @@
             <div class="lg:col-span-3">
               <label class="block text-[11px] font-extrabold uppercase text-stone-600 mb-1">Paid at Pump By</label>
               <select id="fuel-paid-by" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
-                <!-- Populated dynamically -->
+                <option value="">-- No Confirmed Guests Yet --</option>
               </select>
             </div>
             <div class="lg:col-span-6">
@@ -714,14 +714,14 @@
               <div>
                 <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Paid By</label>
                 <select id="exp-paid-by" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/50 border border-amber-300 text-sm font-extrabold text-red-950">
-                  <!-- Populated dynamically -->
+                  <option value="">-- No Confirmed Guests Yet --</option>
                 </select>
               </div>
 
               <!-- Include / Exclude Guests Checkboxes -->
               <div class="bg-parchment p-3.5 rounded-2xl border border-amber-200">
                 <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-extrabold uppercase text-red-950">Split Between (Include / Exclude)</label>
+                  <label class="text-xs font-extrabold uppercase text-red-950">Split Between (Confirmed Only)</label>
                   <div class="flex gap-2">
                     <button type="button" onclick="toggleAllExpenseGuests(true)" class="text-[11px] font-extrabold text-emerald-700 hover:underline">Include All</button>
                     <button type="button" onclick="toggleAllExpenseGuests(false)" class="text-[11px] font-extrabold text-red-700 hover:underline">Clear</button>
@@ -1136,59 +1136,59 @@
         exitBanner.innerHTML = `
           <div class="text-xs sm:text-sm text-red-950 font-semibold">
             Signed in as <strong>${activeGuest.name}</strong>. Need to drop out of the Sankranti 2027 trip?
-          </div>
-          <button type="button" onclick="confirmGuestExit('${activeGuest.id}')" class="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-white text-xs font-extrabold shadow transition self-start sm:self-auto">
-            🚪 Exit Trip (Revoke My Access)
-          </button>
-        `;
-      } else if (exitBanner) {
-        exitBanner.remove();
+      const currentTab = document.querySelector('.main-tab-panel:not(.hidden)');
+      if (currentTab) {
+        if (currentTab.id === 'tab-rsvp') renderRsvpSection();
+        if (currentTab.id === 'tab-expenses') renderExpensesSection();
+        if (currentTab.id === 'tab-gallery') renderGallerySection();
+        if (currentTab.id === 'tab-logs') renderLogsSection();
+        if (currentTab.id === 'tab-admin') renderAdminSection();
       }
-
-      // Squad Pills
-// ... existing code ... -->
-    // =========================================================================
-    // 5. WHATSAPP INVITES, RSVP GATE, PERMANENT EXIT & PREFERENCES FORM
-    // =========================================================================
-    function getWhatsAppInviteUrl(guest) {
-      const baseUrl = window.location.href.split('?')[0];
-      const inviteLink = `${baseUrl}?invite=${encodeURIComponent(guest.id)}`;
-      const msg =
-        `☀️🪁 *Sankranti 2027 Squad Invite* 🔥\n\n` +
-        `Hey *${guest.name}*! You're invited to our Sankranti 2027 celebration (#DhummuLeputunnam).\n\n` +
-        `Tap your personal link below to Accept your invite and add your travel dates, starter choices, and spirits preferences:\n` +
-        `${inviteLink}`;
-      const cleanPhone = (guest.phone || '').replace(/\D/g, '');
-      if (cleanPhone) {
-        return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
-      }
-      return `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      renderExpensesSection();
     }
 
-    function copyInviteLink(guestId) {
-// ... existing code ... -->
-    function acceptGuestInvite(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      if (guest.rsvp === 'exited' && !isAdminUnlocked) {
-        showToast('You exited this Sankranti 2027 trip. Only Host Admin can re-invite you.', 'error');
-        return;
-      }
-      guest.rsvp = 'accepted';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'RSVP',
-        action: 'Accepted Invite',
-        msg: `${guest.name} accepted the Sankranti 2027 invite (#DhummuLeputunnam)!`
+    function renderExpensesSection() {
+      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      const payerSelects = ['exp-paid-by', 'auto-bill-payer', 'fuel-paid-by'];
+      payerSelects.forEach(selId => {
+        const el = document.getElementById(selId);
+        if (!el) return;
+        const prev = el.value;
+        if (confirmedGuests.length === 0) {
+          el.innerHTML = `<option value="">-- No Confirmed Guests Yet --</option>`;
+        } else {
+          el.innerHTML = confirmedGuests.map(g =>
+            `<option value="${g.id}" ${g.id === prev ? 'selected' : ''}>${g.name}</option>`
+          ).join('');
+        }
       });
-      document.getElementById('welcome-guest-name').textContent = `Welcome, ${guest.name}!`;
-      document.getElementById('welcome-rsvp-modal').classList.remove('hidden');
-    }
 
-    function closeWelcomeModal() {
-      document.getElementById('welcome-rsvp-modal').classList.add('hidden');
-      if (!isAdminUnlocked) {
-        switchMainTab('home');
+      const expCheckboxes = document.getElementById('exp-guest-checkboxes');
+      if (expCheckboxes) {
+        if (confirmedGuests.length === 0) {
+          expCheckboxes.innerHTML = `<p class="col-span-2 text-xs text-stone-500 italic">No confirmed guests yet. Guests appear here once they accept their invite.</p>`;
+        } else {
+          expCheckboxes.innerHTML = confirmedGuests.map(g => `
+            <label class="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-amber-200 text-xs font-bold text-red-950 cursor-pointer">
+              <input type="checkbox" class="exp-split-cb accent-orange-600" value="${g.id}" checked />
+              <span>${g.name}</span>
+            </label>
+          `).join('');
+        }
+      }
+
+      const fuelCheckboxes = document.getElementById('fuel-riders-checkboxes');
+      if (fuelCheckboxes) {
+        if (confirmedGuests.length === 0) {
+          fuelCheckboxes.innerHTML = `<span class="text-xs text-stone-500 italic">No confirmed guests yet.</span>`;
+        } else {
+          fuelCheckboxes.innerHTML = confirmedGuests.map(g => `
+            <label class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-sky-200 text-xs font-bold text-red-950 cursor-pointer">
+              <input type="checkbox" class="fuel-rider-cb accent-sky-600" value="${g.id}" onchange="updateFuelPreview()" checked />
+              <span>${g.name}</span>
+            </label>
+          `).join('');
+        }
       }
     }
 

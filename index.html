@@ -1364,8 +1364,14 @@
     }
 
     // ==================== INDEXEDDB HD PHOTO VAULT ====================
+    let memoryFallbackPhotos = [];
+
     function openPhotoDb() {
       return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+          reject(new Error('IndexedDB unavailable'));
+          return;
+        }
         const req = indexedDB.open(DB_NAME, 1);
         req.onupgradeneeded = (e) => {
           const db = e.target.result;
@@ -1378,70 +1384,102 @@
       });
     }
 
+    function recordToPhotoBlob(record) {
+      if (record.blob instanceof Blob) return record.blob;
+      if (record.buffer) {
+        return new Blob([record.buffer], { type: record.mimeType || 'image/jpeg' });
+      }
+      return null;
+    }
+
     async function getAllHdPhotos() {
       try {
         const db = await openPhotoDb();
-        return await new Promise((resolve, reject) => {
+        const records = await new Promise((resolve, reject) => {
           const tx = db.transaction(DB_STORE, 'readonly');
           const store = tx.objectStore(DB_STORE);
           const req = store.getAll();
           req.onsuccess = () => resolve(req.result || []);
           req.onerror = () => reject(req.error);
         });
+        const combined = [...records, ...memoryFallbackPhotos];
+        return combined.map(r => ({ ...r, resolvedBlob: recordToPhotoBlob(r) })).filter(r => r.resolvedBlob);
       } catch (e) {
-        return [];
+        return memoryFallbackPhotos
+          .map(r => ({ ...r, resolvedBlob: recordToPhotoBlob(r) }))
+          .filter(r => r.resolvedBlob);
       }
     }
 
     async function handleHdPhotoUpload(event) {
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
-      try {
-        const db = await openPhotoDb();
-        const uploader = getActiveGuestObj()?.name || (isAdminUnlocked ? 'Host Admin' : 'Squad Member');
-        for (const file of files) {
-          const id = 'photo_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-          await new Promise((resolve, reject) => {
-            const tx = db.transaction(DB_STORE, 'readwrite');
-            tx.objectStore(DB_STORE).put({
-              id,
-              name: file.name,
-              blob: file,
-              uploadedBy: uploader,
-              createdAt: Date.now()
+      const uploader = getActiveGuestObj()?.name || (isAdminUnlocked ? 'Host Admin' : 'Squad Member');
+      let savedCount = 0;
+
+      for (const file of files) {
+        const id = 'photo_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        const safeName = file.name || `Sankranti2027_${Date.now()}.jpg`;
+        const mimeType = file.type || 'image/jpeg';
+
+        try {
+          const buffer = await file.arrayBuffer();
+          const record = {
+            id,
+            name: safeName,
+            mimeType,
+            buffer,
+            uploadedBy: uploader,
+            createdAt: Date.now()
+          };
+
+          try {
+            const db = await openPhotoDb();
+            await new Promise((resolve, reject) => {
+              const tx = db.transaction(DB_STORE, 'readwrite');
+              tx.objectStore(DB_STORE).put(record);
+              tx.oncomplete = () => resolve();
+              tx.onerror = () => reject(tx.error);
             });
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-          });
+          } catch (dbErr) {
+            // Fallback to in-memory vault if IndexedDB is blocked (e.g., Incognito / sandboxed iframe)
+            memoryFallbackPhotos.unshift(record);
+          }
+          savedCount++;
+        } catch (readErr) {
+          console.error('Photo read failed:', readErr);
         }
+      }
+
+      if (savedCount > 0) {
         saveAppState({
           actor: uploader,
           category: 'Gallery',
           action: 'Uploaded HD Photos',
-          msg: `${uploader} uploaded ${files.length} uncompressed HD photo(s).`
+          msg: `${uploader} uploaded ${savedCount} uncompressed HD photo(s).`
         });
-        showToast(`📸 Uploaded ${files.length} HD photo(s)!`);
+        showToast(`📸 Uploaded ${savedCount} HD photo(s)!`);
         await renderGallerySection();
-      } catch (e) {
-        showToast('❌ Could not save photo to IndexedDB.', 'error');
-      } finally {
-        event.target.value = '';
+      } else {
+        showToast('❌ Could not read selected photo. Try picking from Photo Library.', 'error');
       }
+      event.target.value = '';
     }
 
     async function downloadHdPhoto(photoId) {
       const photos = await getAllHdPhotos();
       const target = photos.find(p => p.id === photoId);
-      if (!target) return;
-      const url = URL.createObjectURL(target.blob);
+      if (!target || !target.resolvedBlob) return;
+      const url = URL.createObjectURL(target.resolvedBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = target.name || 'Sankranti2027_HD.jpg';
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     async function deleteHdPhoto(photoId) {
+      memoryFallbackPhotos = memoryFallbackPhotos.filter(p => p.id !== photoId);
       try {
         const db = await openPhotoDb();
         await new Promise((resolve, reject) => {
@@ -1450,220 +1488,62 @@
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error);
         });
-        showToast('🗑️ Photo deleted from vault.', 'info');
-        await renderGallerySection();
-      } catch (e) {
-        showToast('❌ Failed to delete photo.', 'error');
-      }
+      } catch (e) {}
+      showToast('🗑️ Photo deleted from vault.', 'info');
+      await renderGallerySection();
     }
 
     function openLightbox(url, caption) {
-      const modal = document.getElementById('photo-lightbox-modal');
       const img = document.getElementById('lightbox-img');
       const cap = document.getElementById('lightbox-caption');
       if (img) img.src = url;
       if (cap) cap.textContent = caption || '';
-      if (modal) modal.classList.remove('hidden');
+      document.getElementById('photo-lightbox-modal')?.classList.remove('hidden');
     }
 
-    // ==================== NAVIGATION & ROLE SWITCHING ====================
-    function switchMainTab(tabName) {
-      document.querySelectorAll('.tab-panel').forEach(panel => {
-        panel.classList.toggle('hidden', panel.id !== `tab-${tabName}`);
-      });
-      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-        const active = btn.dataset.tab === tabName;
-        if (btn.id === 'nav-tab-admin') {
-          btn.className = active
-            ? 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-emerald-400 text-emerald-950 shadow'
-            : 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-emerald-200 bg-emerald-900/50 border border-emerald-500/40 hover:bg-emerald-800/60';
-        } else {
-          btn.className = active
-            ? 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-amber-400 text-red-950 shadow'
-            : 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10';
-        }
-      });
+    // ==================== CORE ROLE, NAVIGATION & ADMIN CONTROLS ====================
+    function getActiveGuestObj() {
+      if (currentRole && currentRole !== 'public') {
+        const found = appState.guests.find(g => g.id === currentRole);
+        if (found) return found;
+      }
+      return appState.guests[0] || null;
     }
 
-    function handleRoleSwitch(guestId) {
-      currentRole = guestId || 'public';
+    function handleRoleSwitch(newRole) {
+      currentRole = newRole || 'public';
       isEditingTravelDetails = false;
       renderAllUI();
     }
 
-    // ==================== FEAST, BAR & ESSENTIALS INDIVIDUAL ENTRIES ====================
-    function toggleFeastOtherInput(prefix) {
-      const val = document.getElementById(`${prefix}-item-select`)?.value || '';
-      const wrap = document.getElementById(`${prefix}-other-wrap`);
-      if (wrap) {
-        if (val === 'Others') {
-          wrap.classList.remove('hidden');
-          document.getElementById(`${prefix}-other-input`)?.focus();
+    function switchMainTab(tabName) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      const target = document.getElementById(`tab-${tabName}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        const isActive = btn.getAttribute('data-tab') === tabName;
+        if (btn.id === 'nav-tab-admin') {
+          btn.className = isActive
+            ? 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-emerald-400 text-red-950 shadow'
+            : 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-emerald-200 bg-emerald-900/50 border border-emerald-500/40 hover:bg-emerald-800/60';
         } else {
-          wrap.classList.add('hidden');
+          btn.className = isActive
+            ? 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-amber-400 text-red-950 shadow'
+            : 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10';
         }
-      }
-      if (prefix === 'essential') {
-        const sdWrap = document.getElementById('essential-softdrink-wrap');
-        if (sdWrap) {
-          if (val === 'Soft Drinks / Mixers') {
-            sdWrap.classList.remove('hidden');
-            toggleSoftDrinkOtherInput();
-          } else {
-            sdWrap.classList.add('hidden');
-          }
-        }
-        const chipsWrap = document.getElementById('essential-chips-wrap');
-        if (chipsWrap) {
-          if (val === 'Chips & Munchies') {
-            chipsWrap.classList.remove('hidden');
-            toggleChipsOtherInput();
-          } else {
-            chipsWrap.classList.add('hidden');
-          }
-        }
-      }
-    }
+      });
 
-    function toggleSoftDrinkOtherInput() {
-      const sdVal = document.getElementById('essential-softdrink-select')?.value || '';
-      const sdOther = document.getElementById('essential-softdrink-other-input');
-      if (!sdOther) return;
-      if (sdVal === 'Others') {
-        sdOther.classList.remove('hidden');
-        sdOther.focus();
-      } else {
-        sdOther.classList.add('hidden');
-      }
-    }
-
-    function toggleChipsOtherInput() {
-      const chipsVal = document.getElementById('essential-chips-select')?.value || '';
-      const chipsOther = document.getElementById('essential-chips-other-input');
-      if (!chipsOther) return;
-      if (chipsVal === 'Others') {
-        chipsOther.classList.remove('hidden');
-        chipsOther.focus();
-      } else {
-        chipsOther.classList.add('hidden');
-      }
-    }
-
-    function toggleFeastCustomQtyInput(prefix) {
-      const val = document.getElementById(`${prefix}-qty-select`)?.value || '';
-      const wrap = document.getElementById(`${prefix}-custom-qty-wrap`);
-      if (!wrap) return;
-      if (val === 'Custom') {
-        wrap.classList.remove('hidden');
-        document.getElementById(`${prefix}-custom-qty-input`)?.focus();
-      } else {
-        wrap.classList.add('hidden');
-      }
-    }
-
-    function addFeastBarOrder(kind = 'Starter') {
-      const activeGuest = getActiveGuestObj();
-      if (!activeGuest && !isAdminUnlocked) {
-        showToast('Select or accept a guest profile first!', 'error');
-        return;
-      }
-
-      const prefix = kind === 'Spirit' ? 'spirit' : kind === 'Essential' ? 'essential' : 'starter';
-      const defaultItem = kind === 'Spirit' ? 'Budweiser' : kind === 'Essential' ? 'Water Bottles' : 'Chicken Pakodi';
-      const defaultQty = kind === 'Spirit' ? '1 Bottle' : kind === 'Essential' ? '1 Pack' : '250 grams';
-      const emoji = kind === 'Spirit' ? '🥃' : kind === 'Essential' ? '🥤' : '🍗';
-
-      const selectedItem = document.getElementById(`${prefix}-item-select`)?.value || defaultItem;
-      const customItem = (document.getElementById(`${prefix}-other-input`)?.value || '').trim();
-      let itemName = selectedItem === 'Others' ? customItem : selectedItem;
-
-      if (kind === 'Essential' && selectedItem === 'Soft Drinks / Mixers') {
-        const sdBrand = document.getElementById('essential-softdrink-select')?.value || 'Thums Up';
-        const sdCustom = (document.getElementById('essential-softdrink-other-input')?.value || '').trim();
-        itemName = sdBrand === 'Others' ? sdCustom : sdBrand;
-        if (!itemName) {
-          showToast('Please type the soft drink name under Others.', 'error');
-          return;
-        }
-      } else if (kind === 'Essential' && selectedItem === 'Chips & Munchies') {
-        const chipsBrand = document.getElementById('essential-chips-select')?.value || "Lay's";
-        const chipsCustom = (document.getElementById('essential-chips-other-input')?.value || '').trim();
-        itemName = chipsBrand === 'Others' ? chipsCustom : chipsBrand;
-        if (!itemName) {
-          showToast('Please type the chips / snack name under Others.', 'error');
-          return;
-        }
-      } else if (!itemName) {
-        showToast(`Please type the ${kind.toLowerCase()} name under Others.`, 'error');
-        return;
-      }
-
-      const selectedQty = document.getElementById(`${prefix}-qty-select`)?.value || defaultQty;
-      const customQty = (document.getElementById(`${prefix}-custom-qty-input`)?.value || '').trim();
-      const quantity = selectedQty === 'Custom' ? (customQty || '1 Unit') : selectedQty;
-
-      const requestedById = activeGuest?.id || appState.guests[0]?.id || '';
-      const requestedByName = activeGuest?.name || (isAdminUnlocked ? 'Host Admin' : 'Guest');
-      const initialSharedWith = requestedById ? [requestedById] : [];
-
-      const orderId = 'feast_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
-      const newOrder = {
-        id: orderId,
-        kind,
-        itemName,
-        quantity,
-        requestedById,
-        requestedByName,
-        sharedWith: initialSharedWith,
-        amount: 0,
-        paidBy: requestedById,
-        updatedAt: Date.now()
-      };
-
-      if (!Array.isArray(appState.feastOrders)) appState.feastOrders = [];
-      appState.feastOrders.unshift(newOrder);
-
-      // Immediately capture this item in the Expenses ledger under its matching category
-      const linkedExp = syncFeastOrderToLinkedExpense(newOrder);
-
-      if (document.getElementById(`${prefix}-other-input`)) document.getElementById(`${prefix}-other-input`).value = '';
-      if (document.getElementById('essential-softdrink-other-input')) document.getElementById('essential-softdrink-other-input').value = '';
-      if (document.getElementById('essential-chips-other-input')) document.getElementById('essential-chips-other-input').value = '';
-      if (document.getElementById(`${prefix}-custom-qty-input`)) document.getElementById(`${prefix}-custom-qty-input`).value = '';
-
-      saveAppState({
-        actor: requestedByName,
-        category: 'Feast & Bar',
-        action: `Added ${kind} Entry`,
-        msg: `${requestedByName} added ${itemName} (${quantity}) to Feast & Bar and Expenses.`
-      }, { feastOrder: newOrder });
-
-      if (linkedExp && window.__cloudSync) {
-        window.__cloudSync.pushExpense(linkedExp);
-      }
-
-      showToast(`${emoji} Added ${itemName} (${quantity}) & synced to Expenses!`);
-      renderAllUI();
-    }
-
-    function getActiveGuestObj() {
-      if (currentRole && currentRole !== 'public') {
-        return appState.guests.find(g => g.id === currentRole) || null;
-      }
-      return appState.guests.find(g => g.rsvp === 'accepted') || appState.guests[0] || null;
+      if (tabName === 'gallery') renderGallerySection();
     }
 
     function scrollToHomeSection(elementId) {
       switchMainTab('home');
-      const target = document.getElementById(elementId);
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        target.classList.add('ring-4', 'ring-amber-400');
-        setTimeout(() => target.classList.remove('ring-4', 'ring-amber-400'), 1400);
-      }
+      setTimeout(() => {
+        document.getElementById(elementId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
     }
 
-    // ==================== ADMIN PIN & CONTROL ====================
     function openAdminPinModal() {
       if (isAdminUnlocked) {
         switchMainTab('admin');
@@ -1671,186 +1551,66 @@
       }
       const input = document.getElementById('admin-pin-input');
       if (input) input.value = '';
-      document.getElementById('admin-pin-modal').classList.remove('hidden');
-      setTimeout(() => input && input.focus(), 100);
+      document.getElementById('admin-pin-modal')?.classList.remove('hidden');
+      setTimeout(() => input?.focus(), 60);
     }
 
     function verifyAdminPin() {
-      const input = document.getElementById('admin-pin-input');
-      const entered = (input?.value || '').trim();
-      if (entered === appState.adminPin) {
+      const entered = document.getElementById('admin-pin-input')?.value?.trim() || '';
+      if (entered === String(appState.adminPin || '0089')) {
         isAdminUnlocked = true;
         closeModal('admin-pin-modal');
         showToast('🛡️ Host Admin Mode Unlocked!');
         renderAllUI();
-        switchMainTab('admin');
       } else {
-        showToast('❌ Incorrect Admin PIN.', 'error');
+        showToast('❌ Incorrect PIN.', 'error');
       }
     }
 
     function logoutAdmin() {
       isAdminUnlocked = false;
-      showToast('🔒 Switched back to Guest Mode.', 'info');
-      renderAllUI();
       switchMainTab('home');
+      showToast('🔒 Host Admin Mode Locked.', 'info');
+      renderAllUI();
     }
 
     function changeAdminPin() {
-      const input = document.getElementById('new-admin-pin-input');
-      const newPin = (input?.value || '').trim();
-      if (newPin.length < 4) {
-        showToast('Please enter a 4 to 6 digit PIN.', 'error');
+      const val = document.getElementById('new-admin-pin-input')?.value?.trim() || '';
+      if (!/^\d{4,6}$/.test(val)) {
+        showToast('Enter a 4 to 6 digit numeric PIN.', 'error');
         return;
       }
-      appState.adminPin = newPin;
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'Security',
-        action: 'Updated Admin PIN',
-        msg: 'Host Admin updated the security PIN.'
-      });
-      input.value = '';
+      appState.adminPin = val;
+      document.getElementById('new-admin-pin-input').value = '';
+      saveAppState({ actor: 'Host Admin', category: 'Security', action: 'Updated PIN', msg: 'Host Admin PIN updated.' });
       showToast('✅ Host Admin PIN updated!');
     }
 
     function resetAllTripData() {
       appState = getDefaultState();
       currentRole = 'public';
-      saveAppState();
-      showToast('🗑️ All trip data cleared to clean slate.', 'info');
+      saveAppState(null, { fullSync: true });
+      showToast('🗑️ All trip data cleared.', 'info');
       renderAllUI();
     }
 
-    // ==================== INVITE GATE, ACCEPT, DECLINE & 15s WELCOME POPUP ====================
-    function openInviteGateForGuest(guest) {
-      const appShell = document.getElementById('app-shell');
-      const gateModal = document.getElementById('invite-gate-modal');
-      const nameEl = document.getElementById('gate-guest-name');
-      const actionBtns = document.getElementById('gate-action-buttons');
-      const declinedNotice = document.getElementById('gate-declined-notice');
-
-      if (!gateModal || !guest) return;
-      if (appShell) appShell.classList.add('hidden');
-      gateModal.classList.remove('hidden');
-
-      if (nameEl) nameEl.textContent = guest.name;
-
-      if (guest.rsvp === 'declined') {
-        actionBtns.classList.add('hidden');
-        declinedNotice.classList.remove('hidden');
-      } else {
-        actionBtns.classList.remove('hidden');
-        declinedNotice.classList.add('hidden');
-      }
-
-      document.getElementById('gate-accept-btn').onclick = () => acceptInviteFromGate(guest.id);
-      document.getElementById('gate-decline-btn').onclick = () => declineInviteFromGate(guest.id);
-      document.getElementById('gate-reaccept-btn').onclick = () => acceptInviteFromGate(guest.id);
+    // ==================== GUEST INVITES, RSVP & CONTACTS ====================
+    function buildInviteUrl(guest) {
+      const base = window.location.origin + window.location.pathname;
+      return `${base}?invite=${encodeURIComponent(guest.id)}&name=${encodeURIComponent(guest.name)}`;
     }
 
-    function acceptInviteFromGate(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      guest.rsvp = 'accepted';
-      currentRole = guest.id;
-      saveAppState({
-        actor: guest.name,
-        category: 'RSVP',
-        action: 'Accepted Invite',
-        msg: `${guest.name} accepted the Sankranti 2027 invitation!`
-      }, { guest });
-
-      // Reveal main app shell and hide invite gate
-      document.getElementById('invite-gate-modal').classList.add('hidden');
-      document.getElementById('app-shell').classList.remove('hidden');
-
-      renderAllUI();
-      switchMainTab('home');
-
-      // Launch 15-second auto-dismissing Welcome Modal
-      openWelcomeModal(guest.name);
-    }
-
-    function declineInviteFromGate(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      guest.rsvp = 'declined';
-      saveAppState({
-        actor: guest.name,
-        category: 'RSVP',
-        action: 'Declined Invite',
-        msg: `${guest.name} declined the Sankranti 2027 invitation.`
-      }, { guest });
-      openInviteGateForGuest(guest);
-    }
-
-    function declineAfterAccept(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId) || getActiveGuestObj();
-      if (!guest) return;
-      guest.rsvp = 'declined';
-      saveAppState({
-        actor: guest.name,
-        category: 'RSVP',
-        action: 'Declined After Accepting',
-        msg: `${guest.name} opted out / declined after previously accepting the invite.`
-      }, { guest });
-      showToast(`❌ ${guest.name} marked as Declined.`, 'info');
-      if (currentRole === guest.id) {
-        currentRole = 'public';
-      }
-      renderAllUI();
-      if (!isAdminUnlocked) {
-        openInviteGateForGuest(guest);
-      }
-    }
-
-    function openWelcomeModal(guestName) {
-      const modal = document.getElementById('welcome-rsvp-modal');
-      const nameEl = document.getElementById('welcome-guest-name');
-      const timerEl = document.getElementById('welcome-auto-timer');
-      if (!modal) return;
-
-      if (nameEl) nameEl.textContent = guestName;
-      modal.classList.remove('hidden');
-
-      if (welcomeCountdownInterval) clearInterval(welcomeCountdownInterval);
-      let secondsLeft = 15;
-      if (timerEl) timerEl.textContent = `${secondsLeft}s`;
-
-      welcomeCountdownInterval = setInterval(() => {
-        secondsLeft -= 1;
-        if (timerEl) timerEl.textContent = `${Math.max(0, secondsLeft)}s`;
-        if (secondsLeft <= 0) {
-          closeWelcomeModal();
-        }
-      }, 1000);
-    }
-
-    function closeWelcomeModal() {
-      if (welcomeCountdownInterval) {
-        clearInterval(welcomeCountdownInterval);
-        welcomeCountdownInterval = null;
-      }
-      closeModal('welcome-rsvp-modal');
-      scrollToHomeSection('home-travel-card');
-    }
-
-    // ==================== GUEST CREATION, CONTACTS & WHATSAPP ====================
     function addGuestFromForm(source) {
-      const nameInput = document.getElementById(source === 'admin' ? 'admin-new-name' : 'rsvp-new-name');
-      const phoneInput = document.getElementById(source === 'admin' ? 'admin-new-phone' : 'rsvp-new-phone');
-      const name = (nameInput?.value || '').trim();
-      const phone = normalizePhone(phoneInput?.value || '');
-
+      const nameEl = document.getElementById(`${source}-new-name`);
+      const phoneEl = document.getElementById(`${source}-new-phone`);
+      const name = (nameEl?.value || '').trim();
+      const phone = normalizePhone(phoneEl?.value || '');
       if (!name) {
-        showToast('Please enter the guest’s name first.', 'error');
+        showToast('Please enter a friend’s name.', 'error');
         return;
       }
-
-      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36).slice(-4);
       const newGuest = {
-        id,
+        id: 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         name,
         phone,
         rsvp: 'pending',
@@ -1864,164 +1624,164 @@
         starters: [],
         spirits: []
       };
-
       appState.guests.push(newGuest);
-      if (!currentRole || currentRole === 'public') {
-        currentRole = newGuest.id;
-      }
-
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : 'Squad',
-        category: 'Invite',
-        action: 'Added Guest',
-        msg: `Added ${name} to the Sankranti 2027 invite list.`
-      }, { guest: newGuest });
-
-      if (nameInput) nameInput.value = '';
-      if (phoneInput) phoneInput.value = '';
-      showToast(`✅ Added ${name}! Ready to send WhatsApp invite.`);
+      if (nameEl) nameEl.value = '';
+      if (phoneEl) phoneEl.value = '';
+      saveAppState({ actor: 'Host Admin', category: 'RSVP', action: 'Added Guest', msg: `Added ${name} to the squad list.` }, { guest: newGuest });
+      showToast(`✅ ${name} added! Ready to share invite.`);
       renderAllUI();
     }
 
     async function pickContactFromMobile(source) {
-      const nameInput = document.getElementById(source === 'admin' ? 'admin-new-name' : 'rsvp-new-name');
-      const phoneInput = document.getElementById(source === 'admin' ? 'admin-new-phone' : 'rsvp-new-phone');
-
-      // 1. Native Contact Picker API (Android Chrome)
-      if ('contacts' in navigator && 'ContactsManager' in window) {
+      if ('contacts' in navigator && 'select' in navigator.contacts) {
         try {
           const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
-          if (contacts && contacts.length > 0) {
+          if (contacts && contacts.length) {
             const c = contacts[0];
-            if (c.name && c.name[0] && nameInput) nameInput.value = c.name[0];
-            if (c.tel && c.tel[0] && phoneInput) phoneInput.value = normalizePhone(c.tel[0]);
-            showToast('📱 Contact pulled from phonebook!');
-            return;
+            const nameEl = document.getElementById(`${source}-new-name`);
+            const phoneEl = document.getElementById(`${source}-new-phone`);
+            if (nameEl && c.name?.[0]) nameEl.value = c.name[0];
+            if (phoneEl && c.tel?.[0]) phoneEl.value = c.tel[0];
+            showToast('📱 Contact filled! Tap Add to save.');
           }
-        } catch (err) {
-          // User cancelled or unsupported
-        }
-      }
-
-      // 2. iOS / Desktop fallback: focus phone input for iOS keyboard Contact Autofill + offer vCard (.vcf) upload
-      if (phoneInput) phoneInput.focus();
-      showToast('📱 Tap iOS keyboard contact bar above or pick a .vcf contact card!', 'info');
-      const vcfInput = document.getElementById('vcf-file-input');
-      if (vcfInput) {
-        vcfInput.dataset.targetSource = source;
-        vcfInput.click();
+        } catch (e) {}
+      } else {
+        document.getElementById('vcf-file-input')?.click();
       }
     }
 
     function handleVcfUpload(event) {
       const file = event.target.files?.[0];
       if (!file) return;
-      const source = event.target.dataset.targetSource || 'rsvp';
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = String(e.target.result || '');
-        const fnMatch = text.match(/FN[^:]*:(.+)/i);
-        const telMatch = text.match(/TEL[^:]*:(.+)/i);
-        const nameInput = document.getElementById(source === 'admin' ? 'admin-new-name' : 'rsvp-new-name');
-        const phoneInput = document.getElementById(source === 'admin' ? 'admin-new-phone' : 'rsvp-new-phone');
-        if (fnMatch && nameInput) nameInput.value = fnMatch[1].trim();
-        if (telMatch && phoneInput) phoneInput.value = normalizePhone(telMatch[1].trim());
-        showToast('📇 Imported contact from vCard!');
+      reader.onload = () => {
+        const text = String(reader.result || '');
+        const fnMatch = text.match(/FN:(.*)/i);
+        const telMatch = text.match(/TEL[^:]*:(.*)/i);
+        const name = fnMatch ? fnMatch[1].trim() : '';
+        const phone = telMatch ? normalizePhone(telMatch[1].trim()) : '';
+        if (name) {
+          const targetSource = !document.getElementById('tab-rsvp')?.classList.contains('hidden') ? 'rsvp' : 'admin';
+          const nameEl = document.getElementById(`${targetSource}-new-name`);
+          const phoneEl = document.getElementById(`${targetSource}-new-phone`);
+          if (nameEl) nameEl.value = name;
+          if (phoneEl) phoneEl.value = phone;
+          showToast(`📇 Loaded ${name} from vCard!`);
+        }
       };
       reader.readAsText(file);
       event.target.value = '';
     }
 
-    function buildPersonalInviteLink(guest) {
-      const base = window.location.origin + window.location.pathname;
-      const params = new URLSearchParams();
-      params.set('invite', guest.id);
-      params.set('name', guest.name);
-      return `${base}?${params.toString()}`;
-    }
-
-    function getWhatsAppInviteUrl(guest) {
-      const link = buildPersonalInviteLink(guest);
-      const msg = `Hey ${guest.name}! Sankranti is around the corner. Just accept the invite. No excuses, no 'boss didn't approve leave,' and definitely no cancelling last minute! (#DhummuLeputunnam)\n\n👉 Accept here: ${link}`;
-      const encoded = encodeURIComponent(msg);
-      if (guest.phone) {
-        return `https://wa.me/${guest.phone}?text=${encoded}`;
-      }
-      // Without a phone number, whatsapp://send opens WhatsApp's native Contact Picker directly on mobile!
-      return `whatsapp://send?text=${encoded}`;
-    }
-
     function openWhatsAppInvite(guestId) {
       const guest = appState.guests.find(g => g.id === guestId);
       if (!guest) return;
-      const url = getWhatsAppInviteUrl(guest);
-      window.open(url, '_blank');
+      const link = buildInviteUrl(guest);
+      const msg = `🪁 *Sankranti 2027 Squad Invite!* 🔥\n\nHey *${guest.name}*, gear up for 3 days of Bhogi bonfires, Sankranthi feast & Kanuma vibes (Jan 14–16, 2027)!\n\nTap your personal invite link to accept & set your travel/feast picks:\n${link}`;
+      const waUrl = guest.phone
+        ? `https://wa.me/${guest.phone}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank');
     }
 
     function copyInviteLink(guestId) {
       const guest = appState.guests.find(g => g.id === guestId);
       if (!guest) return;
-      const link = buildPersonalInviteLink(guest);
-      const temp = document.createElement('textarea');
-      temp.value = link;
-      document.body.appendChild(temp);
-      temp.select();
+      const ta = document.createElement('textarea');
+      ta.value = buildInviteUrl(guest);
+      document.body.appendChild(ta);
+      ta.select();
       document.execCommand('copy');
-      temp.remove();
-      showToast(`🔗 Copied personal invite link for ${guest.name}!`);
-    }
-
-    function removeGuest(guestId) {
-      const idx = appState.guests.findIndex(g => g.id === guestId);
-      if (idx === -1) return;
-      const removed = appState.guests[idx];
-      appState.guests.splice(idx, 1);
-      if (currentRole === guestId) currentRole = 'public';
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'Invite',
-        action: 'Removed Guest',
-        msg: `Removed ${removed.name} from the squad list.`
-      }, { deleteGuestId: guestId });
-      showToast(`🗑️ Removed ${removed.name}.`, 'info');
-      renderAllUI();
+      ta.remove();
+      showToast(`🔗 Invite link copied for ${guest.name}!`);
     }
 
     function resetAndReinviteGuest(guestId) {
       const guest = appState.guests.find(g => g.id === guestId);
       if (!guest) return;
-      const oldId = guest.id;
-      guest.id = guest.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36).slice(-4);
       guest.rsvp = 'pending';
       guest.travelSubmitted = false;
-      if (currentRole === oldId) currentRole = guest.id;
-      if (window.__cloudSync) {
-        window.__cloudSync.deleteGuest(oldId);
-      }
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'Invite',
-        action: 'Reset & Re-Invited Guest',
-        msg: `Generated a fresh invite link and reset RSVP status for ${guest.name}.`
-      }, { guest });
-      showToast(`🔄 Fresh invite ready for ${guest.name}! Tap Send WhatsApp Invite.`);
+      saveAppState({ actor: 'Host Admin', category: 'RSVP', action: 'Reset RSVP', msg: `Reset RSVP status for ${guest.name}.` }, { guest });
+      showToast(`🔄 Reset ${guest.name} to Pending.`);
       renderAllUI();
     }
 
-    // ==================== TRAVEL DETAILS, PACKING CHECKLIST & CRAVINGS ====================
-    function editTravelDetails() {
-      const guest = getActiveGuestObj();
+    function removeGuest(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      appState.guests = appState.guests.filter(g => g.id !== guestId);
+      if (currentRole === guestId) currentRole = 'public';
+      saveAppState({ actor: 'Host Admin', category: 'RSVP', action: 'Removed Guest', msg: `Removed ${guest?.name || 'guest'}.` }, { deleteGuestId: guestId });
+      showToast('🗑️ Guest removed.', 'info');
+      renderAllUI();
+    }
+
+    function openInviteGateForGuest(guest) {
+      const modal = document.getElementById('invite-gate-modal');
+      if (!modal) return;
+      document.getElementById('gate-guest-name').textContent = guest.name;
+      document.getElementById('gate-action-buttons')?.classList.remove('hidden');
+      document.getElementById('gate-declined-notice')?.classList.add('hidden');
+      modal.classList.remove('hidden');
+
+      const acceptHandler = () => {
+        guest.rsvp = 'accepted';
+        currentRole = guest.id;
+        modal.classList.add('hidden');
+        saveAppState({ actor: guest.name, category: 'RSVP', action: 'Accepted Invite', msg: `${guest.name} accepted the Sankranti 2027 invite!` }, { guest });
+        openWelcomeModal(guest.name);
+        renderAllUI();
+      };
+
+      document.getElementById('gate-accept-btn').onclick = acceptHandler;
+      document.getElementById('gate-reaccept-btn').onclick = acceptHandler;
+      document.getElementById('gate-decline-btn').onclick = () => {
+        guest.rsvp = 'declined';
+        document.getElementById('gate-action-buttons')?.classList.add('hidden');
+        document.getElementById('gate-declined-notice')?.classList.remove('hidden');
+        saveAppState({ actor: guest.name, category: 'RSVP', action: 'Declined Invite', msg: `${guest.name} clicked Decline on invite.` }, { guest });
+        renderAllUI();
+      };
+    }
+
+    function declineAfterAccept(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
       if (!guest) return;
-      guest.travelSubmitted = false;
+      openInviteGateForGuest(guest);
+      document.getElementById('gate-action-buttons')?.classList.add('hidden');
+      document.getElementById('gate-declined-notice')?.classList.remove('hidden');
+    }
+
+    function openWelcomeModal(guestName) {
+      const modal = document.getElementById('welcome-rsvp-modal');
+      if (!modal) return;
+      document.getElementById('welcome-guest-name').textContent = guestName;
+      modal.classList.remove('hidden');
+      let secs = 15;
+      const timerEl = document.getElementById('welcome-auto-timer');
+      if (timerEl) timerEl.textContent = `${secs}s`;
+      if (welcomeCountdownInterval) clearInterval(welcomeCountdownInterval);
+      welcomeCountdownInterval = setInterval(() => {
+        secs--;
+        if (timerEl) timerEl.textContent = `${Math.max(0, secs)}s`;
+        if (secs <= 0) closeWelcomeModal();
+      }, 1000);
+    }
+
+    function closeWelcomeModal() {
+      if (welcomeCountdownInterval) clearInterval(welcomeCountdownInterval);
+      document.getElementById('welcome-rsvp-modal')?.classList.add('hidden');
+    }
+
+    // ==================== TRAVEL & PACKING HANDLERS ====================
+    function editTravelDetails() {
+      isEditingTravelDetails = true;
       renderHomeGuestForms();
-      const fromInput = document.getElementById('home-from-city');
-      if (fromInput) fromInput.focus();
     }
 
     function saveGuestPreferences() {
       const guest = getActiveGuestObj();
       if (!guest) {
-        showToast('Add or select a guest first!', 'error');
+        showToast('Please select or add a guest first.', 'error');
         return;
       }
       guest.fromCity = (document.getElementById('home-from-city')?.value || '').trim();
@@ -2029,102 +1789,334 @@
       guest.arrivalDate = document.getElementById('home-arrival-date')?.value || '2027-01-13';
       guest.departureDate = document.getElementById('home-departure-date')?.value || '2027-01-17';
       guest.travelSubmitted = true;
-
+      isEditingTravelDetails = false;
       saveAppState({
         actor: guest.name,
         category: 'Travel',
-        action: 'Submitted Travel Details',
-        msg: `${guest.name} confirmed route: ${guest.fromCity || 'TBD'} → ${guest.toCity || 'TBD'} (${guest.arrivalDate} to ${guest.departureDate}).`
+        action: 'Updated Travel',
+        msg: `${guest.name} confirmed route: ${guest.fromCity || 'Origin'} → ${guest.toCity || 'Hub'} (${guest.arrivalDate} to ${guest.departureDate}).`
       }, { guest });
-
-      showToast(`✅ Travel details saved & minimized for ${guest.name}!`);
+      showToast(`✅ Travel details saved for ${guest.name}!`);
       renderAllUI();
-
-      // Smoothly take the guest down to Step 2: Travel Essentials Packing Checklist
-      const packingSection = document.getElementById('home-packing-unlocked-box');
-      if (packingSection) {
-        setTimeout(() => {
-          packingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 120);
-      }
     }
 
     function togglePackingItem(itemId) {
       const guest = getActiveGuestObj();
-      if (!guest) return;
+      if (!guest) {
+        showToast('Select or add a guest first to pack items.', 'error');
+        return;
+      }
       if (!Array.isArray(guest.packedItems)) guest.packedItems = [];
       const idx = guest.packedItems.indexOf(itemId);
-      if (idx === -1) {
-        guest.packedItems.push(itemId);
-      } else {
-        guest.packedItems.splice(idx, 1);
-      }
+      if (idx >= 0) guest.packedItems.splice(idx, 1);
+      else guest.packedItems.push(itemId);
       saveAppState(null, { guest });
       renderHomeGuestForms();
     }
 
     function addCustomPackingItem() {
       const guest = getActiveGuestObj();
-      if (!guest) return;
       const input = document.getElementById('custom-packing-input');
       const label = (input?.value || '').trim();
+      if (!guest) {
+        showToast('Select or add a guest first.', 'error');
+        return;
+      }
       if (!label) return;
       if (!Array.isArray(guest.customPackingItems)) guest.customPackingItems = [];
-      const id = 'custom_' + Date.now().toString(36);
-      guest.customPackingItems.push({ id, label: '✨ ' + label });
-      input.value = '';
+      const id = 'pack_' + Date.now();
+      guest.customPackingItems.push({ id, label: '🎒 ' + label });
+      if (input) input.value = '';
       saveAppState(null, { guest });
       renderHomeGuestForms();
-      showToast('🎒 Added to your packing list!');
     }
 
     function toggleCravingChip(type, item) {
       const guest = getActiveGuestObj();
       if (!guest) return;
-      const arr = type === 'starters' ? (guest.starters || []) : (guest.spirits || []);
-      const idx = arr.indexOf(item);
-      if (idx === -1) arr.push(item);
-      else arr.splice(idx, 1);
-      if (type === 'starters') guest.starters = arr;
-      else guest.spirits = arr;
+      if (!Array.isArray(guest[type])) guest[type] = [];
+      const idx = guest[type].indexOf(item);
+      if (idx >= 0) guest[type].splice(idx, 1);
+      else guest[type].push(item);
       saveAppState(null, { guest });
       renderHomeGuestForms();
     }
 
-    function saveGuestCravings() {
-      const guest = getActiveGuestObj();
-      if (!guest) {
-        showToast('Add or select a guest first!', 'error');
-        return;
+    // ==================== FEAST, BAR & ESSENTIALS PLANNER + CONSOLIDATED ROLL-UP ====================
+    function toggleFeastOtherInput(prefix) {
+      const select = document.getElementById(`${prefix}-item-select`);
+      const otherWrap = document.getElementById(`${prefix}-other-wrap`);
+      if (select && otherWrap) {
+        otherWrap.classList.toggle('hidden', select.value !== 'Others');
       }
-      const extraSpirits = (document.getElementById('home-spirits-input')?.value || '')
-        .split(',').map(s => s.trim()).filter(Boolean);
-
-      guest.spirits = Array.from(new Set([...(guest.spirits || []), ...extraSpirits]));
-      if (document.getElementById('home-spirits-input')) document.getElementById('home-spirits-input').value = '';
-
-      saveAppState({
-        actor: guest.name,
-        category: 'Wishlist',
-        action: 'Updated Bar Wishlist',
-        msg: `${guest.name} updated spirits & drinks preferences.`
-      }, { guest });
-      showToast(`🍻 Saved drinks wishlist for ${guest.name}!`);
-      renderHomeGuestForms();
+      if (prefix === 'essential') {
+        const val = select?.value || '';
+        document.getElementById('essential-softdrink-wrap')?.classList.toggle('hidden', val !== 'Soft Drinks / Mixers');
+        document.getElementById('essential-chips-wrap')?.classList.toggle('hidden', val !== 'Chips & Munchies');
+      }
     }
 
-    // ==================== EXPENSE INLINE EDIT & ITEM SPLIT ====================
+    function toggleSoftDrinkOtherInput() {
+      const sel = document.getElementById('essential-softdrink-select');
+      const inp = document.getElementById('essential-softdrink-other-input');
+      if (sel && inp) inp.classList.toggle('hidden', sel.value !== 'Others');
+    }
+
+    function toggleChipsOtherInput() {
+      const sel = document.getElementById('essential-chips-select');
+      const inp = document.getElementById('essential-chips-other-input');
+      if (sel && inp) inp.classList.toggle('hidden', sel.value !== 'Others');
+    }
+
+    function toggleFeastCustomQtyInput(prefix) {
+      const sel = document.getElementById(`${prefix}-qty-select`);
+      const wrap = document.getElementById(`${prefix}-custom-qty-wrap`);
+      if (sel && wrap) wrap.classList.toggle('hidden', sel.value !== 'Custom');
+    }
+
+    function parseFeastQuantity(qtyStr) {
+      const s = String(qtyStr || '').trim();
+      const match = s.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+      if (!match) return { num: 1, unit: s || 'Unit' };
+      const num = parseFloat(match[1]) || 1;
+      const rawUnit = (match[2] || 'Unit').trim();
+      const lower = rawUnit.toLowerCase();
+      let normUnit = rawUnit;
+      if (lower.startsWith('bottle')) normUnit = 'Bottle';
+      else if (lower.startsWith('pack')) normUnit = 'Pack';
+      else if (lower.startsWith('case')) normUnit = 'Case';
+      else if (lower.includes('full plate')) normUnit = 'Full Plate';
+      else if (lower.includes('half plate')) normUnit = 'Half Plate';
+      else if (lower.startsWith('gram') || lower === 'g' || lower === 'gms') normUnit = 'grams';
+      else if (lower === 'ml') normUnit = 'ml';
+      else if (lower.startsWith('litre') || lower === 'l') normUnit = 'Litre';
+      else if (lower.startsWith('pc')) normUnit = 'Pcs';
+      return { num, unit: normUnit, rawUnit };
+    }
+
+    function formatAggregatedQty(totalNum, unit) {
+      const cleanNum = Number.isInteger(totalNum) ? totalNum : Number(totalNum.toFixed(2));
+      if (!unit || unit === 'Unit') return `${cleanNum} Unit${cleanNum === 1 ? '' : 's'}`;
+      if (['Bottle', 'Pack', 'Case', 'Full Plate', 'Half Plate'].includes(unit)) {
+        return `${cleanNum} ${unit}${cleanNum === 1 ? '' : 's'}`;
+      }
+      return `${cleanNum} ${unit}`;
+    }
+
+    function getConsolidatedFeastGroups() {
+      const orders = appState.feastOrders || [];
+      const map = new Map();
+      orders.forEach(o => {
+        const parsed = parseFeastQuantity(o.quantity);
+        const key = `${o.kind}::${o.itemName.trim().toLowerCase()}::${parsed.unit.toLowerCase()}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            kind: o.kind,
+            itemName: o.itemName.trim(),
+            unit: parsed.unit,
+            totalNum: 0,
+            entries: [],
+            guestMap: new Map(),
+            latestUpdatedAt: o.updatedAt || 0
+          });
+        }
+        const grp = map.get(key);
+        grp.totalNum += parsed.num;
+        grp.entries.push(o);
+        if ((o.updatedAt || 0) > grp.latestUpdatedAt) grp.latestUpdatedAt = o.updatedAt || 0;
+        const gId = o.requestedById || ('guest_' + (o.requestedByName || 'squad').toLowerCase());
+        const gName = o.requestedByName || 'Squad';
+        if (!grp.guestMap.has(gId)) {
+          grp.guestMap.set(gId, { guestId: gId, guestName: gName, num: 0 });
+        }
+        grp.guestMap.get(gId).num += parsed.num;
+      });
+
+      return Array.from(map.values()).map(grp => ({
+        ...grp,
+        totalLabel: formatAggregatedQty(grp.totalNum, grp.unit),
+        guestBreakdown: Array.from(grp.guestMap.values()).map(gb => ({
+          ...gb,
+          qtyLabel: formatAggregatedQty(gb.num, grp.unit)
+        }))
+      }));
+    }
+
+    function addFeastBarOrder(kind) {
+      const prefix = kind === 'Starter' ? 'starter' : kind === 'Spirit' ? 'spirit' : 'essential';
+      const itemSelect = document.getElementById(`${prefix}-item-select`);
+      let itemName = itemSelect?.value || '';
+
+      if (itemName === 'Others') {
+        itemName = (document.getElementById(`${prefix}-other-input`)?.value || '').trim();
+      } else if (kind === 'Essential' && itemName === 'Soft Drinks / Mixers') {
+        const sd = document.getElementById('essential-softdrink-select')?.value || '';
+        itemName = sd === 'Others'
+          ? (document.getElementById('essential-softdrink-other-input')?.value || '').trim()
+          : sd;
+      } else if (kind === 'Essential' && itemName === 'Chips & Munchies') {
+        const ch = document.getElementById('essential-chips-select')?.value || '';
+        itemName = ch === 'Others'
+          ? (document.getElementById('essential-chips-other-input')?.value || '').trim()
+          : ch;
+      }
+
+      if (!itemName) {
+        showToast('Please enter the item name.', 'error');
+        return;
+      }
+
+      const qtySelect = document.getElementById(`${prefix}-qty-select`);
+      let quantity = qtySelect?.value || '1 Unit';
+      if (quantity === 'Custom') {
+        quantity = (document.getElementById(`${prefix}-custom-qty-input`)?.value || '').trim();
+        if (!quantity) {
+          showToast('Please enter a custom quantity.', 'error');
+          return;
+        }
+      }
+
+      const activeGuest = getActiveGuestObj();
+      const requestedById = activeGuest?.id || 'admin';
+      const requestedByName = activeGuest?.name || (isAdminUnlocked ? 'Host Admin' : 'Squad Member');
+      const emoji = kind === 'Starter' ? '🍗' : kind === 'Spirit' ? '🥃' : '🥤';
+      const expCategory = kind === 'Starter' ? 'Starters & Food' : kind === 'Spirit' ? 'Spirits & Alcohol' : 'Essentials';
+
+      const newOrder = {
+        id: 'feast_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        kind,
+        itemName,
+        quantity,
+        requestedById,
+        requestedByName,
+        updatedAt: Date.now()
+      };
+
+      if (!Array.isArray(appState.feastOrders)) appState.feastOrders = [];
+      appState.feastOrders.unshift(newOrder);
+
+      // Sync corresponding expense entry
+      const defaultSplit = appState.guests.length ? appState.guests.map(g => g.id) : [requestedById];
+      const linkedExpense = {
+        id: 'exp_' + newOrder.id,
+        feastOrderId: newOrder.id,
+        category: expCategory,
+        item: `${emoji} ${itemName} (${quantity})`,
+        paidBy: activeGuest?.id || appState.guests[0]?.id || '',
+        splitMode: 'custom',
+        splitAmong: defaultSplit,
+        amount: 0,
+        updatedAt: Date.now()
+      };
+      appState.expenses.unshift(linkedExpense);
+
+      if (document.getElementById(`${prefix}-other-input`)) document.getElementById(`${prefix}-other-input`).value = '';
+      if (document.getElementById('essential-softdrink-other-input')) document.getElementById('essential-softdrink-other-input').value = '';
+      if (document.getElementById('essential-chips-other-input')) document.getElementById('essential-chips-other-input').value = '';
+      if (document.getElementById(`${prefix}-custom-qty-input`)) document.getElementById(`${prefix}-custom-qty-input`).value = '';
+
+      saveAppState(
+        {
+          actor: requestedByName,
+          category: 'Feast & Bar',
+          action: `Added ${kind}`,
+          msg: `${requestedByName} added ${itemName} (${quantity}) to Feast & Bar and Expenses.`
+        },
+        { feastOrder: newOrder }
+      );
+      if (window.__cloudSync) window.__cloudSync.pushExpense(linkedExpense);
+
+      showToast(`${emoji} Added ${itemName} (${quantity})!`);
+      renderAllUI();
+    }
+
+    function deleteFeastOrder(orderId) {
+      appState.feastOrders = (appState.feastOrders || []).filter(o => o.id !== orderId);
+      const linkedExpId = 'exp_' + orderId;
+      appState.expenses = appState.expenses.filter(e => e.id !== linkedExpId && e.feastOrderId !== orderId);
+      saveAppState(null, { deleteFeastOrderId: orderId });
+      if (window.__cloudSync) window.__cloudSync.deleteExpense(linkedExpId);
+      showToast('🗑️ Item removed from Feast & Expenses.', 'info');
+      renderAllUI();
+    }
+
+    function renderFeastOrdersList() {
+      const groups = getConsolidatedFeastGroups();
+      const sneakCountEl = document.getElementById('feast-sneak-count');
+      const sneakStripEl = document.getElementById('feast-sneak-peek-strip');
+      const ordersCountEl = document.getElementById('feast-orders-count');
+      const listEl = document.getElementById('feast-orders-list');
+
+      if (sneakCountEl) sneakCountEl.textContent = `${groups.length} unique item${groups.length === 1 ? '' : 's'} planned`;
+      if (ordersCountEl) ordersCountEl.textContent = String(groups.length);
+
+      if (sneakStripEl) {
+        if (!groups.length) {
+          sneakStripEl.innerHTML = `<span class="text-xs text-stone-500 italic">Nothing ordered yet — pick your starters, spirits & essentials above!</span>`;
+        } else {
+          sneakStripEl.innerHTML = groups.map(grp => {
+            const emoji = grp.kind === 'Starter' ? '🍗' : grp.kind === 'Spirit' ? '🥃' : '🥤';
+            const who = grp.guestBreakdown.map(gb => `${gb.guestName} (${gb.qtyLabel})`).join(', ');
+            return `
+              <span class="px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-extrabold text-red-950 shadow-2xs">
+                ${emoji} ${grp.itemName} • <span class="text-orange-700">${grp.totalLabel}</span> <span class="text-stone-500 font-semibold">[${who}]</span>
+              </span>
+            `;
+          }).join('');
+        }
+      }
+
+      if (listEl) {
+        if (!groups.length) {
+          listEl.innerHTML = `<p class="text-xs text-stone-500 italic">No starters, spirits, or essentials added yet.</p>`;
+        } else {
+          listEl.innerHTML = groups.map(grp => {
+            const emoji = grp.kind === 'Starter' ? '🍗' : grp.kind === 'Spirit' ? '🥃' : '🥤';
+            const entryBadges = grp.entries.map(e => `
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-amber-200 text-[11px] font-bold text-red-950">
+                <span>${e.requestedByName}: <strong>${e.quantity}</strong></span>
+                <button type="button" onclick="deleteFeastOrder('${e.id}')" title="Remove entry" class="text-red-600 hover:text-red-800 font-black">✕</button>
+              </span>
+            `).join('');
+
+            return `
+              <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                <div class="space-y-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-black text-red-950">${emoji} ${grp.itemName}</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-black">Total: ${grp.totalLabel}</span>
+                    <span class="text-[11px] font-bold text-stone-500">(${grp.kind})</span>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pt-0.5">
+                    ${entryBadges}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    // ==================== EXPENSES & SPLITWISE SETTLEMENTS ====================
+    function toggleCustomSplitCheckboxes() {
+      const mode = document.getElementById('exp-split-mode')?.value || 'equal';
+      document.getElementById('exp-custom-split-box')?.classList.toggle('hidden', mode !== 'custom');
+    }
+
+    function toggleExpenseEditDrawer(expId) {
+      expandedExpenseId = expandedExpenseId === expId ? null : expId;
+      renderExpensesSection();
+    }
+
     function toggleGuestOnExpense(expId, guestId) {
       const exp = appState.expenses.find(e => e.id === expId);
       if (!exp) return;
       if (!Array.isArray(exp.splitAmong)) exp.splitAmong = [];
       const idx = exp.splitAmong.indexOf(guestId);
-      if (idx === -1) {
-        exp.splitAmong.push(guestId);
-      } else {
-        exp.splitAmong.splice(idx, 1);
-      }
-      exp.updatedAt = Date.now();
+      if (idx >= 0) exp.splitAmong.splice(idx, 1);
+      else exp.splitAmong.push(guestId);
       saveAppState(null, { expense: exp });
       renderExpensesSection();
     }
@@ -2132,237 +2124,89 @@
     function saveExpenseInlineEdit(expId) {
       const exp = appState.expenses.find(e => e.id === expId);
       if (!exp) return;
-      const amtInput = document.getElementById(`exp-edit-amt-${expId}`);
-      const paidBySelect = document.getElementById(`exp-edit-paidby-${expId}`);
-      const amt = parseFloat(amtInput?.value || '0');
-      const paidBy = paidBySelect?.value || exp.paidBy;
-
-      if (!(amt > 0)) {
-        showToast('Enter a valid amount in ₹.', 'error');
+      const paidBy = document.getElementById(`exp-edit-paidby-${expId}`)?.value || '';
+      const amt = Number(document.getElementById(`exp-edit-amt-${expId}`)?.value || 0);
+      if (amt <= 0) {
+        showToast('Enter a valid amount greater than ₹0.', 'error');
         return;
       }
       if (!exp.splitAmong || exp.splitAmong.length === 0) {
-        showToast('Select at least 1 guest to split this bill.', 'error');
+        showToast('Select at least one guest sharing this item.', 'error');
         return;
       }
-
-      exp.amount = amt;
       exp.paidBy = paidBy;
+      exp.amount = amt;
       exp.updatedAt = Date.now();
-
+      expandedExpenseId = null;
       const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Member';
       saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : payerName,
-        category: 'Expense',
-        action: 'Updated Expense & Split',
-        msg: `Updated ${exp.item} to ₹${amt}, paid by ${payerName}, split among ${exp.splitAmong.length} member(s).`
+        actor: payerName,
+        category: 'Expenses',
+        action: 'Updated Expense Split',
+        msg: `${exp.item} set to ₹${amt} (Paid by ${payerName}, split among ${exp.splitAmong.length}).`
       }, { expense: exp });
-
-      expandedExpenseId = null;
-      showToast(`💸 Saved ₹${amt} split among ${exp.splitAmong.length} member(s)!`);
+      showToast(`✅ Saved ₹${amt} split for ${exp.item}!`);
       renderAllUI();
-    }
-
-    function toggleExpenseEditDrawer(expId) {
-      expandedExpenseId = (expandedExpenseId === expId) ? null : expId;
-      renderExpensesSection();
-    }
-
-    function syncFeastOrderToLinkedExpense(order) {
-      const linkedExpId = 'exp_feast_' + order.id;
-      const payerId = order.paidBy || order.requestedById || appState.guests[0]?.id || '';
-      const sharedList = (order.sharedWith && order.sharedWith.length > 0)
-        ? [...order.sharedWith]
-        : (payerId ? [payerId] : []);
-      const expCategory = order.kind === 'Spirit'
-        ? 'Spirits & Alcohol'
-        : order.kind === 'Essential'
-          ? 'Essentials'
-          : 'Starters & Food';
-
-      const expObj = {
-        id: linkedExpId,
-        feastOrderId: order.id,
-        category: expCategory,
-        item: `${order.itemName} (${order.quantity})`,
-        paidBy: payerId,
-        amount: Number(order.amount) || 0,
-        splitAmong: sharedList,
-        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-        updatedAt: Date.now()
-      };
-
-      const existingIdx = appState.expenses.findIndex(e => e.id === linkedExpId);
-      if (existingIdx >= 0) {
-        appState.expenses[existingIdx] = expObj;
-      } else {
-        appState.expenses.unshift(expObj);
-      }
-      return expObj;
-    }
-
-    function deleteFeastOrder(orderId) {
-      const order = (appState.feastOrders || []).find(o => o.id === orderId);
-      appState.feastOrders = (appState.feastOrders || []).filter(o => o.id !== orderId);
-      const linkedExpId = 'exp_feast_' + orderId;
-      const hadExp = appState.expenses.some(e => e.id === linkedExpId);
-      appState.expenses = appState.expenses.filter(e => e.id !== linkedExpId);
-
-      if (hadExp && window.__cloudSync) {
-        window.__cloudSync.deleteExpense(linkedExpId);
-      }
-
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : (getActiveGuestObj()?.name || 'Squad'),
-        category: 'Feast & Bar',
-        action: 'Removed Item Entry',
-        msg: `Removed ${order?.itemName || 'item'} from Feast & Bar.`
-      }, { deleteFeastOrderId: orderId });
-
-      showToast('🗑️ Item removed.', 'info');
-      renderAllUI();
-    }
-
-    function renderFeastOrdersList() {
-      const container = document.getElementById('feast-orders-list');
-      const countEl = document.getElementById('feast-orders-count');
-      const sneakStrip = document.getElementById('feast-sneak-peek-strip');
-      const sneakCount = document.getElementById('feast-sneak-count');
-      if (!container) return;
-
-      const orders = appState.feastOrders || [];
-      if (countEl) countEl.textContent = orders.length;
-      if (sneakCount) sneakCount.textContent = `${orders.length} item${orders.length === 1 ? '' : 's'} planned`;
-
-      const getIcon = (kind) => kind === 'Spirit' ? '🥃' : kind === 'Essential' ? '🥤' : '🍗';
-      const getBadgeStyle = (kind) => kind === 'Spirit'
-        ? 'bg-red-100 text-red-900'
-        : kind === 'Essential'
-          ? 'bg-emerald-100 text-emerald-900'
-          : 'bg-orange-100 text-orange-900';
-
-      if (sneakStrip) {
-        if (orders.length === 0) {
-          sneakStrip.innerHTML = `<span class="text-xs text-stone-500 italic">Nothing ordered yet — add starters, spirits, or essentials above!</span>`;
-        } else {
-          sneakStrip.innerHTML = orders.map(o => `
-            <span class="px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-red-950 shadow-xs inline-flex items-center gap-1.5">
-              <span>${getIcon(o.kind)} <strong>${o.itemName}</strong> (${o.quantity})</span>
-              <span class="text-orange-700 font-extrabold">• ${o.requestedByName || 'Squad'}</span>
-            </span>
-          `).join('');
-        }
-      }
-
-      if (orders.length === 0) {
-        container.innerHTML = `
-          <div class="p-6 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center space-y-1">
-            <div class="text-2xl">🍗🥃🥤</div>
-            <p class="text-xs sm:text-sm font-black text-red-950">No starters, spirits, or essentials logged yet</p>
-            <p class="text-xs text-stone-600">Pick any item & quantity above—it will automatically show up in Expenses for splitting!</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = orders.map(order => `
-        <div class="px-4 py-3 rounded-2xl bg-amber-50/50 border border-amber-200 flex items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-2 min-w-0">
-            <span class="text-sm sm:text-base font-black text-red-950">${getIcon(order.kind)} ${order.itemName}</span>
-            <span class="px-2.5 py-0.5 rounded-full ${getBadgeStyle(order.kind)} text-xs font-extrabold">${order.quantity}</span>
-            <span class="text-[11px] font-semibold text-stone-500">• Added by ${order.requestedByName || 'Squad'}</span>
-          </div>
-          <button type="button" onclick="deleteFeastOrder('${order.id}')" title="Remove item" class="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-extrabold transition shrink-0">
-            🗑️
-          </button>
-        </div>
-      `).join('');
-    }
-
-    // ==================== EXPENSES & SPLITWISE ENGINE ====================
-    function toggleCustomSplitCheckboxes() {
-      const mode = document.getElementById('exp-split-mode')?.value || 'equal';
-      const box = document.getElementById('exp-custom-split-box');
-      if (box) {
-        box.classList.toggle('hidden', mode !== 'custom');
-      }
     }
 
     function saveExpenseForm() {
       const category = document.getElementById('exp-category')?.value || 'Other';
       const customNote = (document.getElementById('exp-custom-item-name')?.value || '').trim();
-      const item = customNote || category;
       const paidBy = document.getElementById('exp-paid-by')?.value || '';
       const splitMode = document.getElementById('exp-split-mode')?.value || 'equal';
-      const amount = parseFloat(document.getElementById('exp-amount')?.value || '0');
+      const amount = Number(document.getElementById('exp-amount')?.value || 0);
 
       if (!paidBy) {
-        showToast('Please add at least one guest before logging an expense.', 'error');
+        showToast('Add guests first before logging an expense.', 'error');
         return;
       }
-      if (!(amount > 0)) {
-        showToast('Please enter a valid expense amount in ₹.', 'error');
+      if (amount <= 0) {
+        showToast('Enter a valid expense amount.', 'error');
         return;
       }
 
       let splitAmong = [];
-      if (splitMode === 'custom') {
-        splitAmong = Array.from(document.querySelectorAll('.custom-split-cb:checked')).map(cb => cb.value);
+      if (splitMode === 'equal') {
+        const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
+        splitAmong = (confirmed.length ? confirmed : appState.guests).map(g => g.id);
       } else {
-        const confirmed = appState.guests.filter(g => g.rsvp === 'accepted').map(g => g.id);
-        splitAmong = confirmed.length > 0 ? confirmed : appState.guests.map(g => g.id);
+        splitAmong = Array.from(document.querySelectorAll('.custom-split-cb:checked')).map(cb => cb.value);
       }
 
-      if (splitAmong.length === 0) {
-        showToast('Select at least one member to split this expense.', 'error');
+      if (!splitAmong.length) {
+        showToast('Select at least one member to split with.', 'error');
         return;
       }
 
+      const itemLabel = customNote || category;
       const newExp = {
-        id: 'exp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+        id: 'exp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         category,
-        item,
+        item: itemLabel,
         paidBy,
-        amount,
+        splitMode,
         splitAmong,
-        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+        amount,
         updatedAt: Date.now()
       };
-
       appState.expenses.unshift(newExp);
+      if (document.getElementById('exp-custom-item-name')) document.getElementById('exp-custom-item-name').value = '';
+      if (document.getElementById('exp-amount')) document.getElementById('exp-amount').value = '';
+
       const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Member';
       saveAppState({
         actor: payerName,
-        category: 'Expense',
+        category: 'Expenses',
         action: 'Logged Expense',
-        msg: `${payerName} logged ₹${amount} for ${item} (${category}), split among ${splitAmong.length} member(s).`
+        msg: `${payerName} logged ₹${amount} for ${itemLabel}.`
       }, { expense: newExp });
-
-      if (document.getElementById('exp-amount')) document.getElementById('exp-amount').value = '';
-      if (document.getElementById('exp-custom-item-name')) document.getElementById('exp-custom-item-name').value = '';
-      showToast(`💸 Logged ₹${amount} for ${item}!`);
+      showToast(`💸 Logged ₹${amount} for ${itemLabel}!`);
       renderAllUI();
     }
 
     function deleteExpense(expId) {
-      const target = appState.expenses.find(e => e.id === expId);
       appState.expenses = appState.expenses.filter(e => e.id !== expId);
-
-      // If this expense came from a Feast & Bar starter, also clean up that entry
-      if (target && target.id.startsWith('exp_feast_')) {
-        const feastId = target.id.replace('exp_feast_', '');
-        appState.feastOrders = (appState.feastOrders || []).filter(o => o.id !== feastId);
-        if (window.__cloudSync) {
-          window.__cloudSync.deleteFeastOrder(feastId);
-        }
-      }
-
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : (getActiveGuestObj()?.name || 'Squad'),
-        category: 'Expense',
-        action: 'Deleted Expense',
-        msg: `Removed ${target?.item || 'an expense entry'} from the ledger.`
-      }, { deleteExpenseId: expId });
+      saveAppState({ actor: 'Squad', category: 'Expenses', action: 'Deleted Expense', msg: 'Removed an expense entry.' }, { deleteExpenseId: expId });
       showToast('🗑️ Expense removed.', 'info');
       renderAllUI();
     }
@@ -2373,16 +2217,12 @@
 
       appState.expenses.forEach(exp => {
         const amt = Number(exp.amount) || 0;
-        const members = (exp.splitAmong || []).filter(id => id in balances);
-        if (amt <= 0 || members.length === 0) return;
-
-        if (exp.paidBy in balances) {
-          balances[exp.paidBy] += amt;
-        }
-        const share = amt / members.length;
-        members.forEach(mId => {
-          balances[mId] -= share;
-        });
+        if (amt <= 0 || !exp.paidBy) return;
+        const sharers = (exp.splitAmong || []).filter(id => id in balances);
+        if (!sharers.length) return;
+        if (exp.paidBy in balances) balances[exp.paidBy] += amt;
+        const share = amt / sharers.length;
+        sharers.forEach(id => { balances[id] -= share; });
       });
 
       const debtors = [];
@@ -2396,8 +2236,7 @@
       creditors.sort((a, b) => b.amount - a.amount);
 
       const transfers = [];
-      let i = 0;
-      let j = 0;
+      let i = 0, j = 0;
       while (i < debtors.length && j < creditors.length) {
         const pay = Math.min(debtors[i].amount, creditors[j].amount);
         if (pay >= 1) {
@@ -2415,63 +2254,48 @@
       return transfers;
     }
 
-    // ==================== MASTER UI RENDERING ====================
-    function renderAdminKpiDashlets() {
-      const grid = document.getElementById('admin-kpi-grid');
-      if (!grid) return;
-      const accepted = appState.guests.filter(g => g.rsvp === 'accepted');
-      const pending = appState.guests.filter(g => g.rsvp === 'pending');
-      const declined = appState.guests.filter(g => g.rsvp === 'declined');
-      const totalSpend = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-
-      const cards = [
-        { label: 'Confirmed', val: accepted.length, color: 'bg-emerald-50 border-emerald-300 text-emerald-950' },
-        { label: 'Pending', val: pending.length, color: 'bg-amber-50 border-amber-300 text-amber-950' },
-        { label: 'Declined', val: declined.length, color: 'bg-red-50 border-red-300 text-red-950' },
-        { label: 'Starters', val: (appState.feastOrders || []).length, color: 'bg-orange-50 border-orange-300 text-orange-950' },
-        { label: 'Total Spend', val: '₹' + totalSpend.toLocaleString('en-IN'), color: 'bg-indigo-50 border-indigo-300 text-indigo-950' },
-        { label: 'Activity Logs', val: appState.logs.length, color: 'bg-stone-50 border-stone-300 text-stone-900' }
-      ];
-
-      grid.innerHTML = cards.map(c => `
-        <div class="p-3.5 rounded-2xl border ${c.color} text-center shadow-xs">
-          <div class="text-lg sm:text-xl font-black">${c.val}</div>
-          <div class="text-[11px] font-extrabold uppercase tracking-wider opacity-80">${c.label}</div>
-        </div>
-      `).join('');
-    }
-
+    // ==================== MASTER UI ORCHESTRATOR ====================
     async function renderAllUI() {
-      // Admin vs Guest Header & Tab visibility
+      // Admin vs Guest Header & Nav visibility
       const lockIcon = document.getElementById('admin-lock-icon');
       const toggleLabel = document.getElementById('admin-toggle-label');
       if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🛡️' : '🔒';
       if (toggleLabel) toggleLabel.textContent = isAdminUnlocked ? 'Host Admin' : 'Guest Mode';
 
-      ['nav-tab-rsvp', 'nav-tab-logs', 'nav-tab-admin', 'admin-home-dashlets', 'home-manage-invites-btn'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('hidden', !isAdminUnlocked);
-      });
+      document.getElementById('nav-tab-rsvp')?.classList.toggle('hidden', !isAdminUnlocked);
+      document.getElementById('nav-tab-logs')?.classList.toggle('hidden', !isAdminUnlocked);
+      document.getElementById('nav-tab-admin')?.classList.toggle('hidden', !isAdminUnlocked);
+      document.getElementById('admin-home-dashlets')?.classList.toggle('hidden', !isAdminUnlocked);
+      document.getElementById('home-manage-invites-btn')?.classList.toggle('hidden', !isAdminUnlocked);
 
-      if (isAdminUnlocked) renderAdminKpiDashlets();
-
-      // Confirmed Squad Strip (Read-only for guests; clickable switcher only for Admin)
-      const acceptedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
-      const countBadge = document.getElementById('confirmed-squad-count');
-      const squadList = document.getElementById('home-confirmed-squad-list');
-      if (countBadge) countBadge.textContent = acceptedGuests.length;
-      if (squadList) {
-        if (acceptedGuests.length === 0) {
-          squadList.innerHTML = `<span class="text-xs text-stone-500 italic">No confirmed squad members yet. Once guests accept their invite, they appear right here!</span>`;
-        } else {
-          squadList.innerHTML = acceptedGuests.map(g => {
-            const routeChip = g.fromCity ? ` • ${g.fromCity}` : '';
-            if (isAdminUnlocked) {
-              return `<button type="button" onclick="handleRoleSwitch('${g.id}')" class="px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-950 text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition"><span>✅</span><span>${g.name}${routeChip}</span></button>`;
-            }
-            return `<div class="px-3.5 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-extrabold flex items-center gap-1.5"><span>✅</span><span>${g.name}${routeChip}</span></div>`;
-          }).join('');
+      // Admin KPI Dashlets
+      if (isAdminUnlocked) {
+        const kpiGrid = document.getElementById('admin-kpi-grid');
+        const accepted = appState.guests.filter(g => g.rsvp === 'accepted').length;
+        const pending = appState.guests.filter(g => g.rsvp === 'pending').length;
+        const declined = appState.guests.filter(g => g.rsvp === 'declined').length;
+        const totalSpend = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        if (kpiGrid) {
+          kpiGrid.innerHTML = `
+            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200"><div class="text-[10px] font-black uppercase text-emerald-800">Confirmed</div><div class="text-xl font-black text-emerald-950">${accepted}</div></div>
+            <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200"><div class="text-[10px] font-black uppercase text-amber-800">Pending</div><div class="text-xl font-black text-amber-950">${pending}</div></div>
+            <div class="p-3 rounded-2xl bg-red-50 border border-red-200"><div class="text-[10px] font-black uppercase text-red-800">Declined</div><div class="text-xl font-black text-red-950">${declined}</div></div>
+            <div class="p-3 rounded-2xl bg-orange-50 border border-orange-200"><div class="text-[10px] font-black uppercase text-orange-800">Feast Items</div><div class="text-xl font-black text-orange-950">${(appState.feastOrders || []).length}</div></div>
+            <div class="p-3 rounded-2xl bg-indigo-50 border border-indigo-200"><div class="text-[10px] font-black uppercase text-indigo-800">Total Spend</div><div class="text-xl font-black text-indigo-950">₹${totalSpend.toLocaleString('en-IN')}</div></div>
+            <div class="p-3 rounded-2xl bg-stone-50 border border-stone-200"><div class="text-[10px] font-black uppercase text-stone-700">Logs</div><div class="text-xl font-black text-stone-950">${appState.logs.length}</div></div>
+          `;
         }
+      }
+
+      // Confirmed Squad Strip
+      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      const countEl = document.getElementById('confirmed-squad-count');
+      const squadListEl = document.getElementById('home-confirmed-squad-list');
+      if (countEl) countEl.textContent = String(confirmedGuests.length);
+      if (squadListEl) {
+        squadListEl.innerHTML = confirmedGuests.length
+          ? confirmedGuests.map(g => `<span class="px-3.5 py-1.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-xs font-extrabold text-emerald-950">✅ ${g.name}</span>`).join('')
+          : `<span class="text-xs text-stone-500 italic">No confirmed guests yet. Share invite links to build the squad!</span>`;
       }
 
       renderHomeGuestForms();
@@ -2479,7 +2303,9 @@
       renderRsvpList();
       renderExpensesSection();
       renderLogsSection();
-      await renderGallerySection();
+      if (!document.getElementById('tab-gallery')?.classList.contains('hidden')) {
+        await renderGallerySection();
+      }
     }
 
     function renderHomeGuestForms() {
@@ -2749,7 +2575,7 @@
         return;
       }
       grid.innerHTML = photos.map(p => {
-        const url = URL.createObjectURL(p.blob);
+        const url = URL.createObjectURL(p.resolvedBlob);
         const caption = `${p.name} • By ${p.uploadedBy}`;
         return `
           <div class="rounded-2xl overflow-hidden bg-stone-100 border border-amber-200 shadow-xs flex flex-col">

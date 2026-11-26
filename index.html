@@ -79,16 +79,16 @@
         </div>
 
         <!-- Active Session / Role Switcher & Sync -->
-        <div class="flex flex-wrap items-center gap-2.5 bg-black/25 backdrop-blur-md p-3 rounded-2xl border border-white/15">
-          <div class="flex flex-col">
-            <span class="text-[10px] uppercase tracking-wider text-amber-200/80 font-bold">Active View Mode</span>
-            <select id="role-switcher" onchange="handleRoleSwitch(this.value)" class="mt-0.5 bg-white text-red-950 text-xs sm:text-sm font-extrabold px-3 py-1.5 rounded-xl focus:outline-none cursor-pointer">
+        <div class="flex flex-col sm:flex-row sm:items-end gap-2.5 bg-black/25 backdrop-blur-md p-3 rounded-2xl border border-white/15 w-full lg:w-auto">
+          <div class="flex flex-col flex-1 sm:min-w-[210px]">
+            <label for="role-switcher" class="text-[10px] uppercase tracking-wider text-amber-200/90 font-bold mb-1">Active View Mode</label>
+            <select id="role-switcher" onchange="handleRoleSwitch(this.value)" class="h-10 w-full bg-white text-red-950 text-xs sm:text-sm font-extrabold px-3 rounded-xl focus:outline-none cursor-pointer shadow-sm">
               <option value="overview">🏠 Group Overview (Public)</option>
               <!-- Guest options populated dynamically -->
             </select>
           </div>
 
-          <button onclick="openAdminPinModal()" id="admin-lock-btn" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-extrabold text-xs sm:text-sm shadow transition flex items-center gap-1.5">
+          <button type="button" onclick="openAdminPinModal()" id="admin-lock-btn" class="h-10 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-extrabold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0">
             <span id="admin-lock-icon">🔒</span>
             <span id="admin-lock-label">Guest Mode (Unlock Admin)</span>
           </button>
@@ -115,7 +115,7 @@
         <button type="button" onclick="switchMainTab('gallery')" id="nav-gallery" style="touch-action: manipulation;" class="main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
           <span>📸</span><span>HD Photo Gallery</span>
         </button>
-        <button type="button" onclick="switchMainTab('logs')" id="nav-logs" style="touch-action: manipulation;" class="main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
+        <button type="button" onclick="switchMainTab('logs')" id="nav-logs" style="touch-action: manipulation;" class="main-nav-btn hidden cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
           <span>📜</span><span>Activity Logs</span>
         </button>
         <button type="button" onclick="switchMainTab('admin')" id="nav-admin" style="touch-action: manipulation;" class="main-nav-btn hidden cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-emerald-800 text-white shadow">
@@ -132,28 +132,61 @@
     <div class="max-w-7xl mx-auto">
 
       <!-- =================================================================== -->
-      <!-- TAB 1: HOME PAGE WITH CLICKABLE KPI DASHLETS                        -->
+      <!-- TAB 1: HOME PAGE (GUEST PERSONAL HUB & ADMIN OVERVIEW)              -->
       <!-- =================================================================== -->
       <section id="tab-home" class="main-tab-panel space-y-6">
-        
-        <!-- Route Banner -->
-        <div class="bg-white/95 backdrop-blur rounded-3xl p-5 sm:p-6 border border-amber-200 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-600">Tap any dashlet below for full breakdown pop-up</span>
-            <h2 class="text-xl sm:text-2xl font-extrabold text-red-950 mt-0.5">Sankranti 2027 Command Center</h2>
-            <p class="text-xs sm:text-sm text-amber-900/80 mt-0.5">Circuit: <strong>Jangareddygudem</strong> (Bhogi) → <strong>Kothapeta</strong> (Sankranthi) → <strong>Narsapuram</strong> (Kanuma)</p>
+
+        <!-- Festive Countdown & 3-Day Circuit Hero (Clean, Guest-Friendly) -->
+        <div class="bg-gradient-to-br from-amber-50 via-white to-orange-50 rounded-3xl p-5 sm:p-7 border-2 border-amber-300 shadow-lg flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-black uppercase tracking-wider">🪁 Sankranti 2027 Squad Hub</span>
+              <span id="sankranti-countdown-badge" class="px-3 py-1 rounded-full bg-red-900 text-amber-200 text-xs font-extrabold">⏳ Counting down to Jan 14, 2027</span>
+            </div>
+            <h2 id="home-welcome-banner-title" class="text-2xl sm:text-3xl font-black text-red-950">
+              Three Days of Bonfires, Feasts & Road Trips!
+            </h2>
+            <div class="flex flex-wrap gap-2 pt-1 text-xs font-bold">
+              <span class="px-3 py-1.5 rounded-xl bg-amber-100/90 text-amber-950 border border-amber-300">🔥 Jan 14 • Bhogi Bonfires</span>
+              <span class="px-3 py-1.5 rounded-xl bg-orange-100/90 text-orange-950 border border-orange-300">☀️ Jan 15 • Sankranthi Feast</span>
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-100/90 text-emerald-950 border border-emerald-300">🌊 Jan 16 • Kanuma Vibes</span>
+            </div>
           </div>
-          <div class="flex flex-wrap gap-2">
-            <button id="home-rsvp-btn" onclick="switchMainTab('rsvp')" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
-              + RSVP / Update Preferences
+
+          <!-- Quick Action Launchpad for Guests -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5 shrink-0">
+            <button type="button" onclick="scrollToHomeSection('home-guest-details-section')" class="p-3 rounded-2xl bg-white hover:bg-amber-50 border-2 border-amber-200 hover:border-orange-500 text-left shadow-sm transition">
+              <div class="text-xl">🎒</div>
+              <div class="text-xs font-black text-red-950 mt-1">Travel & Packing</div>
+              <div class="text-[10px] text-stone-500 font-semibold">Dates & bag checklist</div>
             </button>
-            <button onclick="switchMainTab('expenses')" class="px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs sm:text-sm font-extrabold transition">
-              💸 View / Manage Expenses
+            <button type="button" onclick="scrollToHomeSection('home-cravings-section')" class="p-3 rounded-2xl bg-white hover:bg-amber-50 border-2 border-amber-200 hover:border-orange-500 text-left shadow-sm transition">
+              <div class="text-xl">🍗🍻</div>
+              <div class="text-xs font-black text-red-950 mt-1">Starters & Spirits</div>
+              <div class="text-[10px] text-stone-500 font-semibold">Pick your favorites</div>
+            </button>
+            <button type="button" onclick="scrollToHomeSection('home-quick-expense-section')" class="p-3 rounded-2xl bg-white hover:bg-amber-50 border-2 border-amber-200 hover:border-orange-500 text-left shadow-sm transition">
+              <div class="text-xl">💸</div>
+              <div class="text-xs font-black text-red-950 mt-1">Add an Expense</div>
+              <div class="text-[10px] text-stone-500 font-semibold">Fuel, food & splits</div>
+            </button>
+            <button type="button" onclick="switchMainTab('gallery')" class="p-3 rounded-2xl bg-white hover:bg-amber-50 border-2 border-amber-200 hover:border-orange-500 text-left shadow-sm transition">
+              <div class="text-xl">📸</div>
+              <div class="text-xs font-black text-red-950 mt-1">HD Photo Vault</div>
+              <div class="text-[10px] text-stone-500 font-semibold">Upload & download HD</div>
             </button>
           </div>
         </div>
 
-        <!-- Accepted Guest's Personal Trip Details & Preferences Form on Home Page -->
+        <!-- Guest Select Prompt (Shown only when in Public Overview & not logged in as a specific guest) -->
+        <div id="home-select-profile-banner" class="bg-white rounded-3xl p-5 sm:p-6 border border-amber-200 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-red-950">👋 Tap Your Name to Open Your Personal Trip Checklist</h3>
+            <p class="text-xs text-stone-600 mt-0.5">Select your name below to confirm travel dates, tick your packing bag, pick starters & spirits, or log expenses.</p>
+          </div>
+        </div>
+
+        <!-- Accepted Guest's Personal Trip Details & Cheeky Packing Checklist on Home Page -->
         <div id="home-guest-details-section" class="hidden bg-white rounded-3xl p-5 sm:p-8 border-2 border-emerald-500 shadow-xl space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amber-100">
             <div>
@@ -205,7 +238,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
-                  <span>🎒</span><span>2. Travel Essentials Packing Checklist</span>
+                  <span>🎒</span><span>2. Essentials to Carry (Packing Checklist)</span>
                 </h4>
                 <p class="text-xs text-stone-600 mt-0.5">Tick items off as you throw them in your bag—so nobody asks to borrow toothpaste or a charger at 2 AM!</p>
               </div>
@@ -233,156 +266,210 @@
           </div>
         </div>
 
-        <!-- 6 Interactive KPI Dashlets Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Guest Interactive Section: Starters & Spirits Wishlist + Quick Expense Logger -->
+        <div id="home-guest-action-cards" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          <!-- Dashlet 1: Confirmed Guests -->
-          <div onclick="openDashletModal('guests')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-            <div class="flex items-start justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl shadow-inner">
-                👥
-              </div>
-              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-extrabold border border-emerald-200 group-hover:bg-emerald-700 group-hover:text-white transition">
-                View List →
-              </span>
+          <!-- Left (7 cols): Pick Your Starters & Spirits Wishlist -->
+          <div id="home-cravings-section" class="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-300 shadow-lg space-y-5">
+            <div class="pb-3 border-b border-amber-100">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-orange-600">Feast & Bar Wishlist</span>
+              <h3 class="text-xl font-extrabold text-red-950">🍗🍻 What Should We Stock for You?</h3>
+              <p class="text-xs text-stone-600 mt-0.5">Tap your favorite starters & spirits below so the squad knows what to order!</p>
             </div>
-            <div class="mt-4">
-              <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Confirmed Squad</div>
-              <div class="flex items-baseline gap-2 mt-1">
-                <span id="kpi-confirmed-count" class="text-4xl font-black text-red-950">0</span>
-                <span id="kpi-total-invited" class="text-sm font-bold text-amber-800">/ 0 Invited</span>
+
+            <!-- Starters Picker -->
+            <div class="bg-parchment/70 p-4 rounded-2xl border border-amber-200 space-y-3">
+              <div class="text-xs font-extrabold uppercase text-red-950">🍗 Pick Starters</div>
+              <div class="flex flex-wrap gap-1.5" id="home-starter-chips">
+                <!-- Rendered dynamically -->
               </div>
-              <p id="kpi-guests-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Loading squad status...</p>
+              <div class="flex gap-2">
+                <input id="home-custom-starter-input" type="text" placeholder="Custom starter (e.g., Natukodi Fry)..." onkeydown="if(event.key==='Enter') addCustomWishItem('starters')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950" />
+                <button type="button" onclick="addCustomWishItem('starters')" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-extrabold">+ Add</button>
+              </div>
+              <div id="home-selected-starters" class="flex flex-wrap gap-1.5 pt-1"></div>
+            </div>
+
+            <!-- Spirits Picker -->
+            <div class="bg-parchment/70 p-4 rounded-2xl border border-amber-200 space-y-3">
+              <div class="text-xs font-extrabold uppercase text-red-950">🍻 Pick Spirits / Drinks</div>
+              <div class="flex flex-wrap gap-1.5" id="home-spirit-chips">
+                <!-- Rendered dynamically -->
+              </div>
+              <div class="flex gap-2">
+                <input id="home-custom-spirit-input" type="text" placeholder="Custom drink (e.g., Jameson, Budweiser)..." onkeydown="if(event.key==='Enter') addCustomWishItem('alcohol')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950" />
+                <button type="button" onclick="addCustomWishItem('alcohol')" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold">+ Add</button>
+              </div>
+              <div id="home-selected-spirits" class="flex flex-wrap gap-1.5 pt-1"></div>
             </div>
           </div>
 
-          <!-- Dashlet 2: Travel Arrivals & Cities -->
-          <div onclick="openDashletModal('travel')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-            <div class="flex items-start justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-800 flex items-center justify-center text-2xl shadow-inner">
-                🚆
+          <!-- Right (5 cols): Quick Expense Logger Right on Home -->
+          <div id="home-quick-expense-section" class="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-300 shadow-lg space-y-4">
+            <div class="pb-3 border-b border-amber-100 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Paid for Something?</span>
+                <h3 class="text-xl font-extrabold text-red-950">💸 Quick Expense Logger</h3>
               </div>
-              <span class="px-2.5 py-1 rounded-full bg-sky-50 text-sky-800 text-xs font-extrabold border border-sky-200 group-hover:bg-sky-700 group-hover:text-white transition">
-                Schedule →
-              </span>
+              <button type="button" onclick="switchMainTab('expenses')" class="text-xs font-extrabold text-orange-700 hover:underline">Full Splitwise →</button>
             </div>
-            <div class="mt-4">
-              <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Travel & Arrival Hubs</div>
-              <div class="flex items-baseline gap-2 mt-1">
-                <span id="kpi-cities-count" class="text-4xl font-black text-red-950">0</span>
-                <span class="text-sm font-bold text-sky-800">Arrival Hubs</span>
-              </div>
-              <p id="kpi-travel-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Jangareddygudem, Kothapeta, Narsapuram...</p>
-            </div>
-          </div>
 
-          <!-- Dashlet 3: Starters & Food Tally -->
-          <div onclick="openDashletModal('food')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-            <div class="flex items-start justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-800 flex items-center justify-center text-2xl shadow-inner">
-                🍗
-              </div>
-              <span class="px-2.5 py-1 rounded-full bg-orange-50 text-orange-800 text-xs font-extrabold border border-orange-200 group-hover:bg-orange-600 group-hover:text-white transition">
-                Menu Tally →
-              </span>
-            </div>
-            <div class="mt-4">
-              <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Starters & Feast Tally</div>
-              <div class="flex items-baseline gap-2 mt-1">
-                <span id="kpi-starters-qty" class="text-4xl font-black text-red-950">0</span>
-                <span class="text-sm font-bold text-orange-800">Plates / Portions</span>
-              </div>
-              <p id="kpi-food-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Veg vs Non-Veg & item breakdown</p>
-            </div>
-          </div>
-
-          <!-- Dashlet 4: Alcohol & Brands Tally -->
-          <div onclick="openDashletModal('alcohol')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-            <div class="flex items-start justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl shadow-inner">
-                🍻
-              </div>
-              <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 text-xs font-extrabold border border-amber-300 group-hover:bg-amber-600 group-hover:text-white transition">
-                Bar Stock →
-              </span>
-            </div>
-            <div class="mt-4">
-              <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Spirits & Bar Stock</div>
-              <div class="flex items-baseline gap-2 mt-1">
-                <span id="kpi-alcohol-qty" class="text-4xl font-black text-red-950">0</span>
-                <span class="text-sm font-bold text-amber-800">Units / Bottles</span>
-              </div>
-              <p id="kpi-alcohol-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Beer, Whiskey, Vodka, Rum breakdown</p>
-            </div>
-          </div>
-
-          <!-- Dashlet 5: Total Expenses & Settlements -->
-          <div onclick="openDashletModal('expenses')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-            <div class="flex items-start justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-800 flex items-center justify-center text-2xl shadow-inner">
-                💰
-              </div>
-              <span class="px-2.5 py-1 rounded-full bg-red-50 text-red-800 text-xs font-extrabold border border-red-200 group-hover:bg-red-700 group-hover:text-white transition">
-                Settle Up →
-              </span>
-            </div>
-            <div class="mt-4">
-              <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Trip Expenses & Split</div>
-              <div class="flex items-baseline gap-2 mt-1">
-                <span id="kpi-expense-total" class="text-3xl sm:text-4xl font-black text-red-950">₹0</span>
-              </div>
-              <p id="kpi-expense-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Tap to view who pays whom</p>
-            </div>
-          </div>
-
-          <!-- Dashlet 6: HD Photo Gallery -->
-          <div onclick="openDashletModal('photos')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-            <div class="flex items-start justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center text-2xl shadow-inner">
-                📷
-              </div>
-              <span class="px-2.5 py-1 rounded-full bg-purple-50 text-purple-800 text-xs font-extrabold border border-purple-200 group-hover:bg-purple-700 group-hover:text-white transition">
-                HD Vault →
-              </span>
-            </div>
-            <div class="mt-4">
-              <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">HD Memories Vault</div>
-              <div class="flex items-baseline gap-2 mt-1">
-                <span id="kpi-photos-count" class="text-4xl font-black text-red-950">0</span>
-                <span class="text-sm font-bold text-purple-800">Original HD Pics</span>
-              </div>
-              <p id="kpi-photos-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Lossless IndexedDB storage & 1-click HD download</p>
-            </div>
-          </div>
-
-          <!-- Dashlet 7: Live Audit & Change Logs -->
-          <div onclick="switchMainTab('logs')" class="sm:col-span-2 lg:col-span-3 group cursor-pointer bg-gradient-to-r from-stone-900 via-red-950 to-stone-900 text-amber-50 rounded-3xl p-5 sm:p-6 border-2 border-amber-400/50 hover:border-amber-300 shadow-md hover:shadow-xl transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-start sm:items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl shrink-0">
-                📜
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Category</label>
+                <select id="home-exp-category" onchange="handleHomeExpenseCatChange()" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-extrabold text-red-950">
+                  <option value="Fuel">⛽ Fuel</option>
+                  <option value="Starters">🍗 Starters & Food</option>
+                  <option value="Spirits">🍻 Spirits & Alcohol</option>
+                  <option value="Essentials">🥤 Essentials (Water, Plates, Tissues)</option>
+                  <option value="Stay">🏨 Stay & Accommodation</option>
+                  <option value="Other">🧾 Other Expense</option>
+                </select>
               </div>
               <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-xs font-extrabold uppercase tracking-wider text-amber-300">Individual Change & Audit Trail</span>
-                  <span id="kpi-logs-count" class="px-2.5 py-0.5 rounded-full bg-amber-400 text-red-950 text-[11px] font-black">0 Entries</span>
-                </div>
-                <p id="kpi-latest-log" class="text-xs sm:text-sm text-amber-100/90 mt-1 font-semibold">
-                  Tracking every RSVP, preference, expense, and photo update by individual...
-                </p>
+                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Item / Option</label>
+                <select id="home-exp-option" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
               </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Note (Optional)</label>
+                <input id="home-exp-note" type="text" placeholder="e.g., Toll gate / Water cases" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/40 border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-emerald-900 mb-1">Amount Paid (₹ INR)</label>
+                <input id="home-exp-amount" type="number" min="1" step="any" placeholder="e.g., 1500" class="w-full px-3.5 py-2.5 rounded-xl bg-emerald-50/60 border-2 border-emerald-400 text-sm font-black text-red-950" />
+              </div>
+              <button type="button" onclick="saveQuickHomeExpense()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-red-800 hover:from-orange-500 hover:to-red-700 text-white font-extrabold text-sm shadow-lg transition">
+                💾 Log Expense & Split Equally
+              </button>
             </div>
-            <span class="px-4 py-2 rounded-xl bg-amber-400 text-red-950 text-xs font-extrabold self-start sm:self-center group-hover:bg-amber-300 transition shrink-0">
-              Inspect Full Audit Log →
-            </span>
           </div>
-
         </div>
 
-        <!-- Quick Squad Status Strip -->
+        <!-- ADMIN-ONLY KPI DASHLETS (Hidden for regular guests) -->
+        <div id="admin-home-dashlets-wrapper" class="hidden space-y-5">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-950 text-xs font-black uppercase tracking-wider">🛡️ Host Admin Live Metrics</span>
+            <span class="text-xs text-stone-500 font-semibold">Tap any card for breakdown</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Dashlet 1: Confirmed Guests -->
+            <div onclick="openDashletModal('guests')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
+              <div class="flex items-start justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl shadow-inner">👥</div>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-extrabold border border-emerald-200 group-hover:bg-emerald-700 group-hover:text-white transition">View List →</span>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Confirmed Squad</div>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="kpi-confirmed-count" class="text-4xl font-black text-red-950">0</span>
+                  <span id="kpi-total-invited" class="text-sm font-bold text-amber-800">/ 0 Invited</span>
+                </div>
+                <p id="kpi-guests-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Awaiting RSVPs...</p>
+              </div>
+            </div>
+
+            <!-- Dashlet 2: Travel Arrivals & Cities -->
+            <div onclick="openDashletModal('travel')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
+              <div class="flex items-start justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-800 flex items-center justify-center text-2xl shadow-inner">🚆</div>
+                <span class="px-2.5 py-1 rounded-full bg-sky-50 text-sky-800 text-xs font-extrabold border border-sky-200 group-hover:bg-sky-700 group-hover:text-white transition">Schedule →</span>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Travel & Arrival Hubs</div>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="kpi-cities-count" class="text-4xl font-black text-red-950">0</span>
+                  <span class="text-sm font-bold text-sky-800">Arrival Hubs</span>
+                </div>
+                <p id="kpi-travel-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">No arrivals confirmed yet</p>
+              </div>
+            </div>
+
+            <!-- Dashlet 3: Starters & Food Tally -->
+            <div onclick="openDashletModal('food')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
+              <div class="flex items-start justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-800 flex items-center justify-center text-2xl shadow-inner">🍗</div>
+                <span class="px-2.5 py-1 rounded-full bg-orange-50 text-orange-800 text-xs font-extrabold border border-orange-200 group-hover:bg-orange-600 group-hover:text-white transition">Wishlist & Spend →</span>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Starters Requests & Bills</div>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="kpi-starters-qty" class="text-4xl font-black text-red-950">0</span>
+                  <span class="text-sm font-bold text-orange-800">Items</span>
+                </div>
+                <p id="kpi-food-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Guest wishlist & food bills</p>
+              </div>
+            </div>
+
+            <!-- Dashlet 4: Alcohol & Brands Tally -->
+            <div onclick="openDashletModal('alcohol')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
+              <div class="flex items-start justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl shadow-inner">🍻</div>
+                <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 text-xs font-extrabold border border-amber-300 group-hover:bg-amber-600 group-hover:text-white transition">Bar Stock →</span>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Spirits Requests & Bills</div>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="kpi-alcohol-qty" class="text-4xl font-black text-red-950">0</span>
+                  <span class="text-sm font-bold text-amber-800">Items</span>
+                </div>
+                <p id="kpi-alcohol-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Guest drinks wishlist & bills</p>
+              </div>
+            </div>
+
+            <!-- Dashlet 5: Total Expenses & Settlements -->
+            <div onclick="openDashletModal('expenses')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
+              <div class="flex items-start justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-800 flex items-center justify-center text-2xl shadow-inner">💰</div>
+                <span class="px-2.5 py-1 rounded-full bg-red-50 text-red-800 text-xs font-extrabold border border-red-200 group-hover:bg-red-700 group-hover:text-white transition">Settle Up →</span>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">Trip Expenses & Split</div>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="kpi-expense-total" class="text-3xl sm:text-4xl font-black text-red-950">₹0</span>
+                </div>
+                <p id="kpi-expense-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Tap to view who pays whom</p>
+              </div>
+            </div>
+
+            <!-- Dashlet 6: HD Photo Gallery -->
+            <div onclick="openDashletModal('photos')" class="group cursor-pointer bg-white rounded-3xl p-6 border-2 border-amber-200 hover:border-orange-500 shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
+              <div class="flex items-start justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center text-2xl shadow-inner">📷</div>
+                <span class="px-2.5 py-1 rounded-full bg-purple-50 text-purple-800 text-xs font-extrabold border border-purple-200 group-hover:bg-purple-700 group-hover:text-white transition">HD Vault →</span>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-stone-500">HD Memories Vault</div>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="kpi-photos-count" class="text-4xl font-black text-red-950">0</span>
+                  <span class="text-sm font-bold text-purple-800">Original HD Pics</span>
+                </div>
+                <p id="kpi-photos-sub" class="text-xs text-stone-600 mt-2 font-medium truncate">Lossless storage & 1-click HD download</p>
+              </div>
+            </div>
+
+            <!-- Dashlet 7: Live Audit & Change Logs -->
+            <div onclick="switchMainTab('logs')" class="sm:col-span-2 lg:col-span-3 group cursor-pointer bg-gradient-to-r from-stone-900 via-red-950 to-stone-900 text-amber-50 rounded-3xl p-5 sm:p-6 border-2 border-amber-400/50 hover:border-amber-300 shadow-md hover:shadow-xl transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-start sm:items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl shrink-0">📜</div>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-amber-300">Individual Change & Audit Trail</span>
+                    <span id="kpi-logs-count" class="px-2.5 py-0.5 rounded-full bg-amber-400 text-red-950 text-[11px] font-black">0 Entries</span>
+                  </div>
+                  <p id="kpi-latest-log" class="text-xs sm:text-sm text-amber-100/90 mt-1 font-semibold">Tracking every RSVP, preference, expense, and photo update...</p>
+                </div>
+              </div>
+              <span class="px-4 py-2 rounded-xl bg-amber-400 text-red-950 text-xs font-extrabold self-start sm:self-center group-hover:bg-amber-300 transition shrink-0">Inspect Full Audit Log →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Squad Status Strip (Confirmed Members Only) -->
         <div class="bg-white/95 rounded-3xl p-5 sm:p-6 border border-amber-200 shadow-md">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base sm:text-lg font-extrabold text-red-950">Squad RSVP & Quick Simulate</h3>
-            <span class="text-xs text-amber-800 font-semibold">Click any guest to open their invite / preferences</span>
+            <h3 class="text-base sm:text-lg font-extrabold text-red-950">Confirmed Squad</h3>
+            <span class="text-xs text-amber-800 font-semibold">Tap your name to open your personal portal</span>
           </div>
           <div id="home-squad-pills" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
             <!-- Rendered dynamically -->
@@ -1006,7 +1093,7 @@
   <!-- Footer -->
   <footer class="bg-red-950 text-amber-100/80 py-5 px-4 text-center text-xs border-t border-amber-800/60">
     <p class="font-bold text-amber-200">Sankranti 2027 • #DhummuLeputunnam</p>
-    <p class="mt-1">Jangareddygudem • Kothapeta • Narsapuram</p>
+    <p class="mt-1">Bhogi • Sankranthi • Kanuma</p>
   </footer>
 
   </div><!-- End #app-shell -->
@@ -1131,56 +1218,83 @@
   <!-- APPLICATION JAVASCRIPT                                                -->
   <!-- ===================================================================== -->
   <script>
-    const STORAGE_KEY = 'sankranti_2027_trip_state_v6';
+    const STORAGE_KEY = 'sankranti_2027_trip_state_v7';
     const LEGACY_STORAGE_KEYS = [
       'sankranti_2027_reunion_state_v1',
       'sankranti_2027_reunion_state_v2',
       'sankranti_2027_reunion_state_v3',
       'sankranti_2027_reunion_state_v4',
-      'sankranti_2027_trip_state_v5'
+      'sankranti_2027_trip_state_v5',
+      'sankranti_2027_trip_state_v6'
     ];
     const DB_NAME = 'Sankranti2027HdPhotoVault';
     const DB_STORE = 'hd_photos';
 
-    const DEFAULT_PACKING_ESSENTIALS = [
+    const DEFAULT_PACKING_ITEMS = [
       { id: 'charger', label: '🔌 Mobile Charger & Power Bank (1% battery panic is real)' },
-      { id: 'camera', label: '📸 Camera / GoPro (for proof of shenanigans)' },
-      { id: 'brush', label: '🪥 Toothbrush & Toothpaste (please don’t borrow)' },
-      { id: 'shampoo', label: '🧴 Shampoo & Conditioner (for silky festival hair)' },
-      { id: 'innerwear', label: '🩲 Extra Innerwears (don’t ask why, just pack 2 extra 😜)' },
-      { id: 'ethnic', label: '👘 Traditional / Ethnic Wear & Festive Outfits' },
-      { id: 'shades', label: '🕶️ Sunglasses & Sunscreen (look cool, beat the sun)' },
-      { id: 'meds', label: '💊 Headache & Hangover Meds (future you will thank you)' },
-      { id: 'deodorant', label: '✨ Deodorant / Perfume (stay fresh after bonfires)' },
-      { id: 'slippers', label: '🩴 Comfy Slippers & Shoes (for village walks & dances)' },
-      { id: 'idcard', label: '🪪 Govt ID Card & Cash / UPI Ready' },
-      { id: 'earphones', label: '🎧 Earphones / AirPods (for travel playlists)' }
+      { id: 'camera', label: '📷 Camera / GoPro (For squad reels & candid shots)' },
+      { id: 'brush', label: '🪥 Toothbrush & Toothpaste (Please do not borrow!)' },
+      { id: 'shampoo', label: '🧴 Shampoo, Conditioner & Face Wash' },
+      { id: 'innerwear', label: '🩲 Extra Innerwears (Don’t ask why, just pack 2 extra 😜)' },
+      { id: 'outfits', label: '👕 Festive Ethnic Wear & Night Party Outfits' },
+      { id: 'shades', label: '🕶️ Sunglasses, Cap & Sunscreen' },
+      { id: 'meds', label: '💊 Headache & Hangover Meds (You’ll thank yourself!)' },
+      { id: 'flipflops', label: '🩴 Comfortable Flip-Flops & Sneakers' }
     ];
 
-    function buildDefaultPackingList() {
-      return DEFAULT_PACKING_ESSENTIALS.map(it => ({ ...it, packed: false }));
+    const QUICK_STARTER_CHOICES = [
+      'Chicken 65', 'Apollo Fish', 'Loose Prawns', 'Natukodi Fry',
+      'Mutton Pepper Fry', 'Paneer Tikka', 'Crispy Corn', 'Chilli Mushroom'
+    ];
+
+    const QUICK_SPIRIT_CHOICES = [
+      'Kingfisher Strong', 'Budweiser Magnum', 'Jameson', 'Black Dog',
+      'Ballantine’s', 'Old Monk', 'Absolut Vodka', 'Mocktails / Soft Drinks'
+    ];
+
+    function scrollToHomeSection(sectionId) {
+      switchMainTab('home');
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
     }
 
     function getDefaultState() {
+      const initialGuests = [
+        { id: 'srinu', name: 'Srinu', phone: '' },
+        { id: 'praveen', name: 'Praveen', phone: '' },
+        { id: 'pavan', name: 'Pavan', phone: '' },
+        { id: 'harsha', name: 'Harsha', phone: '' },
+        { id: 'ravi', name: 'Ravi', phone: '' },
+        { id: 'suresh', name: 'Suresh', phone: '' },
+        { id: 'vamshi', name: 'Vamshi', phone: '' },
+        { id: 'naresh', name: 'Naresh', phone: '' }
+      ];
       return {
         adminPin: '0089',
-        itemPrices: {},
-        itemSplitModes: {},
-        itemCustomSplits: {},
-        pickedChecklist: {},
-        guests: [
-          { id: 'srinu', name: 'Srinu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'praveen', name: 'Praveen', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'chandu', name: 'Chandu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kothapeta', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'pavan', name: 'Pavan', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Narsapuram', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'lella', name: 'Lella', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Tanuku', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'palla', name: 'Palla', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kirlampudi', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'palli', name: 'Palli', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'jayanth', name: 'Jayanth', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] }
-        ],
+        guests: initialGuests.map(g => ({
+          id: g.id,
+          name: g.name,
+          phone: g.phone,
+          rsvp: 'pending',
+          fromCity: '',
+          arrivalCity: 'Jangareddygudem',
+          travelDate: '2027-01-14',
+          returnDate: '2027-01-17',
+          packing: DEFAULT_PACKING_ITEMS.map(item => ({ ...item, packed: false })),
+          starters: [],
+          alcohol: []
+        })),
         expenses: [],
         activityLog: [
-          { id: 'init-log', timestamp: new Date().toLocaleString('en-IN'), actor: 'System', category: 'ADMIN', action: 'Initialized', msg: 'Sankranti 2027 workspace initialized clean.' }
+          {
+            id: 'log-init',
+            time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+            actor: 'System',
+            category: 'ADMIN',
+            action: 'Initialized',
+            msg: 'Sankranti 2027 Trip Organizer initialized (Clean Slate).'
+          }
         ]
       };
     }
@@ -1191,209 +1305,36 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return getDefaultState();
         const parsed = JSON.parse(raw);
-        const def = getDefaultState();
-        return {
-          ...def,
-          ...parsed,
-          guests: Array.isArray(parsed.guests) ? parsed.guests.map(g => ({
-            starters: [],
-            alcohol: [],
-            essentials: [],
-            cigarettes: [],
-            packingList: Array.isArray(g.packingList) && g.packingList.length ? g.packingList : buildDefaultPackingList(),
-            ...g
-          })) : def.guests,
-          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
-          activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : def.activityLog
-        };
-      } catch (e) {
-        return getDefaultState();
-      }
-    }
-// ... existing code ... -->
-    function populatePreferenceFormForGuest(guest, prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const heading = document.getElementById(p + 'pref-form-heading') || document.getElementById('home-pref-heading');
-      if (heading) heading.textContent = `${guest.name}'s Trip Confirmation & Packing Checklist`;
-
-      const fromEl = document.getElementById(p + 'pref-from-city');
-      if (fromEl) fromEl.value = guest.fromCity || '';
-
-      const tDateEl = document.getElementById(p + 'pref-travel-date');
-      if (tDateEl) tDateEl.value = guest.travelDate || '2027-01-13';
-
-      const rDateEl = document.getElementById(p + 'pref-return-date');
-      if (rDateEl) rDateEl.value = guest.returnDate || '2027-01-17';
-
-      const citySelect = document.getElementById(p + 'pref-arrival-city');
-      const customCity = document.getElementById(p + 'pref-custom-city');
-      const standardCities = ['Hyderabad', 'Tanuku', 'Narsapuram', 'Kothapeta', 'Jangareddygudem', 'Kirlampudi'];
-      if (citySelect && customCity) {
-        if (standardCities.includes(guest.arrivalCity)) {
-          citySelect.value = guest.arrivalCity;
-          customCity.classList.add('hidden');
-        } else {
-          citySelect.value = 'Others';
-          customCity.classList.remove('hidden');
-          customCity.value = guest.arrivalCity || '';
-        }
-      }
-
-      if (!Array.isArray(guest.packingList) || !guest.packingList.length) {
-        guest.packingList = buildDefaultPackingList();
-      }
-      renderGuestPackingChecklist(guest, prefix);
-    }
-
-    function toggleCustomCityInput(val, customId = 'pref-custom-city') {
-      const el = document.getElementById(customId);
-      if (!el) return;
-      if (val === 'Others') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function toggleGuestPackingItem(itemId, checked, prefix = 'rsvp') {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest || !Array.isArray(guest.packingList)) return;
-      const item = guest.packingList.find(it => it.id === itemId);
-      if (!item) return;
-      item.packed = checked;
-      saveAppState();
-      renderGuestPackingChecklist(guest, prefix);
-    }
-
-    function addCustomPackingItem(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      const input = document.getElementById(p + 'custom-pack-input');
-      const label = (input?.value || '').trim();
-      if (!label) return showToast('Type an essential item to add.', 'error');
-      if (!Array.isArray(guest.packingList)) guest.packingList = buildDefaultPackingList();
-      guest.packingList.push({
-        id: 'pack-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
-        label: '🎒 ' + label,
-        packed: false
-      });
-      input.value = '';
-      saveAppState();
-      renderGuestPackingChecklist(guest, prefix);
-      showToast('Added to your packing checklist!');
-    }
-
-    function renderGuestPackingChecklist(guest, prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const grid = document.getElementById(p + 'packing-checklist-grid');
-      const badge = document.getElementById(p + 'packing-progress');
-      const list = Array.isArray(guest.packingList) ? guest.packingList : [];
-      const packedCount = list.filter(it => it.packed).length;
-
-      if (badge) {
-        badge.textContent = `${packedCount} / ${list.length} Packed ${packedCount === list.length && list.length > 0 ? '🎉' : ''}`;
-      }
-      if (!grid) return;
-
-      grid.innerHTML = list.map(it => `
-        <label class="flex items-start gap-2.5 p-3 rounded-2xl border transition cursor-pointer select-none ${it.packed ? 'bg-emerald-50 border-emerald-400 text-emerald-950' : 'bg-white border-amber-200 text-red-950 hover:border-orange-400'}">
-          <input type="checkbox" ${it.packed ? 'checked' : ''} onchange="toggleGuestPackingItem('${it.id}', this.checked, '${prefix}')" class="mt-0.5 w-4 h-4 accent-emerald-600 cursor-pointer shrink-0" />
-          <span class="text-xs sm:text-sm font-bold leading-snug ${it.packed ? 'line-through opacity-75' : ''}">${it.label}</span>
-        </label>
-      `).join('');
-    }
-
-    function saveGuestPreferences(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      guest.fromCity = (document.getElementById(p + 'pref-from-city')?.value || '').trim();
-      guest.travelDate = document.getElementById(p + 'pref-travel-date').value;
-      guest.returnDate = document.getElementById(p + 'pref-return-date').value;
-      const cityVal = document.getElementById(p + 'pref-arrival-city').value;
-      guest.arrivalCity = cityVal === 'Others'
-        ? (document.getElementById(p + 'pref-custom-city').value.trim() || 'Others')
-        : cityVal;
-
-      const packedCount = (guest.packingList || []).filter(it => it.packed).length;
-      const totalPack = (guest.packingList || []).length;
-
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Confirmed Travel',
-        msg: `${guest.name} confirmed route (${guest.fromCity || 'Origin'} → ${guest.arrivalCity}, ${guest.travelDate} to ${guest.returnDate}) & packed ${packedCount}/${totalPack} essentials.`
-      });
-      showToast(`Travel confirmation & checklist saved for ${guest.name}!`);
-    }
-
-    function loadAppState() {
-      try {
-        LEGACY_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return getDefaultState();
-        const parsed = JSON.parse(raw);
-        const def = getDefaultState();
-        return {
-          ...def,
-          ...parsed,
-          guests: Array.isArray(parsed.guests) ? parsed.guests.map(g => ({
-            starters: [],
-            alcohol: [],
-            essentials: [],
-            cigarettes: [],
-            ...g
-          })) : def.guests,
-          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
-          activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : def.activityLog
-        };
+        if (!parsed || !Array.isArray(parsed.guests)) return getDefaultState();
+        parsed.guests.forEach(g => {
+          if (!Array.isArray(g.packing) || !g.packing.length) {
+            g.packing = DEFAULT_PACKING_ITEMS.map(item => ({ ...item, packed: false }));
+          }
+          if (!Array.isArray(g.starters)) g.starters = [];
+          if (!Array.isArray(g.alcohol)) g.alcohol = [];
+        });
+        if (!Array.isArray(parsed.expenses)) parsed.expenses = [];
+        if (!Array.isArray(parsed.activityLog)) parsed.activityLog = [];
+        return parsed;
       } catch (e) {
         return getDefaultState();
       }
     }
 
     let appState = loadAppState();
-    let isAdminUnlocked = false;
     let currentRole = 'overview';
-    let selectedRsvpGuestId = appState.guests[0]?.id || 'srinu';
+    let isAdminUnlocked = false;
+    let selectedRsvpGuestId = appState.guests[0]?.id || '';
     let editingExpenseId = null;
     let editingLogId = null;
+    let lastModalTextSummary = '';
 
-    const STARTER_MENU = {
-      'Non-Veg': [
-        'Chicken 65', 'Chilli Chicken', 'Chicken Lollipop', 'Tandoori Chicken (Half)',
-        'Apollo Fish', 'Loose Prawns', 'Mutton Pepper Fry', 'Natukodi Fry', 'Other'
-      ],
-      'Veg': [
-        'Paneer Tikka', 'Chilli Paneer', 'Crispy Corn', 'Gobi Manchurian',
-        'Hara Bhara Kabab', 'Mushroom Pepper Fry', 'Veg Spring Rolls', 'Other'
-      ]
-    };
-
-    const ALCOHOL_BRANDS = {
-      'Beer': ['Kingfisher Strong', 'Kingfisher Ultra', 'Budweiser Magnum', 'Corona Extra', 'Bira 91 White', 'Heineken', 'Other'],
-      'Whiskey': ['Jameson Irish', 'Jack Daniel’s', 'Black Dog Triple Gold', '100 Pipers', 'Teachers Highland Cream', 'Royal Stag', 'Blenders Pride', 'Other'],
-      'Vodka': ['Absolut', 'Smirnoff', 'Grey Goose', 'Magic Moments', 'Other'],
-      'Rum': ['Old Monk', 'Bacardi White', 'Captain Morgan', 'Other'],
-      'Wine': ['Sula Shiraz', 'Sula Chenin Blanc', 'Jacob’s Creek', 'Other'],
-      'Non-Alcoholic': ['Red Bull', 'Schweppes Ginger Ale', 'Fresh Lime Soda', 'Diet Coke', 'Other']
-    };
-
-    function getActiveActorName() {
-      if (isAdminUnlocked) return 'Host Admin';
-      const g = getActiveGuest();
-      return g ? g.name : 'Squad Member';
-    }
-
-    function getActiveGuest() {
-      if (currentRole === 'overview') return null;
-      return appState.guests.find(g => g.id === currentRole) || null;
-    }
-
-    function saveAppState(logEntry) {
+    function saveAppState(logEntry = null) {
       if (logEntry) {
         appState.activityLog.unshift({
-          id: 'log-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-          timestamp: new Date().toLocaleString('en-IN'),
-          actor: logEntry.actor || getActiveActorName(),
+          id: 'log-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+          time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+          actor: logEntry.actor || 'Guest',
           category: logEntry.category || 'ADMIN',
           action: logEntry.action || 'Updated',
           msg: logEntry.msg || ''
@@ -1402,7 +1343,7 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
       } catch (e) {
-        console.error('Storage save failed:', e);
+        console.error('Failed saving state:', e);
       }
       renderAllUI();
     }
@@ -1412,57 +1353,61 @@
       if (!container) return;
       const el = document.createElement('div');
       const bg = type === 'error' ? 'bg-red-800 border-red-400' : 'bg-emerald-800 border-emerald-400';
-      el.className = `${bg} text-white border px-4 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-extrabold animate-pop pointer-events-auto`;
+      el.className = `${bg} text-white px-4 py-3 rounded-2xl border shadow-xl text-xs sm:text-sm font-extrabold animate-pop pointer-events-auto max-w-sm`;
       el.textContent = message;
       container.appendChild(el);
-      setTimeout(() => {
-        el.style.opacity = '0';
-        el.style.transition = 'opacity 0.25s ease';
-        setTimeout(() => el.remove(), 260);
-      }, 3000);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function copyTextFallback(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+
+    function getActiveGuest() {
+      if (!currentRole || currentRole === 'overview') return null;
+      return appState.guests.find(g => g.id === currentRole) || null;
     }
 
     // =========================================================================
-    // 1. NAVIGATION, ROLE SWITCHER & ADMIN AUTHENTICATION
+    // 1. NAVIGATION, ROLE SWITCHER & ADMIN PIN
     // =========================================================================
-    function switchMainTab(tabId) {
+    function switchMainTab(tabName) {
       document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.add('hidden'));
-      const target = document.getElementById('tab-' + tabId);
+      const target = document.getElementById('tab-' + tabName);
       if (target) target.classList.remove('hidden');
 
       document.querySelectorAll('.main-nav-btn').forEach(btn => {
-        if (btn.id === 'nav-admin') {
-          btn.className = 'main-nav-btn ' + (isAdminUnlocked ? '' : 'hidden ') +
-            'cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 ' +
-            (tabId === 'admin' ? 'bg-emerald-950 text-amber-300 ring-2 ring-amber-400 shadow' : 'bg-emerald-800 text-white shadow');
-        } else if (btn.id === 'nav-' + tabId) {
-          btn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow';
-        } else {
-          const isHidden = btn.classList.contains('hidden');
-          btn.className = 'main-nav-btn ' + (isHidden ? 'hidden ' : '') +
-            'cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200';
-        }
+        if (btn.id === 'nav-admin') return;
+        btn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200';
       });
+      const activeBtn = document.getElementById('nav-' + tabName);
+      if (activeBtn && tabName !== 'admin') {
+        activeBtn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow';
+      }
 
-      if (tabId === 'rsvp') renderRsvpSection();
-      if (tabId === 'expenses') renderExpensesSection();
-      if (tabId === 'gallery') renderGallerySection();
-      if (tabId === 'logs') renderLogsSection();
-      if (tabId === 'admin') renderAdminSection();
+      if (tabName === 'gallery') renderGallerySection();
+      if (tabName === 'logs') renderLogsSection();
+      if (tabName === 'admin' && isAdminUnlocked) renderAdminSection();
     }
 
     function handleRoleSwitch(val) {
       currentRole = val;
       if (val !== 'overview') {
         selectedRsvpGuestId = val;
-        const g = appState.guests.find(x => x.id === val);
-        if (g && g.rsvp !== 'accepted' && !isAdminUnlocked) {
-          openInviteGateForGuest(g);
+        const guest = appState.guests.find(g => g.id === val);
+        if (guest && guest.rsvp !== 'accepted' && !isAdminUnlocked) {
+          openInviteGateForGuest(guest);
           return;
         }
       }
       renderAllUI();
-      showToast(val === 'overview' ? 'Switched to Group Overview' : `Viewing as ${getActiveActorName()}`);
     }
 
     function openAdminPinModal() {
@@ -1470,9 +1415,10 @@
         switchMainTab('admin');
         return;
       }
+      const modal = document.getElementById('admin-pin-modal');
       const input = document.getElementById('admin-pin-input');
       if (input) input.value = '';
-      document.getElementById('admin-pin-modal')?.classList.remove('hidden');
+      modal?.classList.remove('hidden');
       setTimeout(() => input?.focus(), 50);
     }
 
@@ -1482,14 +1428,12 @@
 
     function verifyAdminPin() {
       const entered = (document.getElementById('admin-pin-input')?.value || '').trim();
-      if (entered === (appState.adminPin || '0089')) {
+      if (entered === String(appState.adminPin || '0089')) {
         isAdminUnlocked = true;
         closeAdminPinModal();
-        document.getElementById('app-shell')?.classList.remove('hidden');
-        document.getElementById('invite-gate-modal')?.classList.add('hidden');
+        showToast('Host Admin Mode Unlocked! 🛡️');
         renderAllUI();
         switchMainTab('admin');
-        showToast('Host Admin unlocked!');
       } else {
         showToast('Incorrect Admin PIN.', 'error');
       }
@@ -1497,160 +1441,55 @@
 
     function logoutAdmin() {
       isAdminUnlocked = false;
-      renderAllUI();
+      showToast('Admin Mode Locked 🔒');
       switchMainTab('home');
-      showToast('Admin mode locked.');
+      renderAllUI();
     }
 
     function changeAdminPin() {
-      if (!isAdminUnlocked) return;
       const newPin = (document.getElementById('admin-new-pin')?.value || '').trim();
-      if (!/^\d{4,8}$/.test(newPin)) {
-        return showToast('Enter a valid 4 to 8 digit numeric PIN.', 'error');
-      }
+      if (newPin.length < 4) return showToast('Enter at least 4 digits.', 'error');
       appState.adminPin = newPin;
       document.getElementById('admin-new-pin').value = '';
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Changed PIN',
-        msg: 'Host Admin updated the security PIN.'
-      });
-      showToast('Admin PIN updated successfully!');
+      saveAppState({ actor: 'Host Admin', category: 'ADMIN', action: 'PIN Updated', msg: 'Host Admin security PIN updated.' });
+      showToast('Admin PIN updated!');
     }
 
     // =========================================================================
-    // 2. INVITE GATE, WHATSAPP INVITES, PHONE DIRECTORY & RSVP HANDLERS
+    // 2. INVITATION GATE & CELEBRATION POP-UP
     // =========================================================================
-    function normalizeIndianPhone(raw) {
-      const digits = String(raw || '').replace(/\D/g, '');
-      if (!digits) return '';
-      if (digits.length === 10) return '91' + digits;
-      return digits;
-    }
+    function openInviteGateForGuest(guest) {
+      const shell = document.getElementById('app-shell');
+      const modal = document.getElementById('invite-gate-modal');
+      const title = document.getElementById('invite-gate-title');
+      const body = document.getElementById('invite-gate-body');
+      if (shell) shell.classList.add('hidden');
+      if (title) title.textContent = `Hey ${guest.name}!`;
 
-    function getPersonalInviteLink(guest) {
-      const base = window.location.href.split('?')[0].split('#')[0];
-      return `${base}?invite=${encodeURIComponent(guest.id)}`;
-    }
-
-    function getWhatsAppInviteUrl(guest) {
-      const link = getPersonalInviteLink(guest);
-      const msg = [
-        `Hey ${guest.name}! Sankranti is around the corner. Just accept the invite. No excuses, no 'boss didn't approve leave,' and definitely no cancelling last minute! (#DhummuLeputunnam)`,
-        ``,
-        `Tap your invite link below to accept & confirm your travel dates:`,
-        link
-      ].join('\n');
-      const phone = normalizeIndianPhone(guest.phone);
-      return phone
-        ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
-        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    }
-
-    function copyInviteLink(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      const link = getPersonalInviteLink(guest);
-      const ta = document.createElement('textarea');
-      ta.value = link;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast(`Invite link copied for ${guest.name}!`);
-    }
-
-    async function pickContactFromMobile(targetMode, guestId) {
-      if (navigator.contacts && typeof navigator.contacts.select === 'function') {
-        try {
-          const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
-          if (contacts && contacts.length) {
-            const cName = (contacts[0].name && contacts[0].name[0]) || '';
-            const cTel = normalizeIndianPhone((contacts[0].tel && contacts[0].tel[0]) || '');
-            if (targetMode === 'admin') {
-              if (cName) document.getElementById('admin-new-guest-name').value = cName;
-              if (cTel) document.getElementById('admin-new-guest-phone').value = cTel;
-              showToast(`Pulled ${cName || 'contact'} from phonebook!`);
-            } else if (guestId) {
-              const g = appState.guests.find(x => x.id === guestId);
-              if (g && cTel) {
-                g.phone = cTel;
-                saveAppState({
-                  actor: 'Host Admin',
-                  category: 'ADMIN',
-                  action: 'Updated Phone',
-                  msg: `Saved phone number for ${g.name} from contacts.`
-                });
-                showToast(`Saved ${g.name}'s number!`);
-              }
-            }
-          }
-          return;
-        } catch (err) {
-          console.warn('Contact picker cancelled or unavailable:', err);
+      if (body) {
+        if (guest.rsvp === 'declined' || guest.rsvp === 'exited') {
+          body.innerHTML = `
+            <p class="text-sm text-stone-700 font-semibold">You previously marked your invite as <span class="text-red-700 font-black uppercase">${guest.rsvp}</span>.</p>
+            <p class="text-xs text-stone-500">Changed your mind? Tap below to jump back in!</p>
+            <button type="button" onclick="acceptInviteFromGate('${guest.id}')" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 text-white font-black text-sm shadow-lg">✅ Accept Invitation Now</button>
+          `;
+        } else {
+          body.innerHTML = `
+            <p class="text-sm sm:text-base text-stone-700 font-semibold leading-relaxed">
+              You’re invited to <strong class="text-red-950">Sankranti 2027</strong> (<span class="text-orange-700 font-black">#DhummuLeputunnam</span>)! Accept your invite to confirm your travel dates, packing bag, starters & spirits wishlist.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button type="button" onclick="acceptInviteFromGate('${guest.id}')" class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm shadow-lg transition">
+                ✅ Accept Invitation
+              </button>
+              <button type="button" onclick="declineInviteFromGate('${guest.id}')" class="py-3.5 px-5 rounded-2xl bg-stone-200 hover:bg-red-100 text-stone-800 hover:text-red-900 font-extrabold text-sm transition">
+                ❌ Decline
+              </button>
+            </div>
+          `;
         }
       }
-      if (targetMode === 'admin') {
-        document.getElementById('admin-new-guest-phone')?.focus();
-        showToast('Direct phonebook access is supported on mobile Chrome/Android. Enter number manually here.');
-      } else if (guestId) {
-        selectedRsvpGuestId = guestId;
-        switchMainTab('rsvp');
-        setTimeout(() => document.getElementById('rsvp-phone-input')?.focus(), 80);
-        showToast('Enter or paste mobile number in the box below.');
-      }
-    }
-
-    function saveGuestPhone(guestId) {
-      const g = appState.guests.find(x => x.id === guestId);
-      if (!g) return;
-      const raw = document.getElementById('rsvp-phone-input')?.value || '';
-      g.phone = normalizeIndianPhone(raw);
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Saved Phone',
-        msg: `Updated phone directory entry for ${g.name}.`
-      });
-      showToast(`Phone saved for ${g.name}!`);
-    }
-
-    function openInviteGateForGuest(guest) {
-      const modal = document.getElementById('invite-gate-modal');
-      const shell = document.getElementById('app-shell');
-      const titleEl = document.getElementById('invite-gate-title');
-      const bodyEl = document.getElementById('invite-gate-body');
-      if (!modal || !bodyEl) return;
-
-      if (shell) shell.classList.add('hidden');
-      modal.classList.remove('hidden');
-      if (titleEl) titleEl.textContent = `Hey ${guest.name}!`;
-
-      if (guest.rsvp === 'exited' || guest.rsvp === 'declined') {
-        bodyEl.innerHTML = `
-          <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-950 text-xs sm:text-sm font-bold">
-            Your invitation status is currently marked as <span class="uppercase underline">${guest.rsvp}</span>. Contact Host Admin if you'd like to rejoin Sankranti 2027!
-          </div>
-          <button type="button" onclick="openAdminPinModal()" class="w-full py-3 rounded-2xl bg-stone-800 text-amber-200 text-xs font-extrabold">
-            🛡️ Host Admin Override
-          </button>
-        `;
-      } else {
-        bodyEl.innerHTML = `
-          <p class="text-sm text-stone-700 font-semibold leading-relaxed">
-            You’re invited to <strong>Sankranti 2027</strong> (Jangareddygudem • Kothapeta • Narsapuram). Ready to lock in your spot?
-          </p>
-          <div class="flex flex-col gap-2.5 pt-2">
-            <button type="button" onclick="acceptInviteFromGate('${guest.id}')" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm sm:text-base shadow-lg transition">
-              ✅ Accept Invitation
-            </button>
-            <button type="button" onclick="declineInviteFromGate('${guest.id}')" class="w-full py-3 px-6 rounded-2xl bg-red-100 hover:bg-red-200 text-red-900 font-extrabold text-xs sm:text-sm transition">
-              ❌ Decline
-            </button>
-          </div>
-        `;
-      }
+      modal?.classList.remove('hidden');
     }
 
     function acceptInviteFromGate(guestId) {
@@ -1659,7 +1498,6 @@
       guest.rsvp = 'accepted';
       currentRole = guest.id;
       selectedRsvpGuestId = guest.id;
-
       document.getElementById('invite-gate-modal')?.classList.add('hidden');
       document.getElementById('app-shell')?.classList.remove('hidden');
 
@@ -1670,10 +1508,10 @@
         msg: `${guest.name} accepted the Sankranti 2027 invitation!`
       });
 
-      switchMainTab('home');
       const welcomeTitle = document.getElementById('welcome-guest-name');
       if (welcomeTitle) welcomeTitle.textContent = `Welcome aboard! ${guest.name}`;
       document.getElementById('welcome-rsvp-modal')?.classList.remove('hidden');
+      switchMainTab('home');
     }
 
     function declineInviteFromGate(guestId) {
@@ -1691,24 +1529,65 @@
 
     function closeWelcomeModal() {
       document.getElementById('welcome-rsvp-modal')?.classList.add('hidden');
-      const formSec = document.getElementById('home-guest-details-section');
-      if (formSec) {
-        formSec.classList.remove('hidden');
-        formSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      scrollToHomeSection('home-guest-details-section');
     }
 
-    function confirmGuestExit(guestId) {
+    // =========================================================================
+    // 3. RSVP, WHATSAPP DIRECTORY & PACKING CHECKLIST
+    // =========================================================================
+    function formatIndianPhone(raw) {
+      const digits = String(raw || '').replace(/\D/g, '');
+      if (digits.length === 10) return '91' + digits;
+      return digits;
+    }
+
+    function getInviteLinkForGuest(guest) {
+      const base = window.location.origin + window.location.pathname;
+      return `${base}?invite=${encodeURIComponent(guest.id)}`;
+    }
+
+    function getWhatsAppInviteUrl(guest) {
+      const link = getInviteLinkForGuest(guest);
+      const msg = `Hey ${guest.name}! Sankranti is around the corner. Just accept the invite. No excuses, no 'boss didn't approve leave,' and definitely no cancelling last minute! (#DhummuLeputunnam)\n\nTap to accept: ${link}`;
+      const phone = formatIndianPhone(guest.phone);
+      return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    }
+
+    function copyInviteLink(guestId) {
       const guest = appState.guests.find(g => g.id === guestId);
       if (!guest) return;
-      guest.rsvp = 'exited';
-      saveAppState({
-        actor: guest.name,
-        category: 'RSVP',
-        action: 'Exited Trip',
-        msg: `${guest.name} exited Sankranti 2027.`
-      });
-      openInviteGateForGuest(guest);
+      copyTextFallback(getInviteLinkForGuest(guest));
+      showToast(`Invite link copied for ${guest.name}!`);
+    }
+
+    async function pickContactFromMobile(context) {
+      try {
+        if ('contacts' in navigator && 'ContactsManager' in window) {
+          const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+          if (contacts && contacts.length) {
+            const cName = (contacts[0].name && contacts[0].name[0]) || '';
+            const cTel = (contacts[0].tel && contacts[0].tel[0]) || '';
+            if (context === 'admin') {
+              if (cName) document.getElementById('admin-new-guest-name').value = cName;
+              if (cTel) document.getElementById('admin-new-guest-phone').value = formatIndianPhone(cTel);
+              showToast(`Pulled ${cName || 'contact'} from phonebook!`);
+            } else {
+              const g = appState.guests.find(x => x.id === selectedRsvpGuestId);
+              if (g && cTel) {
+                g.phone = formatIndianPhone(cTel);
+                saveAppState({ actor: 'Host Admin', category: 'RSVP', action: 'Saved Phone', msg: `Updated phone for ${g.name}.` });
+                showToast(`Saved number for ${g.name}!`);
+              }
+            }
+          }
+        } else {
+          showToast('Direct phonebook picker works on mobile Chrome/Android. Enter number manually here.');
+          const targetInput = context === 'admin' ? document.getElementById('admin-new-guest-phone') : document.getElementById('rsvp-phone-input');
+          targetInput?.focus();
+        }
+      } catch (e) {
+        showToast('Could not read contacts—enter phone manually.', 'error');
+      }
     }
 
     function selectGuestForRsvp(guestId) {
@@ -1716,45 +1595,169 @@
       renderRsvpSection();
     }
 
-    function renderRsvpSection() {
-      const selectEl = document.getElementById('rsvp-guest-select');
-      if (selectEl) {
-        selectEl.innerHTML = appState.guests.map(g =>
-          `<option value="${g.id}" ${g.id === selectedRsvpGuestId ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`
-        ).join('');
-      }
+    function saveRsvpGuestPhone(guestId) {
+      const g = appState.guests.find(x => x.id === guestId);
+      const val = document.getElementById('rsvp-phone-input')?.value || '';
+      if (!g) return;
+      g.phone = formatIndianPhone(val);
+      saveAppState({ actor: 'Host Admin', category: 'RSVP', action: 'Updated Phone', msg: `Saved WhatsApp number for ${g.name}.` });
+      showToast(`Saved WhatsApp number for ${g.name}!`);
+    }
 
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || appState.guests[0];
+    function setGuestRsvpStatus(guestId, status) {
+      const g = appState.guests.find(x => x.id === guestId);
+      if (!g) return;
+      g.rsvp = status;
+      if (status === 'accepted') {
+        currentRole = g.id;
+      }
+      saveAppState({
+        actor: g.name,
+        category: 'RSVP',
+        action: `RSVP ${status}`,
+        msg: `${g.name} marked invite status as ${status.toUpperCase()}.`
+      });
+      showToast(`${g.name}: ${status.toUpperCase()}`);
+    }
+
+    function toggleCustomCityInput(val, customInputId = 'pref-custom-city') {
+      const el = document.getElementById(customInputId);
+      if (!el) return;
+      if (val === 'Others') el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function togglePackingItem(itemId) {
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || getActiveGuest();
+      if (!guest) return;
+      const item = (guest.packing || []).find(p => p.id === itemId);
+      if (!item) return;
+      item.packed = !item.packed;
+      saveAppState();
+    }
+
+    function addCustomPackingItem(prefix = 'home') {
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || getActiveGuest();
+      if (!guest) return;
+      const input = document.getElementById(prefix === 'home' ? 'home-custom-pack-input' : 'custom-pack-input');
+      const label = (input?.value || '').trim();
+      if (!label) return showToast('Enter an item name first.', 'error');
+      guest.packing.push({ id: 'pack-' + Date.now(), label: '🎒 ' + label, packed: false });
+      input.value = '';
+      saveAppState();
+      showToast('Added to your packing checklist!');
+    }
+
+    function renderPackingGrid(guest, prefix = 'home') {
+      const grid = document.getElementById(prefix === 'home' ? 'home-packing-checklist-grid' : 'packing-checklist-grid');
+      const prog = document.getElementById(prefix === 'home' ? 'home-packing-progress' : 'packing-progress');
+      const list = guest.packing || [];
+      const packedCount = list.filter(x => x.packed).length;
+      if (prog) prog.textContent = `${packedCount} / ${list.length} Packed`;
+      if (grid) {
+        grid.innerHTML = list.map(item => `
+          <label class="flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition ${item.packed ? 'bg-emerald-50 border-emerald-400 text-emerald-950' : 'bg-white border-amber-200 text-red-950 hover:border-orange-400'}">
+            <input type="checkbox" ${item.packed ? 'checked' : ''} onchange="togglePackingItem('${item.id}')" class="mt-0.5 w-4 h-4 accent-emerald-600 rounded cursor-pointer" />
+            <span class="text-xs font-bold leading-snug ${item.packed ? 'line-through opacity-75' : ''}">${item.label}</span>
+          </label>
+        `).join('');
+      }
+    }
+
+    function populatePreferenceFormForGuest(guest, prefix = 'rsvp') {
+      const fromEl = document.getElementById(prefix === 'home' ? 'home-pref-from-city' : 'pref-from-city');
+      const arrEl = document.getElementById(prefix === 'home' ? 'home-pref-arrival-city' : 'pref-arrival-city');
+      const custEl = document.getElementById(prefix === 'home' ? 'home-pref-custom-city' : 'pref-custom-city');
+      const tDateEl = document.getElementById(prefix === 'home' ? 'home-pref-travel-date' : 'pref-travel-date');
+      const rDateEl = document.getElementById(prefix === 'home' ? 'home-pref-return-date' : 'pref-return-date');
+
+      if (fromEl && document.activeElement !== fromEl) fromEl.value = guest.fromCity || '';
+      if (tDateEl && document.activeElement !== tDateEl) tDateEl.value = guest.travelDate || '2027-01-14';
+      if (rDateEl && document.activeElement !== rDateEl) rDateEl.value = guest.returnDate || '2027-01-17';
+
+      if (arrEl) {
+        const standardCities = ['Jangareddygudem', 'Kothapeta', 'Narsapuram', 'Tanuku', 'Kirlampudi', 'Hyderabad'];
+        if (!guest.arrivalCity || standardCities.includes(guest.arrivalCity)) {
+          arrEl.value = guest.arrivalCity || 'Jangareddygudem';
+          custEl?.classList.add('hidden');
+        } else {
+          arrEl.value = 'Others';
+          if (custEl) {
+            custEl.classList.remove('hidden');
+            if (document.activeElement !== custEl) custEl.value = guest.arrivalCity;
+          }
+        }
+      }
+      renderPackingGrid(guest, prefix);
+    }
+
+    function saveGuestPreferences(prefix = 'rsvp') {
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || getActiveGuest();
       if (!guest) return;
 
+      const fromVal = (document.getElementById(prefix === 'home' ? 'home-pref-from-city' : 'pref-from-city')?.value || '').trim();
+      const arrSel = document.getElementById(prefix === 'home' ? 'home-pref-arrival-city' : 'pref-arrival-city')?.value || 'Jangareddygudem';
+      const custCity = (document.getElementById(prefix === 'home' ? 'home-pref-custom-city' : 'pref-custom-city')?.value || '').trim();
+      const tDate = document.getElementById(prefix === 'home' ? 'home-pref-travel-date' : 'pref-travel-date')?.value || '2027-01-14';
+      const rDate = document.getElementById(prefix === 'home' ? 'home-pref-return-date' : 'pref-return-date')?.value || '2027-01-17';
+
+      guest.fromCity = fromVal;
+      guest.arrivalCity = arrSel === 'Others' && custCity ? custCity : arrSel;
+      guest.travelDate = tDate;
+      guest.returnDate = rDate;
+
+      saveAppState({
+        actor: guest.name,
+        category: 'PREFS',
+        action: 'Saved Travel Details',
+        msg: `${guest.name} confirmed route: ${guest.fromCity || 'TBD'} → ${guest.arrivalCity} (${guest.travelDate} to ${guest.returnDate}).`
+      });
+      showToast(`Saved travel & packing confirmation for ${guest.name}! 🎉`);
+    }
+
+    function renderRsvpSection() {
+      const sel = document.getElementById('rsvp-guest-select');
+      if (sel) {
+        sel.innerHTML = appState.guests.map(g => `<option value="${g.id}" ${g.id === selectedRsvpGuestId ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`).join('');
+      }
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || appState.guests[0];
       const box = document.getElementById('rsvp-invite-box');
       const formContainer = document.getElementById('preferences-form-container');
+      if (!guest || !box) return;
 
-      if (box) {
-        box.innerHTML = `
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-lg sm:text-xl font-extrabold text-red-950">${guest.name}</h3>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${guest.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-200 text-red-950'}">${guest.rsvp}</span>
-              </div>
-              <p class="text-xs text-stone-600 break-all">Personal Link: <span class="font-mono text-red-900">${getPersonalInviteLink(guest)}</span></p>
+      const waUrl = getWhatsAppInviteUrl(guest);
+      box.innerHTML = `
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-xl font-black text-red-950">${guest.name}</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${guest.rsvp === 'accepted' ? 'bg-emerald-200 text-emerald-950' : 'bg-amber-200 text-amber-950'}">${guest.rsvp}</span>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <input id="rsvp-phone-input" type="tel" value="${guest.phone || ''}" placeholder="Phone (e.g. 9876543210)" class="px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950 w-40" />
-              <button type="button" onclick="saveGuestPhone('${guest.id}')" class="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold">💾 Save #</button>
-              <button type="button" onclick="pickContactFromMobile('rsvp', '${guest.id}')" class="px-3 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-extrabold">📱 Contacts</button>
-              <a href="${getWhatsAppInviteUrl(guest)}" target="_blank" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">📲 Send WhatsApp</a>
-              <button type="button" onclick="copyInviteLink('${guest.id}')" class="px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-amber-950 text-xs font-extrabold">🔗 Copy Link</button>
-              ${guest.rsvp !== 'accepted' ? `<button type="button" onclick="acceptInviteFromGate('${guest.id}')" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-extrabold shadow">✅ Accept Invite</button>` : ''}
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <input id="rsvp-phone-input" type="tel" value="${guest.phone || ''}" placeholder="WhatsApp No. (e.g., 9876543210)" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950" />
+              <button type="button" onclick="saveRsvpGuestPhone('${guest.id}')" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold">Save No.</button>
+              <button type="button" onclick="pickContactFromMobile('rsvp')" class="px-3 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-extrabold">📱 Pull from Contacts</button>
             </div>
           </div>
-        `;
-      }
+          <div class="flex flex-wrap items-center gap-2">
+            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow flex items-center gap-1.5">
+              <span>📲</span><span>Send WhatsApp Invite</span>
+            </a>
+            <button type="button" onclick="copyInviteLink('${guest.id}')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold">
+              🔗 Copy Invite Link
+            </button>
+            ${guest.rsvp !== 'accepted'
+              ? `<button type="button" onclick="setGuestRsvpStatus('${guest.id}', 'accepted')" class="px-4 py-2.5 rounded-xl bg-red-800 hover:bg-red-700 text-white text-xs font-extrabold shadow">✅ Accept Invite</button>`
+              : `<button type="button" onclick="setGuestRsvpStatus('${guest.id}', 'declined')" class="px-3.5 py-2.5 rounded-xl bg-stone-200 hover:bg-red-100 text-stone-800 text-xs font-extrabold">Mark Declined</button>`}
+          </div>
+        </div>
+      `;
 
       if (formContainer) {
         if (guest.rsvp === 'accepted') {
           formContainer.classList.remove('hidden');
+          const heading = document.getElementById('pref-form-heading');
+          if (heading) heading.textContent = `${guest.name}'s Travel Confirmation & Packing Checklist`;
           populatePreferenceFormForGuest(guest, 'rsvp');
         } else {
           formContainer.classList.add('hidden');
@@ -1762,33 +1765,417 @@
       }
     }
 
-    function getAggregatedRequestedItems() {
-      const map = new Map();
-      appState.guests.filter(g => g.rsvp === 'accepted').forEach(g => {
-        (g.starters || []).forEach(it => {
-          const key = `Starter:${it.name}`;
-          const prev = map.get(key) || { category: 'Starter', label: it.name, totalQty: 0 };
-          prev.totalQty += Number(it.qty) || 1;
-          map.set(key, prev);
-        });
-        (g.alcohol || []).forEach(it => {
-          const key = `Alcohol:${it.brand}`;
-          const prev = map.get(key) || { category: it.category || 'Spirit', label: it.brand, totalQty: 0 };
-          prev.totalQty += Number(it.qty) || 1;
-          map.set(key, prev);
-        });
-        (g.essentials || []).forEach(it => {
-          const key = `Essential:${it.name}`;
-          const prev = map.get(key) || { category: 'Essential', label: it.name, totalQty: 0 };
-          prev.totalQty += Number(it.qty) || 1;
-          map.set(key, prev);
-        });
+    function toggleWishChip(type, label) {
+      const guest = getActiveGuest();
+      if (!guest) return;
+      if (type === 'starters') {
+        if (!Array.isArray(guest.starters)) guest.starters = [];
+        const idx = guest.starters.findIndex(x => x.name === label);
+        if (idx >= 0) guest.starters.splice(idx, 1);
+        else guest.starters.push({ name: label, qty: 1 });
+      } else {
+        if (!Array.isArray(guest.alcohol)) guest.alcohol = [];
+        const idx = guest.alcohol.findIndex(x => x.brand === label);
+        if (idx >= 0) guest.alcohol.splice(idx, 1);
+        else guest.alcohol.push({ category: 'Spirit', brand: label, qty: 1 });
+      }
+      saveAppState({
+        actor: guest.name,
+        category: 'PREFS',
+        action: 'Updated Wishlist',
+        msg: `${guest.name} updated ${type === 'starters' ? 'starter' : 'spirits'} choice: ${label}.`
       });
-      return Array.from(map.values());
+    }
+
+    function addCustomWishItem(type) {
+      const guest = getActiveGuest();
+      if (!guest) return;
+      const inputId = type === 'starters' ? 'home-custom-starter-input' : 'home-custom-spirit-input';
+      const input = document.getElementById(inputId);
+      const val = (input?.value || '').trim();
+      if (!val) return showToast('Type an item name first.', 'error');
+      toggleWishChip(type, val);
+      input.value = '';
+    }
+
+    function renderHomeGuestWishlist(guest) {
+      const sChips = document.getElementById('home-starter-chips');
+      const aChips = document.getElementById('home-spirit-chips');
+      const sSel = document.getElementById('home-selected-starters');
+      const aSel = document.getElementById('home-selected-spirits');
+
+      const chosenStarters = (guest.starters || []).map(x => x.name);
+      const chosenSpirits = (guest.alcohol || []).map(x => x.brand);
+
+      if (sChips) {
+        sChips.innerHTML = QUICK_STARTER_CHOICES.map(item => {
+          const active = chosenStarters.includes(item);
+          return `<button type="button" onclick="toggleWishChip('starters', '${item.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ${active ? 'bg-orange-600 text-white border-orange-700 shadow' : 'bg-white text-red-950 border-amber-300 hover:border-orange-500'}">${active ? '✓ ' : '+ '}${item}</button>`;
+        }).join('');
+      }
+      if (aChips) {
+        aChips.innerHTML = QUICK_SPIRIT_CHOICES.map(item => {
+          const active = chosenSpirits.includes(item);
+          return `<button type="button" onclick="toggleWishChip('alcohol', '${item.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ${active ? 'bg-amber-600 text-white border-amber-700 shadow' : 'bg-white text-red-950 border-amber-300 hover:border-amber-500'}">${active ? '✓ ' : '+ '}${item}</button>`;
+        }).join('');
+      }
+      if (sSel) {
+        sSel.innerHTML = chosenStarters.length
+          ? chosenStarters.map(n => `<span class="px-2.5 py-1 rounded-full bg-orange-100 text-orange-950 text-[11px] font-black">🍗 ${n}</span>`).join('')
+          : `<span class="text-[11px] text-stone-400 italic">No starters picked yet.</span>`;
+      }
+      if (aSel) {
+        aSel.innerHTML = chosenSpirits.length
+          ? chosenSpirits.map(n => `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-950 text-[11px] font-black">🍻 ${n}</span>`).join('')
+          : `<span class="text-[11px] text-stone-400 italic">No spirits picked yet.</span>`;
+      }
+    }
+
+    function handleHomeExpenseCatChange() {
+      const cat = document.getElementById('home-exp-category')?.value || 'Fuel';
+      const config = EXPENSE_CATEGORY_OPTIONS[cat] || EXPENSE_CATEGORY_OPTIONS.Other;
+      const optEl = document.getElementById('home-exp-option');
+      if (optEl) {
+        optEl.innerHTML = config.options.map(o => `<option value="${o}">${o}</option>`).join('');
+      }
+    }
+
+    function saveQuickHomeExpense() {
+      const guest = getActiveGuest();
+      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      if (!guest || !confirmedGuests.length) return showToast('Accept your invite first to log expenses.', 'error');
+
+      const cat = document.getElementById('home-exp-category')?.value || 'Fuel';
+      const option = document.getElementById('home-exp-option')?.value || '';
+      const note = (document.getElementById('home-exp-note')?.value || '').trim();
+      const amount = parseFloat(document.getElementById('home-exp-amount')?.value);
+      if (!amount || amount <= 0) return showToast('Enter a valid amount in ₹.', 'error');
+
+      const desc = `[${cat}] ${option}${note ? ' — ' + note : ''}`;
+      appState.expenses.unshift({
+        id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+        category: cat,
+        option,
+        note,
+        desc,
+        paidBy: guest.id,
+        splitMode: 'equal',
+        splitBetween: confirmedGuests.map(g => g.id),
+        amount,
+        date: new Date().toISOString().slice(0, 10)
+      });
+
+      document.getElementById('home-exp-note').value = '';
+      document.getElementById('home-exp-amount').value = '';
+      saveAppState({
+        actor: guest.name,
+        category: 'EXPENSE',
+        action: 'Logged Expense',
+        msg: `${guest.name} logged "${desc}" for ₹${amount.toLocaleString('en-IN')} (split equally).`
+      });
+      showToast(`Logged ₹${amount.toLocaleString('en-IN')} & split with squad!`);
     }
 
     // =========================================================================
-    // 3. INDEXEDDB HD PHOTO VAULT (ORIGINAL FULL RESOLUTION)
+    // 5. CASCADING EXPENSE ENGINE & SPLITWISE SETTLEMENTS
+    // =========================================================================
+    const EXPENSE_CATEGORY_OPTIONS = {
+      Fuel: {
+        label: '2. Fuel / Travel Option',
+        noteLabel: 'Route / Vehicle Note (Optional)',
+        notePlaceholder: 'e.g., Hyd → Jangareddygudem (Car 1)',
+        options: ['⛽ Petrol Fill-up', '⛽ Diesel Fill-up', '🛣️ Highway Toll & FASTag', '🚗 Car / Cab Rental', '➕ Other Fuel Expense']
+      },
+      Starters: {
+        label: '2. Starter / Food Item',
+        noteLabel: 'Restaurant / Order Note (Optional)',
+        notePlaceholder: 'e.g., Bhogi Night Dinner / Dhaba',
+        options: ['🍗 Chicken 65 / Chilli Chicken', '🐟 Apollo Fish / Prawns', '🍖 Mutton / Natukodi Fry', '🧀 Paneer Tikka / Crispy Corn', '🍛 Biryani & Main Course', '➕ Other Food Bill']
+      },
+      Spirits: {
+        label: '2. Spirits / Drinks Option',
+        noteLabel: 'Brand / Bottle Count Note (Optional)',
+        notePlaceholder: 'e.g., 2 Cases KF + 2 Jameson',
+        options: ['🍺 Beer Cases', '🥃 Whiskey Bottles', '🍸 Vodka / Gin', '🏴‍☠️ Rum Bottles', '🍷 Wine / Breezers', '➕ Other Bar Bill']
+      },
+      Essentials: {
+        label: '2. Essential Item',
+        noteLabel: 'Quantity / Store Note (Optional)',
+        notePlaceholder: 'e.g., 4 Cases Water + Plates',
+        options: ['💧 Water Bottles (Cases)', '🍽️ Paper Plates & Bowls', '🧻 Tissues & Napkins', '🥤 Disposable Glasses', '🫧 Soda & Soft Drinks', '🧊 Ice Cubes & Lemon/Masala', '🥔 Chips & Munchies', '➕ Other Essentials']
+      },
+      Stay: {
+        label: '2. Stay / Venue Option',
+        noteLabel: 'Location / Nights Note (Optional)',
+        notePlaceholder: 'e.g., Narsapuram Resort 2 Nights',
+        options: ['🏨 Hotel / Resort Rooms', '🏡 Farmhouse / Villa Booking', '🔥 Bonfire & Sound Setup', '➕ Other Stay Expense']
+      },
+      Other: {
+        label: '2. Expense Type',
+        noteLabel: 'Description (Optional)',
+        notePlaceholder: 'e.g., Medical kit / Kite strings',
+        options: ['🪁 Sankranti Kites & Manja', '💊 First-Aid / Meds', '🧾 Miscellaneous Squad Bill']
+      }
+    };
+
+    function handleExpenseCategoryChange() {
+      const cat = document.getElementById('exp-category')?.value || 'Fuel';
+      const cfg = EXPENSE_CATEGORY_OPTIONS[cat] || EXPENSE_CATEGORY_OPTIONS.Other;
+      const optLabel = document.getElementById('exp-option-label');
+      const optSel = document.getElementById('exp-option-select');
+      const noteLabel = document.getElementById('exp-custom-desc-label');
+      const noteInput = document.getElementById('exp-desc');
+      const fuelBox = document.getElementById('exp-fuel-calc-box');
+
+      if (optLabel) optLabel.textContent = cfg.label;
+      if (optSel) optSel.innerHTML = cfg.options.map(o => `<option value="${o}">${o}</option>`).join('');
+      if (noteLabel) noteLabel.textContent = cfg.noteLabel;
+      if (noteInput) noteInput.placeholder = cfg.notePlaceholder;
+      if (fuelBox) {
+        if (cat === 'Fuel') fuelBox.classList.remove('hidden');
+        else fuelBox.classList.add('hidden');
+      }
+    }
+
+    function handleExpenseOptionChange() {}
+
+    function recalcFuelFromDistance() {
+      const km = parseFloat(document.getElementById('fuel-distance-km')?.value) || 0;
+      const mileage = parseFloat(document.getElementById('fuel-mileage')?.value) || 0;
+      const rate = parseFloat(document.getElementById('fuel-rate-per-liter')?.value) || 0;
+      if (km > 0 && mileage > 0 && rate > 0) {
+        const total = Math.round((km / mileage) * rate);
+        const amtEl = document.getElementById('exp-amount');
+        if (amtEl) amtEl.value = total;
+      }
+    }
+
+    function handleExpenseSplitModeChange() {
+      const mode = document.getElementById('exp-split-mode')?.value || 'equal';
+      const box = document.getElementById('exp-custom-split-box');
+      if (!box) return;
+      if (mode === 'custom') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function toggleAllExpenseGuests(checked) {
+      document.querySelectorAll('.exp-split-checkbox').forEach(cb => { cb.checked = checked; });
+    }
+
+    function saveExpenseForm() {
+      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      if (!confirmedGuests.length) return showToast('At least one guest must accept their invite first.', 'error');
+
+      const cat = document.getElementById('exp-category')?.value || 'Fuel';
+      const option = document.getElementById('exp-option-select')?.value || '';
+      const note = (document.getElementById('exp-desc')?.value || '').trim();
+      const paidBy = document.getElementById('exp-paid-by')?.value;
+      const splitMode = document.getElementById('exp-split-mode')?.value || 'equal';
+      const amount = parseFloat(document.getElementById('exp-amount')?.value);
+      const date = document.getElementById('exp-date')?.value || '2027-01-14';
+
+      if (!paidBy) return showToast('Select who paid the bill.', 'error');
+      if (!amount || amount <= 0) return showToast('Enter a valid amount in ₹.', 'error');
+
+      let splitBetween = confirmedGuests.map(g => g.id);
+      if (splitMode === 'custom') {
+        splitBetween = Array.from(document.querySelectorAll('.exp-split-checkbox:checked')).map(cb => cb.value);
+        if (!splitBetween.length) return showToast('Select at least one guest to split with.', 'error');
+      }
+
+      const desc = `[${cat}] ${option}${note ? ' — ' + note : ''}`;
+      const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Guest';
+
+      if (editingExpenseId) {
+        const idx = appState.expenses.findIndex(e => e.id === editingExpenseId);
+        if (idx >= 0) {
+          appState.expenses[idx] = { ...appState.expenses[idx], category: cat, option, note, desc, paidBy, splitMode, splitBetween, amount, date };
+        }
+        editingExpenseId = null;
+        document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
+        document.getElementById('exp-submit-btn').textContent = '💾 Save Expense';
+        document.getElementById('exp-cancel-edit-btn').classList.add('hidden');
+        saveAppState({ actor: payerName, category: 'EXPENSE', action: 'Edited Expense', msg: `Updated expense "${desc}" to ₹${amount.toLocaleString('en-IN')}.` });
+        showToast('Expense updated!');
+      } else {
+        appState.expenses.unshift({
+          id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+          category: cat,
+          option,
+          note,
+          desc,
+          paidBy,
+          splitMode,
+          splitBetween,
+          amount,
+          date
+        });
+        saveAppState({ actor: payerName, category: 'EXPENSE', action: 'Added Expense', msg: `${payerName} paid ₹${amount.toLocaleString('en-IN')} for "${desc}".` });
+        showToast('Expense saved & split calculated!');
+      }
+
+      document.getElementById('exp-desc').value = '';
+      document.getElementById('exp-amount').value = '';
+    }
+
+    function editExpense(expId) {
+      const exp = appState.expenses.find(e => e.id === expId);
+      if (!exp) return;
+      editingExpenseId = expId;
+      document.getElementById('exp-category').value = exp.category || 'Other';
+      handleExpenseCategoryChange();
+      if (exp.option) document.getElementById('exp-option-select').value = exp.option;
+      document.getElementById('exp-desc').value = exp.note || '';
+      document.getElementById('exp-paid-by').value = exp.paidBy;
+      document.getElementById('exp-split-mode').value = exp.splitMode || 'equal';
+      handleExpenseSplitModeChange();
+      if (exp.splitMode === 'custom') {
+        document.querySelectorAll('.exp-split-checkbox').forEach(cb => {
+          cb.checked = (exp.splitBetween || []).includes(cb.value);
+        });
+      }
+      document.getElementById('exp-amount').value = exp.amount;
+      document.getElementById('exp-date').value = exp.date || '2027-01-14';
+      document.getElementById('exp-form-title').textContent = 'Edit Expense';
+      document.getElementById('exp-submit-btn').textContent = '💾 Update Expense';
+      document.getElementById('exp-cancel-edit-btn').classList.remove('hidden');
+      switchMainTab('expenses');
+    }
+
+    function cancelEditExpense() {
+      editingExpenseId = null;
+      document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
+      document.getElementById('exp-submit-btn').textContent = '💾 Save Expense';
+      document.getElementById('exp-cancel-edit-btn').classList.add('hidden');
+      document.getElementById('exp-desc').value = '';
+      document.getElementById('exp-amount').value = '';
+    }
+
+    function deleteExpense(expId) {
+      const idx = appState.expenses.findIndex(e => e.id === expId);
+      if (idx < 0) return;
+      const removed = appState.expenses.splice(idx, 1)[0];
+      saveAppState({ actor: isAdminUnlocked ? 'Host Admin' : 'Squad', category: 'EXPENSE', action: 'Deleted Expense', msg: `Deleted expense "${removed.desc}" (₹${removed.amount}).` });
+      showToast('Expense removed.');
+    }
+
+    function computeSettlements() {
+      const balances = {};
+      appState.guests.forEach(g => { balances[g.id] = 0; });
+
+      appState.expenses.forEach(exp => {
+        const amt = Number(exp.amount) || 0;
+        const participants = (exp.splitBetween || []).filter(id => balances.hasOwnProperty(id));
+        if (!participants.length || !balances.hasOwnProperty(exp.paidBy)) return;
+        balances[exp.paidBy] += amt;
+        const share = amt / participants.length;
+        participants.forEach(pid => { balances[pid] -= share; });
+      });
+
+      const debtors = [];
+      const creditors = [];
+      Object.entries(balances).forEach(([id, bal]) => {
+        if (bal < -0.5) debtors.push({ id, amount: -bal });
+        else if (bal > 0.5) creditors.push({ id, amount: bal });
+      });
+
+      debtors.sort((a, b) => b.amount - a.amount);
+      creditors.sort((a, b) => b.amount - a.amount);
+
+      const txns = [];
+      let i = 0, j = 0;
+      while (i < debtors.length && j < creditors.length) {
+        const pay = Math.min(debtors[i].amount, creditors[j].amount);
+        const fromName = appState.guests.find(g => g.id === debtors[i].id)?.name || debtors[i].id;
+        const toName = appState.guests.find(g => g.id === creditors[j].id)?.name || creditors[j].id;
+        txns.push({ from: fromName, to: toName, amount: Math.round(pay) });
+        debtors[i].amount -= pay;
+        creditors[j].amount -= pay;
+        if (debtors[i].amount < 0.5) i++;
+        if (creditors[j].amount < 0.5) j++;
+      }
+      return txns;
+    }
+
+    function shareSettlementsWhatsApp() {
+      const txns = computeSettlements();
+      const total = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const lines = txns.length
+        ? txns.map(t => `• *${t.from}* pays *${t.to}*: ₹${t.amount.toLocaleString('en-IN')}`).join('\n')
+        : 'All settled up! Zero pending dues.';
+      const msg = `💸 *Sankranti 2027 Expense Summary* (#DhummuLeputunnam)\nTotal Squad Spend: *₹${total.toLocaleString('en-IN')}*\n\n*Who Pays Whom:*\n${lines}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+    }
+
+    function renderExpensesSection() {
+      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      const paidBySel = document.getElementById('exp-paid-by');
+      const cbGrid = document.getElementById('exp-guest-checkboxes');
+      const optSel = document.getElementById('exp-option-select');
+
+      if (optSel && !optSel.options.length) handleExpenseCategoryChange();
+
+      if (paidBySel) {
+        const prev = paidBySel.value;
+        if (!confirmedGuests.length) {
+          paidBySel.innerHTML = `<option value="">-- No Confirmed Guests Yet --</option>`;
+        } else {
+          paidBySel.innerHTML = confirmedGuests.map(g => `<option value="${g.id}" ${g.id === prev ? 'selected' : ''}>${g.name}</option>`).join('');
+        }
+      }
+
+      if (cbGrid) {
+        cbGrid.innerHTML = confirmedGuests.length
+          ? confirmedGuests.map(g => `
+              <label class="flex items-center gap-2 p-2 rounded-xl bg-white border border-amber-200 text-xs font-bold text-red-950 cursor-pointer">
+                <input type="checkbox" value="${g.id}" checked class="exp-split-checkbox accent-orange-600" />
+                <span>${g.name}</span>
+              </label>
+            `).join('')
+          : `<span class="text-xs text-stone-400 col-span-2">No confirmed guests yet.</span>`;
+      }
+
+      const settlementsEl = document.getElementById('settlements-list');
+      const txns = computeSettlements();
+      if (settlementsEl) {
+        settlementsEl.innerHTML = txns.length
+          ? txns.map(t => `
+              <div class="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300">
+                <div class="text-xs sm:text-sm font-extrabold text-red-950">
+                  <span class="text-red-700">${t.from}</span> <span class="text-stone-500">pays</span> <span class="text-emerald-800">${t.to}</span>
+                </div>
+                <span class="px-3 py-1 rounded-xl bg-emerald-700 text-white text-xs sm:text-sm font-black">₹${t.amount.toLocaleString('en-IN')}</span>
+              </div>
+            `).join('')
+          : `<p class="text-xs text-stone-500 italic">No pending settlements yet. Log an expense to calculate splits!</p>`;
+      }
+
+      const ledgerEl = document.getElementById('expenses-ledger-list');
+      if (ledgerEl) {
+        ledgerEl.innerHTML = appState.expenses.length
+          ? appState.expenses.map(exp => {
+              const payer = appState.guests.find(g => g.id === exp.paidBy)?.name || 'Guest';
+              const splitNames = (exp.splitBetween || []).map(id => appState.guests.find(g => g.id === id)?.name || id).join(', ');
+              return `
+                <div class="p-4 rounded-2xl bg-parchment/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div class="text-sm font-extrabold text-red-950">${exp.desc}</div>
+                    <div class="text-xs text-stone-600 mt-0.5">Paid by <strong>${payer}</strong> • Split (${exp.splitMode}): ${splitNames}</div>
+                  </div>
+                  <div class="flex items-center gap-2 self-end sm:self-center">
+                    <span class="text-base font-black text-emerald-800 mr-1">₹${Number(exp.amount).toLocaleString('en-IN')}</span>
+                    <button type="button" onclick="editExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-extrabold">✏️</button>
+                    <button type="button" onclick="deleteExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 text-xs font-extrabold">🗑️</button>
+                  </div>
+                </div>
+              `;
+            }).join('')
+          : `<p class="text-xs text-stone-500 italic">No expenses recorded yet.</p>`;
+      }
+    }
+
+    // =========================================================================
+    // 6. INDEXEDDB HD PHOTO VAULT (LOSSLESS STORAGE)
     // =========================================================================
     function openPhotoDb() {
       return new Promise((resolve, reject) => {
@@ -1809,7 +2196,8 @@
         const db = await openPhotoDb();
         return await new Promise((resolve, reject) => {
           const tx = db.transaction(DB_STORE, 'readonly');
-          const req = tx.objectStore(DB_STORE).getAll();
+          const store = tx.objectStore(DB_STORE);
+          const req = store.getAll();
           req.onsuccess = () => resolve((req.result || []).sort((a, b) => b.createdAt - a.createdAt));
           req.onerror = () => reject(req.error);
         });
@@ -1821,485 +2209,109 @@
     async function handleHdPhotoUpload(event) {
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
-      const captionInput = document.getElementById('photo-caption-input');
-      const baseCaption = (captionInput?.value || '').trim();
-      const uploader = getActiveActorName();
+      const caption = (document.getElementById('photo-caption-input')?.value || '').trim();
+      const uploader = getActiveGuest()?.name || (isAdminUnlocked ? 'Host Admin' : 'Squad Member');
+      const uploaderId = getActiveGuest()?.id || (isAdminUnlocked ? 'admin' : 'guest');
 
-      try {
-        const db = await openPhotoDb();
-        for (const file of files) {
-          const dataUrl = await new Promise((res, rej) => {
-            const reader = new FileReader();
-            reader.onload = () => res(reader.result);
-            reader.onerror = () => rej(reader.error);
-            reader.readAsDataURL(file);
+      const db = await openPhotoDb();
+      for (const file of files) {
+        const id = 'photo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).put({
+            id,
+            blob: file,
+            name: file.name,
+            sizeMB: (file.size / (1024 * 1024)).toFixed(2),
+            caption: caption || file.name.replace(/\.[^/.]+$/, ''),
+            uploader,
+            uploaderId,
+            createdAt: Date.now()
           });
-          const photoRecord = {
-            id: 'photo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-            caption: baseCaption || file.name.replace(/\.[^/.]+$/, ''),
-            fileName: file.name,
-            sizeKB: Math.max(1, Math.round(file.size / 1024)),
-            uploadedBy: uploader,
-            createdAt: Date.now(),
-            dataUrl
-          };
-          await new Promise((res, rej) => {
-            const tx = db.transaction(DB_STORE, 'readwrite');
-            tx.objectStore(DB_STORE).put(photoRecord);
-            tx.oncomplete = () => res();
-            tx.onerror = () => rej(tx.error);
-          });
-        }
-        if (captionInput) captionInput.value = '';
-        event.target.value = '';
-        saveAppState({
-          actor: uploader,
-          category: 'PHOTO',
-          action: 'Uploaded HD Photos',
-          msg: `${uploader} uploaded ${files.length} original HD photo(s).`
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
         });
-        renderGallerySection();
-        showToast(`Uploaded ${files.length} HD photo(s)!`);
-      } catch (e) {
-        showToast('Failed to store photo in browser vault.', 'error');
       }
+
+      document.getElementById('photo-caption-input').value = '';
+      event.target.value = '';
+      saveAppState({ actor: uploader, category: 'PHOTO', action: 'Uploaded HD Photo', msg: `${uploader} uploaded ${files.length} HD photo(s).` });
+      showToast(`Uploaded ${files.length} original HD photo(s)! 📸`);
+      renderGallerySection();
     }
 
     async function downloadHdPhoto(photoId) {
       const photos = await getAllHdPhotos();
-      const p = photos.find(x => x.id === photoId);
-      if (!p) return;
+      const item = photos.find(p => p.id === photoId);
+      if (!item) return;
+      const url = URL.createObjectURL(item.blob);
       const a = document.createElement('a');
-      a.href = p.dataUrl;
-      a.download = p.fileName || 'sankranti-2027-hd.jpg';
+      a.href = url;
+      a.download = item.name || 'sankranti-2027-hd.jpg';
+      document.body.appendChild(a);
       a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
 
     async function deleteHdPhoto(photoId) {
       const photos = await getAllHdPhotos();
-      const p = photos.find(x => x.id === photoId);
-      if (!p) return;
-      const actor = getActiveActorName();
-      if (!isAdminUnlocked && p.uploadedBy !== actor) {
-        return showToast('You can only delete photos you uploaded.', 'error');
-      }
+      const item = photos.find(p => p.id === photoId);
+      if (!item) return;
       const db = await openPhotoDb();
-      await new Promise((res, rej) => {
+      await new Promise((resolve, reject) => {
         const tx = db.transaction(DB_STORE, 'readwrite');
         tx.objectStore(DB_STORE).delete(photoId);
-        tx.oncomplete = () => res();
-        tx.onerror = () => rej(tx.error);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
       });
-      saveAppState({
-        actor,
-        category: 'PHOTO',
-        action: 'Deleted HD Photo',
-        msg: `${actor} deleted photo "${p.caption}".`
-      });
+      const actor = getActiveGuest()?.name || (isAdminUnlocked ? 'Host Admin' : 'Squad Member');
+      saveAppState({ actor, category: 'PHOTO', action: 'Deleted Photo', msg: `${actor} deleted HD photo "${item.caption}".` });
+      showToast('Photo removed from vault.');
       renderGallerySection();
-      showToast('Photo removed.');
     }
 
     async function openLightbox(photoId) {
       const photos = await getAllHdPhotos();
-      const p = photos.find(x => x.id === photoId);
-      if (!p) return;
-      document.getElementById('lightbox-img').src = p.dataUrl;
-      document.getElementById('lightbox-caption').textContent = p.caption;
-      document.getElementById('lightbox-meta').textContent = `Uploaded by ${p.uploadedBy} • ${p.sizeKB} KB`;
-      document.getElementById('lightbox-download-btn').onclick = () => downloadHdPhoto(p.id);
-      document.getElementById('photo-lightbox-modal').classList.remove('hidden');
+      const item = photos.find(p => p.id === photoId);
+      if (!item) return;
+      const url = URL.createObjectURL(item.blob);
+      document.getElementById('lightbox-img').src = url;
+      document.getElementById('lightbox-caption').textContent = item.caption;
+      document.getElementById('lightbox-meta').textContent = `Uploaded by ${item.uploader} • ${item.sizeMB} MB Original HD`;
+      document.getElementById('lightbox-download-btn').onclick = () => downloadHdPhoto(photoId);
+      document.getElementById('photo-lightbox-modal')?.classList.remove('hidden');
     }
 
     function closeLightbox() {
-      document.getElementById('photo-lightbox-modal').classList.add('hidden');
+      document.getElementById('photo-lightbox-modal')?.classList.add('hidden');
     }
 
-    // =========================================================================
-    // 4. GUEST TRAVEL & PACKING CHECKLIST HELPERS
-    // =========================================================================
-    // (Handled above in populatePreferenceFormForGuest, renderGuestPackingChecklist, saveGuestPreferences)
-
-    // =========================================================================
-    // 5. UNIFIED CASCADING EXPENSE ENGINE & SPLITWISE SETTLEMENTS
-    // =========================================================================
-    const EXPENSE_CATEGORY_OPTIONS = {
-      Fuel: {
-        label: '2. Fuel Option',
-        descLabel: 'Route / Vehicle Note (Optional)',
-        descPlaceholder: 'e.g., Hyd → Jangareddygudem (Car 1)',
-        options: ['Petrol Fill-up', 'Diesel Fill-up', 'Highway Toll & FASTag', 'Car / Cab Rental', 'Other Fuel Expense']
-      },
-      Starters: {
-        label: '2. Starter / Food Item',
-        descLabel: 'Restaurant / Order Note (Optional)',
-        descPlaceholder: 'e.g., Bhogi Night Dinner / Dhaba Order',
-        options: ['Chicken 65', 'Chilli Chicken', 'Chicken Lollipop', 'Tandoori Chicken', 'Apollo Fish', 'Loose Prawns', 'Mutton / Natukodi Fry', 'Paneer Tikka', 'Crispy Corn', 'Biryani / Main Course', 'Other Starter / Food']
-      },
-      Spirits: {
-        label: '2. Spirit / Drink Brand',
-        descLabel: 'Quantity / Bottle Note (Optional)',
-        descPlaceholder: 'e.g., 2 Full Bottles / 1 Case Beer',
-        options: ['Kingfisher Strong', 'Kingfisher Ultra', 'Budweiser Magnum', 'Jameson Irish', 'Jack Daniel’s', 'Black Dog / 100 Pipers', 'Absolut / Smirnoff', 'Old Monk / Bacardi', 'Other Spirit / Drink']
-      },
-      Essentials: {
-        label: '2. Essential Item',
-        descLabel: 'Pack / Quantity Note (Optional)',
-        descPlaceholder: 'e.g., 2 Cases Water + Disposable Plates',
-        options: ['Water Bottles (1L / Case)', 'Paper Plates (Pack)', 'Tissues & Napkins (Pack)', 'Disposable Glasses (Pack)', 'Soda Bottles (Club / Kinley)', 'Ice Cubes (Bag)', 'Chips & Munchies', 'Other Essential']
-      },
-      Stay: {
-        label: '2. Stay / Villa Option',
-        descLabel: 'Location / Nights Note (Optional)',
-        descPlaceholder: 'e.g., Kothapeta Farmhouse / Hotel Rooms',
-        options: ['Farmhouse / Villa Stay', 'Hotel Rooms', 'Advance Deposit', 'Other Stay Expense']
-      },
-      Other: {
-        label: '2. Expense Type',
-        descLabel: 'Expense Description',
-        descPlaceholder: 'e.g., Bonfire Wood / DJ / Crackers',
-        options: ['Bonfire & Woods', 'Sound / Speakers', 'Local Transport / Auto', 'Miscellaneous / Custom']
-      }
-    };
-
-    function handleExpenseCategoryChange(preserveSelection = false) {
-      const cat = document.getElementById('exp-category')?.value || 'Fuel';
-      const config = EXPENSE_CATEGORY_OPTIONS[cat] || EXPENSE_CATEGORY_OPTIONS.Other;
-      const optLabel = document.getElementById('exp-option-label');
-      const optSelect = document.getElementById('exp-option-select');
-      const descLabel = document.getElementById('exp-custom-desc-label');
-      const descInput = document.getElementById('exp-desc');
-      const fuelBox = document.getElementById('exp-fuel-calc-box');
-
-      if (optLabel) optLabel.textContent = config.label;
-      if (descLabel) descLabel.textContent = config.descLabel;
-      if (descInput) descInput.placeholder = config.descPlaceholder;
-      if (fuelBox) {
-        if (cat === 'Fuel') fuelBox.classList.remove('hidden');
-        else fuelBox.classList.add('hidden');
-      }
-
-      if (optSelect) {
-        const prev = optSelect.value;
-        optSelect.innerHTML = config.options.map(o => `<option value="${o}">${o}</option>`).join('');
-        if (preserveSelection && config.options.includes(prev)) {
-          optSelect.value = prev;
-        }
-      }
-    }
-
-    function handleExpenseOptionChange() {
-      // Reserved for future custom item hooks
-    }
-
-    function recalcFuelFromDistance() {
-      const km = parseFloat(document.getElementById('fuel-distance-km')?.value) || 0;
-      const mileage = parseFloat(document.getElementById('fuel-mileage')?.value) || 0;
-      const rate = parseFloat(document.getElementById('fuel-rate-per-liter')?.value) || 0;
-      if (km > 0 && mileage > 0 && rate > 0) {
-        const total = Math.round((km / mileage) * rate);
-        const amtInput = document.getElementById('exp-amount');
-        if (amtInput) amtInput.value = total;
-      }
-    }
-
-    function handleExpenseSplitModeChange() {
-      const mode = document.getElementById('exp-split-mode')?.value || 'equal';
-      const box = document.getElementById('exp-custom-split-box');
-      if (!box) return;
-      if (mode === 'custom') box.classList.remove('hidden');
-      else box.classList.add('hidden');
-    }
-
-    function toggleAllExpenseGuests(checked) {
-      document.querySelectorAll('.exp-split-cb').forEach(cb => { cb.checked = checked; });
-    }
-
-    function saveExpenseForm() {
-      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
-      if (!confirmedGuests.length) {
-        return showToast('At least one guest must accept their invite before adding expenses.', 'error');
-      }
-      const cat = document.getElementById('exp-category')?.value || 'Fuel';
-      const option = document.getElementById('exp-option-select')?.value || '';
-      const note = (document.getElementById('exp-desc')?.value || '').trim();
-      const paidBy = document.getElementById('exp-paid-by')?.value;
-      const splitMode = document.getElementById('exp-split-mode')?.value || 'equal';
-      const amount = parseFloat(document.getElementById('exp-amount')?.value);
-      const date = document.getElementById('exp-date')?.value || '2027-01-14';
-
-      if (!paidBy) return showToast('Select who paid the expense.', 'error');
-      if (!amount || amount <= 0) return showToast('Enter a valid amount in ₹.', 'error');
-
-      let splitBetween = [];
-      if (splitMode === 'equal') {
-        splitBetween = confirmedGuests.map(g => g.id);
-      } else {
-        splitBetween = Array.from(document.querySelectorAll('.exp-split-cb:checked')).map(cb => cb.value);
-      }
-      if (!splitBetween.length) return showToast('Select at least one guest to split with.', 'error');
-
-      const desc = `[${cat}] ${option}${note ? ' — ' + note : ''}`;
-      const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Member';
-
-      if (editingExpenseId) {
-        const idx = appState.expenses.findIndex(e => e.id === editingExpenseId);
-        if (idx !== -1) {
-          appState.expenses[idx] = { ...appState.expenses[idx], category: cat, option, note, desc, paidBy, splitMode, splitBetween, amount, date };
-        }
-        editingExpenseId = null;
-        document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
-        document.getElementById('exp-submit-btn').textContent = '💾 Save Expense';
-        document.getElementById('exp-cancel-edit-btn')?.classList.add('hidden');
-        saveAppState({
-          actor: getActiveActorName(),
-          category: 'EXPENSE',
-          action: 'Edited Expense',
-          msg: `Updated expense "${desc}" (₹${amount.toLocaleString('en-IN')}, paid by ${payerName}).`
-        });
-        showToast('Expense updated!');
-      } else {
-        appState.expenses.unshift({
-          id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
-          category: cat,
-          option,
-          note,
-          desc,
-          paidBy,
-          splitMode,
-          splitBetween,
-          amount,
-          date
-        });
-        saveAppState({
-          actor: getActiveActorName(),
-          category: 'EXPENSE',
-          action: 'Added Expense',
-          msg: `Added "${desc}" for ₹${amount.toLocaleString('en-IN')} (paid by ${payerName}, split ${splitBetween.length} ways).`
-        });
-        showToast('Expense saved & split!');
-      }
-
-      document.getElementById('exp-desc').value = '';
-      document.getElementById('exp-amount').value = '';
-    }
-
-    function startEditExpense(expId) {
-      const exp = appState.expenses.find(e => e.id === expId);
-      if (!exp) return;
-      editingExpenseId = exp.id;
-      document.getElementById('exp-form-title').textContent = 'Edit Expense';
-      document.getElementById('exp-submit-btn').textContent = '💾 Update Expense';
-      document.getElementById('exp-cancel-edit-btn')?.classList.remove('hidden');
-
-      if (exp.category) {
-        document.getElementById('exp-category').value = exp.category;
-        handleExpenseCategoryChange(false);
-        if (exp.option) document.getElementById('exp-option-select').value = exp.option;
-      }
-      document.getElementById('exp-desc').value = exp.note || '';
-      document.getElementById('exp-paid-by').value = exp.paidBy;
-      document.getElementById('exp-split-mode').value = exp.splitMode || 'custom';
-      handleExpenseSplitModeChange();
-      document.querySelectorAll('.exp-split-cb').forEach(cb => {
-        cb.checked = (exp.splitBetween || []).includes(cb.value);
-      });
-      document.getElementById('exp-amount').value = exp.amount;
-      document.getElementById('exp-date').value = exp.date || '2027-01-14';
-      document.getElementById('tab-expenses')?.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function cancelEditExpense() {
-      editingExpenseId = null;
-      document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
-      document.getElementById('exp-submit-btn').textContent = '💾 Save Expense';
-      document.getElementById('exp-cancel-edit-btn')?.classList.add('hidden');
-      document.getElementById('exp-desc').value = '';
-      document.getElementById('exp-amount').value = '';
-    }
-
-    function deleteExpense(expId) {
-      const exp = appState.expenses.find(e => e.id === expId);
-      if (!exp) return;
-      appState.expenses = appState.expenses.filter(e => e.id !== expId);
-      saveAppState({
-        actor: getActiveActorName(),
-        category: 'EXPENSE',
-        action: 'Deleted Expense',
-        msg: `Deleted expense "${exp.desc}" (₹${Number(exp.amount).toLocaleString('en-IN')}).`
-      });
-      showToast('Expense removed.');
-    }
-
-    function computeSettlements() {
-      const balances = {};
-      appState.guests.forEach(g => { balances[g.id] = 0; });
-
-      appState.expenses.forEach(exp => {
-        const amt = Number(exp.amount) || 0;
-        const participants = (exp.splitBetween || []).filter(id => id in balances);
-        if (amt <= 0 || !participants.length) return;
-        if (exp.paidBy in balances) balances[exp.paidBy] += amt;
-        const share = amt / participants.length;
-        participants.forEach(id => { balances[id] -= share; });
-      });
-
-      const debtors = [];
-      const creditors = [];
-      Object.entries(balances).forEach(([id, bal]) => {
-        const rounded = Math.round(bal * 100) / 100;
-        if (rounded < -0.5) debtors.push({ id, amount: -rounded });
-        else if (rounded > 0.5) creditors.push({ id, amount: rounded });
-      });
-
-      debtors.sort((a, b) => b.amount - a.amount);
-      creditors.sort((a, b) => b.amount - a.amount);
-
-      const txns = [];
-      let i = 0, j = 0;
-      while (i < debtors.length && j < creditors.length) {
-        const pay = Math.min(debtors[i].amount, creditors[j].amount);
-        const fromName = appState.guests.find(g => g.id === debtors[i].id)?.name || debtors[i].id;
-        const toName = appState.guests.find(g => g.id === creditors[j].id)?.name || creditors[j].id;
-        if (Math.round(pay) > 0) {
-          txns.push({ from: fromName, to: toName, amount: Math.round(pay) });
-        }
-        debtors[i].amount -= pay;
-        creditors[j].amount -= pay;
-        if (debtors[i].amount < 0.5) i++;
-        if (creditors[j].amount < 0.5) j++;
-      }
-      return txns;
-    }
-
-    function shareSettlementsWhatsApp() {
-      const txns = computeSettlements();
-      const total = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-      const lines = [
-        `💸 *Sankranti 2027 Expense Split* (#DhummuLeputunnam)`,
-        `Total Trip Spend: *₹${total.toLocaleString('en-IN')}*`,
-        ``
-      ];
-      if (!txns.length) {
-        lines.push(`✅ All balances are settled!`);
-      } else {
-        txns.forEach(t => lines.push(`• *${t.from}* pays *${t.to}*: *₹${t.amount.toLocaleString('en-IN')}*`));
-      }
-      window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
-    }
-
-    function renderExpensesSection() {
-      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
-      const paidByEl = document.getElementById('exp-paid-by');
-      if (paidByEl) {
-        const prev = paidByEl.value;
-        if (!confirmedGuests.length) {
-          paidByEl.innerHTML = `<option value="">-- No Confirmed Guests Yet --</option>`;
-        } else {
-          paidByEl.innerHTML = confirmedGuests.map(g =>
-            `<option value="${g.id}" ${g.id === prev ? 'selected' : ''}>${g.name}</option>`
-          ).join('');
-        }
-      }
-
-      handleExpenseCategoryChange(true);
-      handleExpenseSplitModeChange();
-
-      const expCheckboxes = document.getElementById('exp-guest-checkboxes');
-      if (expCheckboxes) {
-        if (confirmedGuests.length === 0) {
-          expCheckboxes.innerHTML = `<p class="col-span-2 text-xs text-stone-500 italic">No confirmed guests yet. Guests appear here once they accept their invite.</p>`;
-        } else {
-          expCheckboxes.innerHTML = confirmedGuests.map(g => `
-            <label class="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-amber-200 text-xs font-bold text-red-950 cursor-pointer">
-              <input type="checkbox" class="exp-split-cb accent-orange-600" value="${g.id}" checked />
-              <span>${g.name}</span>
-            </label>
-          `).join('');
-        }
-      }
-
-      // Settlements List
-      const settlementsEl = document.getElementById('settlements-list');
-      if (settlementsEl) {
-        const txns = computeSettlements();
-        if (!txns.length) {
-          settlementsEl.innerHTML = `<div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs sm:text-sm font-bold text-emerald-900">✅ No pending settlements yet! Add an expense on the left to see automatic splits.</div>`;
-        } else {
-          settlementsEl.innerHTML = txns.map(t => `
-            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200">
-              <div class="text-xs sm:text-sm font-extrabold text-red-950">
-                <span class="text-red-700">${t.from}</span> <span class="text-stone-500 font-semibold">pays</span> <span class="text-emerald-800">${t.to}</span>
-              </div>
-              <span class="px-3 py-1 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-black text-red-950 shadow-sm">
-                ₹${t.amount.toLocaleString('en-IN')}
-              </span>
-            </div>
-          `).join('');
-        }
-      }
-
-      // Expenses Ledger List
-      const ledgerEl = document.getElementById('expenses-ledger-list');
-      if (ledgerEl) {
-        if (!appState.expenses.length) {
-          ledgerEl.innerHTML = `<div class="p-6 text-center rounded-2xl bg-parchment/70 border border-amber-200 text-xs sm:text-sm font-bold text-stone-500">No expenses logged yet.</div>`;
-        } else {
-          ledgerEl.innerHTML = appState.expenses.map(exp => {
-            const payer = appState.guests.find(g => g.id === exp.paidBy)?.name || exp.paidBy;
-            const splitNames = (exp.splitBetween || [])
-              .map(id => appState.guests.find(g => g.id === id)?.name || id)
-              .join(', ');
-            return `
-              <div class="p-4 rounded-2xl bg-parchment/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="space-y-1">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-sm font-extrabold text-red-950">${exp.desc}</span>
-                    <span class="px-2 py-0.5 rounded-full bg-amber-200 text-red-950 text-[10px] font-black">${exp.date || '2027-01-14'}</span>
-                  </div>
-                  <p class="text-xs text-stone-600 font-semibold">
-                    Paid by <strong class="text-emerald-800">${payer}</strong> • Split (${(exp.splitBetween || []).length}): <span class="text-stone-700">${splitNames || 'None'}</span>
-                  </p>
-                </div>
-                <div class="flex items-center gap-2 self-end sm:self-center">
-                  <span class="text-base font-black text-red-950 mr-1">₹${Number(exp.amount).toLocaleString('en-IN')}</span>
-                  <button type="button" onclick="startEditExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-extrabold text-amber-950 hover:bg-amber-100">✏️</button>
-                  <button type="button" onclick="deleteExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 text-xs font-extrabold text-red-800 hover:bg-red-200">🗑️</button>
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
-      }
-    }
-
-    // =========================================================================
-    // 6. GALLERY, AUDIT LOGS, ADMIN PANEL, DASHLET MODALS & JSON SYNC
-    // =========================================================================
     async function renderGallerySection() {
       const grid = document.getElementById('hd-gallery-grid');
       if (!grid) return;
       const photos = await getAllHdPhotos();
+      const activeGuest = getActiveGuest();
       if (!photos.length) {
-        grid.innerHTML = `<div class="col-span-full p-8 text-center rounded-3xl bg-parchment/70 border border-amber-200 text-sm font-bold text-stone-500">No HD photos uploaded yet. Tap "Upload HD Photos" above to add your first Sankranti memory!</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-stone-500 text-sm font-semibold">No HD photos uploaded yet. Tap <strong>Upload HD Photos</strong> above to add memories!</div>`;
         return;
       }
-      const actor = getActiveActorName();
       grid.innerHTML = photos.map(p => {
-        const canDelete = isAdminUnlocked || p.uploadedBy === actor;
+        const url = URL.createObjectURL(p.blob);
+        const canDelete = isAdminUnlocked || (activeGuest && (p.uploaderId === activeGuest.id || p.uploader === activeGuest.name));
         return `
           <div class="bg-parchment rounded-2xl overflow-hidden border border-amber-200 shadow-sm flex flex-col">
-            <div onclick="openLightbox('${p.id}')" class="cursor-pointer aspect-video bg-stone-900 overflow-hidden relative group">
-              <img src="${p.dataUrl}" alt="${p.caption}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+            <div onclick="openLightbox('${p.id}')" class="aspect-square bg-stone-900 overflow-hidden cursor-pointer">
+              <img src="${url}" alt="${p.caption}" class="w-full h-full object-cover hover:scale-105 transition duration-300" />
             </div>
             <div class="p-3.5 flex-grow flex flex-col justify-between gap-2">
               <div>
-                <h4 class="text-xs sm:text-sm font-extrabold text-red-950 truncate">${p.caption}</h4>
-                <p class="text-[11px] text-stone-500 font-semibold">by ${p.uploadedBy} • ${p.sizeKB} KB</p>
+                <div class="text-xs sm:text-sm font-extrabold text-red-950 truncate">${p.caption}</div>
+                <div class="text-[11px] text-stone-500">by ${p.uploader} • ${p.sizeMB} MB</div>
               </div>
               <div class="flex items-center gap-1.5 pt-1">
-                <button type="button" onclick="downloadHdPhoto('${p.id}')" class="flex-1 py-1.5 px-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-extrabold">⬇️ HD Download</button>
-                ${canDelete ? `<button type="button" onclick="deleteHdPhoto('${p.id}')" class="py-1.5 px-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 text-[11px] font-extrabold">🗑️</button>` : ''}
+                <button type="button" onclick="downloadHdPhoto('${p.id}')" class="flex-1 py-1.5 px-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold">⬇️ HD Download</button>
+                ${canDelete ? `<button type="button" onclick="deleteHdPhoto('${p.id}')" class="py-1.5 px-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 text-xs font-extrabold">🗑️</button>` : ''}
               </div>
             </div>
           </div>
@@ -2307,143 +2319,90 @@
       }).join('');
     }
 
+    // =========================================================================
+    // 7. ACTIVITY LOGS, ADMIN PANEL, MODALS & SYNC
+    // =========================================================================
     function renderLogsSection() {
-      const actorFilter = document.getElementById('log-filter-actor');
+      const actorSel = document.getElementById('log-filter-actor');
       const catFilter = document.getElementById('log-filter-category')?.value || 'ALL';
-      const query = (document.getElementById('log-search-input')?.value || '').trim().toLowerCase();
-
-      const actors = Array.from(new Set(appState.activityLog.map(l => l.actor).filter(Boolean)));
-      if (actorFilter) {
-        const prev = actorFilter.value;
-        actorFilter.innerHTML = `<option value="ALL">👥 All Individuals</option>` +
-          actors.map(a => `<option value="${a}" ${a === prev ? 'selected' : ''}>${a}</option>`).join('');
-      }
-      const selectedActor = actorFilter?.value || 'ALL';
-
+      const search = (document.getElementById('log-search-input')?.value || '').toLowerCase();
       const amendBtn = document.getElementById('logs-admin-amend-btn');
       if (amendBtn) {
         if (isAdminUnlocked) amendBtn.classList.remove('hidden');
         else amendBtn.classList.add('hidden');
       }
 
-      const summaryStrip = document.getElementById('log-actor-summary-strip');
-      if (summaryStrip) {
-        const counts = {};
-        appState.activityLog.forEach(l => { counts[l.actor] = (counts[l.actor] || 0) + 1; });
-        summaryStrip.innerHTML = Object.entries(counts).map(([name, cnt]) =>
-          `<span class="px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-xs font-extrabold text-red-950">${name}: ${cnt}</span>`
-        ).join('');
+      const actors = Array.from(new Set(appState.activityLog.map(l => l.actor)));
+      if (actorSel) {
+        const prev = actorSel.value || 'ALL';
+        actorSel.innerHTML = `<option value="ALL">👥 All Individuals</option>` + actors.map(a => `<option value="${a}" ${a === prev ? 'selected' : ''}>${a}</option>`).join('');
       }
+      const actorFilter = actorSel?.value || 'ALL';
 
       const filtered = appState.activityLog.filter(l => {
-        if (selectedActor !== 'ALL' && l.actor !== selectedActor) return false;
+        if (actorFilter !== 'ALL' && l.actor !== actorFilter) return false;
         if (catFilter !== 'ALL' && l.category !== catFilter) return false;
-        if (query && !(`${l.actor} ${l.action} ${l.msg}`.toLowerCase().includes(query))) return false;
+        if (search && !`${l.actor} ${l.msg} ${l.action}`.toLowerCase().includes(search)) return false;
         return true;
       });
 
       const feed = document.getElementById('audit-logs-feed');
-      if (!feed) return;
-      if (!filtered.length) {
-        feed.innerHTML = `<div class="p-6 text-center rounded-2xl bg-parchment/70 border border-amber-200 text-xs font-bold text-stone-500">No matching activity logs found.</div>`;
-        return;
+      if (feed) {
+        feed.innerHTML = filtered.length
+          ? filtered.map(l => `
+              <div class="p-3.5 rounded-2xl bg-parchment/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span class="px-2 py-0.5 rounded-md bg-amber-200 text-red-950 text-[10px] font-black uppercase mr-1.5">${l.category}</span>
+                  <strong class="text-xs sm:text-sm text-red-950">${l.actor}:</strong>
+                  <span class="text-xs sm:text-sm text-stone-700 font-medium">${l.msg}</span>
+                </div>
+                <span class="text-[11px] text-stone-400 font-mono shrink-0">${l.time}</span>
+              </div>
+            `).join('')
+          : `<p class="text-xs text-stone-500 italic">No matching activity log entries.</p>`;
       }
-      feed.innerHTML = filtered.map(l => `
-        <div class="p-3.5 rounded-2xl bg-parchment/60 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-2 py-0.5 rounded-md bg-red-900 text-amber-100 text-[10px] font-black">${l.category}</span>
-              <span class="text-xs font-extrabold text-red-950">${l.actor}</span>
-              <span class="text-xs font-bold text-orange-700">• ${l.action}</span>
-            </div>
-            <p class="text-xs text-stone-700 mt-1 font-medium">${l.msg}</p>
-          </div>
-          <span class="text-[11px] font-mono text-stone-500 shrink-0">${l.timestamp}</span>
-        </div>
-      `).join('');
     }
 
     function openAdminAddLogForm() {
-      if (!isAdminUnlocked) return;
       document.getElementById('logs-admin-editor-box')?.classList.remove('hidden');
     }
-
     function closeAdminLogForm() {
       document.getElementById('logs-admin-editor-box')?.classList.add('hidden');
     }
-
     function saveAdminLogEntry() {
-      if (!isAdminUnlocked) return;
-      const actor = (document.getElementById('log-edit-actor')?.value || '').trim() || 'Host Admin';
+      const actor = (document.getElementById('log-edit-actor')?.value || 'Host Admin').trim();
       const category = document.getElementById('log-edit-category')?.value || 'ADMIN';
       const msg = (document.getElementById('log-edit-msg')?.value || '').trim();
-      if (!msg) return showToast('Enter a log message first.', 'error');
+      if (!msg) return showToast('Enter a log message.', 'error');
       document.getElementById('log-edit-msg').value = '';
       closeAdminLogForm();
       saveAppState({ actor, category, action: 'Admin Note', msg });
-      showToast('Log entry recorded!');
+      showToast('Audit log entry added!');
     }
 
     function copyAuditLogs() {
-      const text = appState.activityLog.map(l => `[${l.timestamp}] (${l.category}) ${l.actor} - ${l.action}: ${l.msg}`).join('\n');
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
+      const text = appState.activityLog.map(l => `[${l.time}] (${l.category}) ${l.actor}: ${l.msg}`).join('\n');
+      copyTextFallback(text);
       showToast('Audit log report copied!');
     }
 
     function downloadAuditLogsCsv() {
-      const rows = [['Timestamp', 'Category', 'Actor', 'Action', 'Details']];
-      appState.activityLog.forEach(l => rows.push([l.timestamp, l.category, l.actor, l.action, l.msg]));
+      const rows = [['Time', 'Actor', 'Category', 'Message'], ...appState.activityLog.map(l => [l.time, l.actor, l.category, l.msg])];
       const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'sankranti-2027-audit-logs.csv';
+      a.download = 'sankranti-2027-audit-log.csv';
       a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function renderAdminSection() {
-      const listEl = document.getElementById('admin-guest-management-list');
-      if (listEl) {
-        listEl.innerHTML = appState.guests.map(g => `
-          <div class="p-3.5 rounded-2xl bg-parchment/80 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-extrabold text-red-950">${g.name}</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${g.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-200 text-red-950'}">${g.rsvp}</span>
-              </div>
-              <p class="text-[11px] text-stone-600">${g.phone ? '📞 ' + g.phone : 'No phone saved'} • Route: ${g.fromCity || '—'} → ${g.arrivalCity || '—'}</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-1.5">
-              <a href="${getWhatsAppInviteUrl(g)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-extrabold">📲 WhatsApp</a>
-              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-[11px] font-extrabold text-amber-950">🔗 Link</button>
-              <button type="button" onclick="adminToggleGuestRsvp('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-200 text-[11px] font-extrabold text-red-950">Toggle RSVP</button>
-              <button type="button" onclick="adminRemoveGuest('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 text-[11px] font-extrabold text-red-800">🗑️</button>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      const logPreview = document.getElementById('admin-activity-log');
-      if (logPreview) {
-        logPreview.innerHTML = appState.activityLog.slice(0, 20).map(l =>
-          `<div class="border-b border-stone-800 pb-1"><span class="text-amber-400">[${l.actor}]</span> ${l.msg}</div>`
-        ).join('');
-      }
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
 
     function adminAddGuest() {
-      if (!isAdminUnlocked) return;
       const nameInput = document.getElementById('admin-new-guest-name');
       const phoneInput = document.getElementById('admin-new-guest-phone');
       const name = (nameInput?.value || '').trim();
-      const phone = normalizeIndianPhone(phoneInput?.value || '');
+      const phone = formatIndianPhone(phoneInput?.value || '');
       if (!name) return showToast('Enter guest name.', 'error');
       const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).slice(2, 5);
       appState.guests.push({
@@ -2452,138 +2411,100 @@
         phone,
         rsvp: 'pending',
         fromCity: '',
-        travelDate: '',
         arrivalCity: 'Jangareddygudem',
-        returnDate: '',
-        packingList: buildDefaultPackingList(),
+        travelDate: '2027-01-14',
+        returnDate: '2027-01-17',
+        packing: DEFAULT_PACKING_ITEMS.map(item => ({ ...item, packed: false })),
         starters: [],
-        alcohol: [],
-        essentials: [],
-        cigarettes: []
+        alcohol: []
       });
       nameInput.value = '';
       phoneInput.value = '';
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Added Guest',
-        msg: `Added ${name} to the Sankranti 2027 squad list.`
-      });
-      showToast(`Added ${name}!`);
-    }
-
-    function adminToggleGuestRsvp(guestId) {
-      if (!isAdminUnlocked) return;
-      const g = appState.guests.find(x => x.id === guestId);
-      if (!g) return;
-      g.rsvp = g.rsvp === 'accepted' ? 'pending' : 'accepted';
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Updated RSVP',
-        msg: `Host Admin set ${g.name}'s RSVP status to ${g.rsvp}.`
-      });
+      saveAppState({ actor: 'Host Admin', category: 'ADMIN', action: 'Added Guest', msg: `Added ${name} to the Sankranti 2027 squad.` });
+      showToast(`Added ${name} to squad!`);
     }
 
     function adminRemoveGuest(guestId) {
-      if (!isAdminUnlocked) return;
-      const g = appState.guests.find(x => x.id === guestId);
-      if (!g) return;
-      appState.guests = appState.guests.filter(x => x.id !== guestId);
-      if (currentRole === guestId) currentRole = 'overview';
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Removed Guest',
-        msg: `Removed ${g.name} from the squad list.`
-      });
+      const idx = appState.guests.findIndex(g => g.id === guestId);
+      if (idx < 0) return;
+      const removed = appState.guests.splice(idx, 1)[0];
+      saveAppState({ actor: 'Host Admin', category: 'ADMIN', action: 'Removed Guest', msg: `Removed ${removed.name} from squad.` });
+      showToast(`Removed ${removed.name}.`);
     }
 
-    async function wipeAllDataClean() {
-      if (!isAdminUnlocked) return;
+    function wipeAllDataClean() {
       appState = getDefaultState();
-      try {
-        const db = await openPhotoDb();
-        await new Promise((res, rej) => {
-          const tx = db.transaction(DB_STORE, 'readwrite');
-          tx.objectStore(DB_STORE).clear();
-          tx.oncomplete = () => res();
-          tx.onerror = () => rej(tx.error);
-        });
-      } catch (e) {}
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Wiped All Data',
-        msg: 'Host Admin reset all trip data to a clean slate.'
-      });
-      showToast('All data wiped clean!');
+      saveAppState({ actor: 'Host Admin', category: 'ADMIN', action: 'Wiped Data', msg: 'Reset all trip data to a clean empty slate.' });
+      showToast('All data wiped clean! 🧹');
     }
 
-    // =========================================================================
-    // 7. KPI DASHLET MODALS & SYNC / BACKUP MODAL
-    // =========================================================================
-    async function openDashletModal(type) {
+    function renderAdminSection() {
+      const listEl = document.getElementById('admin-guest-management-list');
+      if (listEl) {
+        listEl.innerHTML = appState.guests.map(g => `
+          <div class="p-3 rounded-2xl bg-parchment/80 border border-amber-200 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-sm font-extrabold text-red-950">${g.name}</span>
+              <span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-200 text-red-950">${g.rsvp}</span>
+              <div class="text-[11px] text-stone-500">${g.phone || 'No phone saved'}</div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <a href="${getWhatsAppInviteUrl(g)}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">📲 WhatsApp</a>
+              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-extrabold">🔗</button>
+              <button type="button" onclick="adminRemoveGuest('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 text-red-800 text-xs font-extrabold">🗑️</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      const logBox = document.getElementById('admin-activity-log');
+      if (logBox) {
+        logBox.innerHTML = appState.activityLog.slice(0, 20).map(l => `<div>[${l.time}] <strong>${l.actor}:</strong> ${l.msg}</div>`).join('');
+      }
+    }
+
+    function openDashletModal(type) {
       const modal = document.getElementById('dashlet-modal');
       const iconEl = document.getElementById('modal-icon');
       const titleEl = document.getElementById('modal-title');
       const bodyEl = document.getElementById('modal-body');
-      if (!modal || !bodyEl) return;
-
       const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
 
       if (type === 'guests') {
         iconEl.textContent = '👥';
-        titleEl.textContent = `Squad RSVP Status (${confirmed.length}/${appState.guests.length} Confirmed)`;
-        bodyEl.innerHTML = appState.guests.map(g => `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-parchment border border-amber-200">
-            <span class="font-extrabold text-red-950">${g.name}</span>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${g.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-200 text-red-950'}">${g.rsvp}</span>
-          </div>
-        `).join('');
+        titleEl.textContent = `Confirmed Squad (${confirmed.length} / ${appState.guests.length})`;
+        bodyEl.innerHTML = appState.guests.map(g => `<div class="p-2.5 rounded-xl bg-parchment flex justify-between font-bold"><span>${g.name}</span><span class="uppercase text-xs">${g.rsvp}</span></div>`).join('');
+        lastModalTextSummary = confirmed.map(g => g.name).join(', ');
       } else if (type === 'travel') {
         iconEl.textContent = '🚆';
-        titleEl.textContent = 'Travel & Arrival Schedule';
-        bodyEl.innerHTML = confirmed.length ? confirmed.map(g => `
-          <div class="p-3 rounded-xl bg-parchment border border-amber-200">
-            <div class="font-extrabold text-red-950">${g.name}</div>
-            <div class="text-xs text-stone-600 mt-0.5">${g.fromCity || 'Origin TBD'} → <strong>${g.arrivalCity || 'Hub TBD'}</strong> (${g.travelDate || 'TBD'} to ${g.returnDate || 'TBD'})</div>
-          </div>
-        `).join('') : `<p class="text-xs text-stone-500">No confirmed travel plans yet.</p>`;
-      } else if (type === 'food' || type === 'alcohol') {
-        const targetCat = type === 'food' ? 'Starters' : 'Spirits';
-        iconEl.textContent = type === 'food' ? '🍗' : '🍻';
-        titleEl.textContent = type === 'food' ? 'Starters & Food Expense Breakdown' : 'Spirits & Bar Stock Breakdown';
-        const items = appState.expenses.filter(e => e.category === targetCat);
-        bodyEl.innerHTML = items.length ? items.map(e => `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-parchment border border-amber-200">
-            <span class="font-bold text-red-950">${e.desc}</span>
-            <span class="font-black text-emerald-900">₹${Number(e.amount).toLocaleString('en-IN')}</span>
-          </div>
-        `).join('') : `<p class="text-xs text-stone-500">No ${targetCat.toLowerCase()} logged yet in Expenses & Split.</p>`;
+        titleEl.textContent = 'Travel & Arrival Hubs';
+        bodyEl.innerHTML = confirmed.length
+          ? confirmed.map(g => `<div class="p-2.5 rounded-xl bg-parchment font-bold">${g.name}: ${g.fromCity || 'TBD'} → ${g.arrivalCity} (${g.travelDate} to ${g.returnDate})</div>`).join('')
+          : '<p class="text-stone-500">No travel details confirmed yet.</p>';
+        lastModalTextSummary = bodyEl.innerText;
+      } else if (type === 'food') {
+        iconEl.textContent = '🍗';
+        titleEl.textContent = 'Starters Wishlist & Food Bills';
+        const items = confirmed.flatMap(g => (g.starters || []).map(s => `${g.name}: ${s.name}`));
+        bodyEl.innerHTML = items.length ? items.map(i => `<div class="p-2 rounded-xl bg-parchment font-bold">${i}</div>`).join('') : '<p class="text-stone-500">No starters requested yet.</p>';
+        lastModalTextSummary = items.join('\n');
+      } else if (type === 'alcohol') {
+        iconEl.textContent = '🍻';
+        titleEl.textContent = 'Spirits Wishlist & Bar Stock';
+        const items = confirmed.flatMap(g => (g.alcohol || []).map(a => `${g.name}: ${a.brand}`));
+        bodyEl.innerHTML = items.length ? items.map(i => `<div class="p-2 rounded-xl bg-parchment font-bold">${i}</div>`).join('') : '<p class="text-stone-500">No spirits requested yet.</p>';
+        lastModalTextSummary = items.join('\n');
       } else if (type === 'expenses') {
         iconEl.textContent = '💰';
         titleEl.textContent = 'Simplified Settlements';
         const txns = computeSettlements();
-        bodyEl.innerHTML = txns.length ? txns.map(t => `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-            <span class="font-bold text-red-950">${t.from} → ${t.to}</span>
-            <span class="font-black text-red-950">₹${t.amount.toLocaleString('en-IN')}</span>
-          </div>
-        `).join('') : `<p class="text-xs text-stone-500">All settled up! No pending payments.</p>`;
+        bodyEl.innerHTML = txns.length ? txns.map(t => `<div class="p-2.5 rounded-xl bg-emerald-50 font-extrabold">${t.from} pays ${t.to}: ₹${t.amount}</div>`).join('') : '<p class="text-stone-500">No pending dues.</p>';
+        lastModalTextSummary = bodyEl.innerText;
       } else if (type === 'photos') {
-        iconEl.textContent = '📷';
-        titleEl.textContent = 'HD Photo Vault Summary';
-        const photos = await getAllHdPhotos();
-        bodyEl.innerHTML = photos.length ? photos.map(p => `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-parchment border border-amber-200">
-            <span class="font-bold text-red-950 truncate">${p.caption} (by ${p.uploadedBy})</span>
-            <button type="button" onclick="downloadHdPhoto('${p.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-700 text-white text-xs font-extrabold">⬇️ HD</button>
-          </div>
-        `).join('') : `<p class="text-xs text-stone-500">No photos uploaded yet.</p>`;
+        closeDashletModal();
+        switchMainTab('gallery');
+        return;
       }
-
-      modal.classList.remove('hidden');
+      modal?.classList.remove('hidden');
     }
 
     function closeDashletModal() {
@@ -2591,35 +2512,20 @@
     }
 
     function copyModalSummary() {
-      const title = document.getElementById('modal-title')?.textContent || 'Summary';
-      const body = document.getElementById('modal-body')?.innerText || '';
-      const ta = document.createElement('textarea');
-      ta.value = `${title}\n${body}`;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
+      copyTextFallback(lastModalTextSummary || '');
       showToast('Summary copied!');
     }
 
     function openSyncModal() {
       document.getElementById('sync-modal')?.classList.remove('hidden');
     }
-
     function closeSyncModal() {
       document.getElementById('sync-modal')?.classList.add('hidden');
     }
-
     function copySyncJson() {
-      const ta = document.createElement('textarea');
-      ta.value = JSON.stringify(appState);
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast('Trip Data JSON copied!');
+      copyTextFallback(JSON.stringify(appState));
+      showToast('Trip JSON copied to clipboard!');
     }
-
     function downloadSyncJson() {
       const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -2627,70 +2533,97 @@
       a.href = url;
       a.download = 'sankranti-2027-backup.json';
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
-
     function importSyncJson() {
       try {
-        const raw = document.getElementById('sync-import-textarea')?.value || '';
+        const raw = (document.getElementById('sync-import-textarea')?.value || '').trim();
         const parsed = JSON.parse(raw);
-        if (!parsed || !Array.isArray(parsed.guests)) {
-          return showToast('Invalid JSON format.', 'error');
-        }
-        appState = { ...getDefaultState(), ...parsed };
-        saveAppState({
-          actor: getActiveActorName(),
-          category: 'ADMIN',
-          action: 'Synced JSON',
-          msg: 'Imported and synced trip state from JSON.'
-        });
+        if (!parsed || !Array.isArray(parsed.guests)) throw new Error('Invalid format');
+        appState = parsed;
+        saveAppState({ actor: 'Host Admin', category: 'ADMIN', action: 'Synced JSON', msg: 'Imported & synced trip state JSON.' });
         closeSyncModal();
-        showToast('Trip data synced successfully!');
+        showToast('Trip data synced successfully! 🔄');
       } catch (e) {
-        showToast('Failed to parse JSON.', 'error');
+        showToast('Invalid JSON pasted.', 'error');
       }
     }
 
     // =========================================================================
-    // 8. MASTER UI RENDERER & STARTUP INITIALIZATION
+    // 8. MASTER UI RENDER LOOP
     // =========================================================================
     async function renderAllUI() {
-      // Role Switcher Dropdown
-      const roleSelect = document.getElementById('role-switcher');
-      if (roleSelect) {
-        roleSelect.innerHTML = `<option value="overview" ${currentRole === 'overview' ? 'selected' : ''}>🏠 Group Overview (Public)</option>` +
-          appState.guests.map(g => `<option value="${g.id}" ${currentRole === g.id ? 'selected' : ''}>👤 ${g.name} (${g.rsvp})</option>`).join('');
+      // Role Switcher Options
+      const roleSel = document.getElementById('role-switcher');
+      if (roleSel) {
+        roleSel.innerHTML = `<option value="overview">🏠 Group Overview (Public)</option>` +
+          appState.guests.map(g => `<option value="${g.id}" ${g.id === currentRole ? 'selected' : ''}>👤 ${g.name} (${g.rsvp})</option>`).join('');
       }
 
-      // Admin Lock Button & Tab
+      // Countdown Badge
+      const countdownEl = document.getElementById('sankranti-countdown-badge');
+      if (countdownEl) {
+        const diffDays = Math.ceil((new Date('2027-01-14T00:00:00') - new Date()) / (1000 * 60 * 60 * 24));
+        countdownEl.textContent = diffDays > 0
+          ? `⏳ ${diffDays} Days to Bhogi (Jan 14, 2027)`
+          : `🔥 Sankranti 2027 Celebration is LIVE!`;
+      }
+
+      // Admin Lock Button, Tab, Logs Tab & Admin-Only Home Dashlets
       const lockIcon = document.getElementById('admin-lock-icon');
       const lockLabel = document.getElementById('admin-lock-label');
       const navAdmin = document.getElementById('nav-admin');
+      const navLogs = document.getElementById('nav-logs');
+      const adminDashletsWrap = document.getElementById('admin-home-dashlets-wrapper');
       if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🔓' : '🔒';
       if (lockLabel) lockLabel.textContent = isAdminUnlocked ? 'Admin Mode Active' : 'Guest Mode (Unlock Admin)';
       if (navAdmin) {
         if (isAdminUnlocked) navAdmin.classList.remove('hidden');
         else navAdmin.classList.add('hidden');
       }
-
-      // Home Guest Confirmation Form (visible when viewing as an accepted guest)
-      const homeGuestSec = document.getElementById('home-guest-details-section');
-      const activeGuest = getActiveGuest();
-      if (homeGuestSec) {
-        if (activeGuest && activeGuest.rsvp === 'accepted') {
-          selectedRsvpGuestId = activeGuest.id;
-          homeGuestSec.classList.remove('hidden');
-          populatePreferenceFormForGuest(activeGuest, 'home');
-        } else {
-          homeGuestSec.classList.add('hidden');
+      if (navLogs) {
+        if (isAdminUnlocked) navLogs.classList.remove('hidden');
+        else {
+          navLogs.classList.add('hidden');
+          const logsTab = document.getElementById('tab-logs');
+          if (logsTab && !logsTab.classList.contains('hidden')) switchMainTab('home');
         }
       }
+      if (adminDashletsWrap) {
+        if (isAdminUnlocked) adminDashletsWrap.classList.remove('hidden');
+        else adminDashletsWrap.classList.add('hidden');
+      }
 
-      // KPI Dashlets
+      // Home Guest Personal Hub (visible when viewing as an accepted guest)
+      const homeGuestSec = document.getElementById('home-guest-details-section');
+      const homeActionCards = document.getElementById('home-guest-action-cards');
+      const selectProfileBanner = document.getElementById('home-select-profile-banner');
+      const bannerTitle = document.getElementById('home-welcome-banner-title');
+      const activeGuest = getActiveGuest();
+
+      if (activeGuest && activeGuest.rsvp === 'accepted') {
+        selectedRsvpGuestId = activeGuest.id;
+        if (bannerTitle) bannerTitle.textContent = `Welcome, ${activeGuest.name}! Ready for Sankranti 2027?`;
+        selectProfileBanner?.classList.add('hidden');
+        homeGuestSec?.classList.remove('hidden');
+        homeActionCards?.classList.remove('hidden');
+        populatePreferenceFormForGuest(activeGuest, 'home');
+        renderHomeGuestWishlist(activeGuest);
+        handleHomeExpenseCatChange();
+      } else {
+        if (bannerTitle) bannerTitle.textContent = `Three Days of Bonfires, Feasts & Road Trips!`;
+        selectProfileBanner?.classList.remove('hidden');
+        homeGuestSec?.classList.add('hidden');
+        homeActionCards?.classList.add('hidden');
+      }
+
+      // Admin KPI Dashlets Data
       const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
       const cities = new Set(confirmed.map(g => g.arrivalCity).filter(Boolean));
-      const starterCount = appState.expenses.filter(e => e.category === 'Starters').length;
-      const spiritCount = appState.expenses.filter(e => e.category === 'Spirits').length;
+      const starterCount = appState.expenses.filter(e => e.category === 'Starters').length +
+        confirmed.reduce((acc, g) => acc + (g.starters?.length || 0), 0);
+      const spiritCount = appState.expenses.filter(e => e.category === 'Spirits').length +
+        confirmed.reduce((acc, g) => acc + (g.alcohol?.length || 0), 0);
       const totalExpense = appState.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
       const photos = await getAllHdPhotos();
 
@@ -2699,7 +2632,7 @@
       document.getElementById('kpi-guests-sub').textContent = confirmed.length ? confirmed.map(g => g.name).join(', ') : 'Awaiting RSVPs...';
 
       document.getElementById('kpi-cities-count').textContent = cities.size;
-      document.getElementById('kpi-travel-sub').textContent = cities.size ? Array.from(cities).join(', ') : 'Jangareddygudem, Kothapeta, Narsapuram...';
+      document.getElementById('kpi-travel-sub').textContent = cities.size ? Array.from(cities).join(', ') : 'No arrivals confirmed yet';
 
       document.getElementById('kpi-starters-qty').textContent = starterCount;
       document.getElementById('kpi-alcohol-qty').textContent = spiritCount;
@@ -2713,17 +2646,17 @@
       }
 
       // Home Squad Pills
+      // Home Squad Pills (Confirmed / Accepted Guests Only)
       const pillsEl = document.getElementById('home-squad-pills');
       if (pillsEl) {
-        pillsEl.innerHTML = appState.guests.map(g => {
-          const accepted = g.rsvp === 'accepted';
-          return `
-            <button type="button" onclick="handleRoleSwitch('${g.id}')" class="p-3 rounded-2xl border text-left transition ${accepted ? 'bg-emerald-50 border-emerald-400 text-emerald-950' : 'bg-parchment border-amber-200 text-red-950 hover:border-orange-400'}">
-              <div class="text-xs sm:text-sm font-extrabold truncate">${g.name}</div>
-              <div class="text-[10px] font-black uppercase mt-0.5 ${accepted ? 'text-emerald-700' : 'text-amber-700'}">${accepted ? '✅ Confirmed' : '⏳ ' + g.rsvp}</div>
-            </button>
-          `;
-        }).join('');
+        pillsEl.innerHTML = confirmed.length
+          ? confirmed.map(g => `
+              <button type="button" onclick="handleRoleSwitch('${g.id}')" class="p-3 rounded-2xl border text-left transition bg-emerald-50 border-emerald-400 text-emerald-950 hover:border-emerald-600 shadow-sm">
+                <div class="text-xs sm:text-sm font-extrabold truncate">${g.name}</div>
+                <div class="text-[10px] font-black uppercase mt-0.5 text-emerald-700">✅ Confirmed</div>
+              </button>
+            `).join('')
+          : `<div class="col-span-full text-xs text-stone-500 italic py-2">No confirmed squad members yet. Once guests accept their invite, they’ll appear right here!</div>`;
       }
 
       renderRsvpSection();

@@ -57,21 +57,36 @@
         </div>
 
         <!-- Top-Right Admin Switcher -->
-        <div class="flex items-center gap-2.5">
-          <span id="mode-toggle-label" class="text-xs sm:text-sm font-extrabold text-amber-100">Guest Mode</span>
+        <div class="flex items-center gap-2 bg-red-950/60 border border-amber-400/30 rounded-full px-3 py-1.5 shadow-sm">
+          <button
+            id="guest-side-label"
+            type="button"
+            onclick="if(isAdminUnlocked) logoutAdmin()"
+            class="text-[11px] sm:text-xs font-black uppercase tracking-wider transition cursor-pointer"
+          >
+            GUEST
+          </button>
           <button
             id="admin-mode-toggle"
             type="button"
             role="switch"
             aria-checked="false"
-            aria-label="Toggle Host Admin Mode"
+            aria-label="Toggle between Guest and Admin mode"
             onclick="handleAdminModeToggle()"
-            class="relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-amber-300/50 bg-red-950/80 p-1 transition-colors duration-200 focus:outline-none"
+            class="relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-amber-300/50 bg-rose-600 p-1 transition-colors duration-200 focus:outline-none"
           >
             <span
               id="admin-mode-toggle-knob"
-              class="inline-block h-5 w-5 transform rounded-full bg-amber-300 shadow transition-transform duration-200 translate-x-0"
+              class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-0"
             ></span>
+          </button>
+          <button
+            id="admin-side-label"
+            type="button"
+            onclick="if(!isAdminUnlocked) openAdminPinModal()"
+            class="text-[11px] sm:text-xs font-black uppercase tracking-wider transition cursor-pointer"
+          >
+            ADMIN
           </button>
         </div>
       </div>
@@ -2878,20 +2893,28 @@
     async function renderAllUI() {
       const toggleBtn = document.getElementById('admin-mode-toggle');
       const toggleKnob = document.getElementById('admin-mode-toggle-knob');
-      const modeLabel = document.getElementById('mode-toggle-label');
+      const guestLabel = document.getElementById('guest-side-label');
+      const adminLabel = document.getElementById('admin-side-label');
       if (toggleBtn) {
         toggleBtn.setAttribute('aria-checked', String(isAdminUnlocked));
         toggleBtn.className = isAdminUnlocked
           ? 'relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-emerald-300 bg-emerald-600 p-1 transition-colors duration-200 focus:outline-none'
-          : 'relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-amber-300/50 bg-red-950/80 p-1 transition-colors duration-200 focus:outline-none';
+          : 'relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-rose-300/60 bg-rose-600 p-1 transition-colors duration-200 focus:outline-none';
       }
       if (toggleKnob) {
         toggleKnob.className = isAdminUnlocked
           ? 'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-6'
-          : 'inline-block h-5 w-5 transform rounded-full bg-amber-300 shadow transition-transform duration-200 translate-x-0';
+          : 'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-0';
       }
-      if (modeLabel) {
-        modeLabel.textContent = isAdminUnlocked ? '🛡️ Admin' : '🔒 Guest Mode';
+      if (guestLabel) {
+        guestLabel.className = isAdminUnlocked
+          ? 'text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-amber-200/60 hover:text-amber-100 transition cursor-pointer'
+          : 'text-[11px] sm:text-xs font-black uppercase tracking-wider text-rose-200 transition cursor-pointer';
+      }
+      if (adminLabel) {
+        adminLabel.className = isAdminUnlocked
+          ? 'text-[11px] sm:text-xs font-black uppercase tracking-wider text-emerald-300 transition cursor-pointer'
+          : 'text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-amber-200/60 hover:text-amber-100 transition cursor-pointer';
       }
 
       const adminOnlyIds = ['nav-tab-rsvp', 'nav-tab-logs', 'nav-tab-admin', 'admin-home-dashlets', 'home-manage-invites-btn'];

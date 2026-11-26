@@ -663,15 +663,24 @@
 
           <!-- Splitwise Settlements Summary -->
           <div class="lg:col-span-5 rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-4">
-            <div class="flex items-center justify-between border-b border-amber-100 pb-3">
+            <div class="flex items-center justify-between border-b border-amber-100 pb-3 gap-2">
               <div>
                 <h3 class="text-lg font-black text-red-950">⚖️ Splitwise Settlements</h3>
                 <p class="text-xs text-stone-600">Auto-calculated minimal transfers</p>
               </div>
-              <div class="text-right">
-                <div class="text-[11px] font-bold text-stone-500 uppercase">Total Spend</div>
-                <div id="total-trip-spend" class="text-xl font-black text-emerald-800">₹0</div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="loadSampleSettlementData()" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-red-950 text-[11px] font-black transition">
+                  ✨ Sample
+                </button>
+                <button type="button" onclick="shareSettlementsOnWhatsApp()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white text-xs font-black shadow transition flex items-center gap-1.5">
+                  <span>💬 WhatsApp</span>
+                </button>
               </div>
+            </div>
+
+            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-amber-50/80 border border-amber-200">
+              <span class="text-xs font-extrabold text-red-950 uppercase tracking-wide">Total Squad Spend</span>
+              <span id="total-trip-spend" class="text-xl font-black text-emerald-800">₹0</span>
             </div>
 
             <div id="settlement-transfers-list" class="space-y-2.5">
@@ -2460,6 +2469,67 @@
       return transfers;
     }
 
+    function buildSettlementSummaryText() {
+      const totalSpend = Math.round(appState.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
+      const transfers = calculateSettlements();
+      const lines = [
+        '🪁 *Sankranti 2027 • Settlement Summary* 💸',
+        `Total Squad Spend: *₹${totalSpend.toLocaleString()}*`,
+        ''
+      ];
+
+      if (!transfers.length) {
+        lines.push('✅ All settled up — no pending transfers!');
+      } else {
+        lines.push('*Who Pays Whom:*');
+        transfers.forEach(t => {
+          const fromName = appState.guests.find(g => g.id === t.fromId)?.name || 'Member';
+          const toName = appState.guests.find(g => g.id === t.toId)?.name || 'Member';
+          lines.push(`• *${fromName}* pays *${toName}* → *₹${t.amount.toLocaleString()}*`);
+        });
+      }
+
+      return lines.join('\n');
+    }
+
+    function shareSettlementsOnWhatsApp() {
+      const summaryText = buildSettlementSummaryText();
+      const ta = document.createElement('textarea');
+      ta.value = summaryText;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch (e) {}
+      ta.remove();
+
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(summaryText)}`;
+      window.open(waUrl, '_blank');
+      showToast('💬 Settlement summary copied & opening WhatsApp!');
+    }
+
+    function loadSampleSettlementData() {
+      const sampleGuests = [
+        { id: 'sample_pavan', name: 'Pavan', phone: '', rsvp: 'accepted', fromCity: 'Hyderabad', toCity: 'Rajahmundry', arrivalDate: '2027-01-13', departureDate: '2027-01-17', travelSubmitted: true, packedItems: [], customPackingItems: [], starters: [], spirits: [] },
+        { id: 'sample_karthik', name: 'Karthik', phone: '', rsvp: 'accepted', fromCity: 'Bengaluru', toCity: 'Rajahmundry', arrivalDate: '2027-01-13', departureDate: '2027-01-17', travelSubmitted: true, packedItems: [], customPackingItems: [], starters: [], spirits: [] },
+        { id: 'sample_yums', name: 'Yums', phone: '', rsvp: 'accepted', fromCity: 'Hyderabad', toCity: 'Rajahmundry', arrivalDate: '2027-01-13', departureDate: '2027-01-17', travelSubmitted: true, packedItems: [], customPackingItems: [], starters: [], spirits: [] },
+        { id: 'sample_teja', name: 'Teja', phone: '', rsvp: 'accepted', fromCity: 'Vijayawada', toCity: 'Rajahmundry', arrivalDate: '2027-01-13', departureDate: '2027-01-17', travelSubmitted: true, packedItems: [], customPackingItems: [], starters: [], spirits: [] }
+      ];
+      const allIds = sampleGuests.map(g => g.id);
+      const sampleExpenses = [
+        { id: 'sample_exp_1', category: 'Fuel', item: 'Highway Fuel Run', paidBy: 'sample_pavan', splitMode: 'equal', splitAmong: allIds, amount: 4000, updatedAt: Date.now() - 3000 },
+        { id: 'sample_exp_2', category: 'Starters & Food', item: 'Chicken Pakodi & Prawns Fry', paidBy: 'sample_karthik', splitMode: 'equal', splitAmong: allIds, amount: 2400, updatedAt: Date.now() - 2000 },
+        { id: 'sample_exp_3', category: 'Spirits & Alcohol', item: 'Squad Spirits & Beer', paidBy: 'sample_yums', splitMode: 'custom', splitAmong: ['sample_pavan', 'sample_yums', 'sample_teja'], amount: 3000, updatedAt: Date.now() - 1000 }
+      ];
+
+      appState.guests = sampleGuests;
+      appState.expenses = sampleExpenses;
+      currentRole = sampleGuests[0].id;
+      saveAppState(null, { fullSync: true });
+      showToast('✨ Loaded sample squad & ₹9,400 settlement preview!');
+      renderAllUI();
+    }
+
     // ==================== MASTER UI ORCHESTRATOR ====================
     function updateSankrantiCountdown() {
       const target = new Date('2027-01-14T06:00:00+05:30').getTime();
@@ -2981,6 +3051,8 @@
       toggleGuestOnExpense,
       saveExpenseInlineEdit,
       deleteExpense,
+      shareSettlementsOnWhatsApp,
+      loadSampleSettlementData,
       handleHdPhotoUpload,
       downloadHdPhoto,
       deleteHdPhoto,

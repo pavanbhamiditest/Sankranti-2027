@@ -102,25 +102,25 @@
   <!-- ===================================================================== -->
   <!-- STICKY NAVIGATION TABS                                                -->
   <!-- ===================================================================== -->
-  <nav id="main-sticky-nav" class="sticky top-0 z-30 bg-cream/95 backdrop-blur-md border-b border-amber-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-start md:justify-center gap-2 py-2.5 overflow-x-auto no-scrollbar">
-        <button onclick="switchMainTab('home')" id="nav-home" class="main-nav-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-2 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow">
+  <nav id="main-sticky-nav" class="sticky top-0 z-30 bg-cream border-b border-amber-200 shadow-sm" style="touch-action: manipulation;">
+    <div class="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 py-2.5">
+        <button type="button" onclick="switchMainTab('home')" id="nav-home" style="touch-action: manipulation;" class="main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow">
           <span>📊</span><span>Home Dashlets</span>
         </button>
-        <button onclick="switchMainTab('rsvp')" id="nav-rsvp" class="main-nav-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-2 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
-          <span>📲</span><span>Invites & My Preferences</span>
+        <button type="button" onclick="switchMainTab('rsvp')" id="nav-rsvp" style="touch-action: manipulation;" class="main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
+          <span>📲</span><span>Invites & Preferences</span>
         </button>
-        <button onclick="switchMainTab('expenses')" id="nav-expenses" class="main-nav-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-2 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
+        <button type="button" onclick="switchMainTab('expenses')" id="nav-expenses" style="touch-action: manipulation;" class="main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
           <span>💸</span><span>Expenses & Split</span>
         </button>
-        <button onclick="switchMainTab('gallery')" id="nav-gallery" class="main-nav-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-2 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
+        <button type="button" onclick="switchMainTab('gallery')" id="nav-gallery" style="touch-action: manipulation;" class="main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
           <span>📸</span><span>HD Photo Gallery</span>
         </button>
-        <button onclick="switchMainTab('logs')" id="nav-logs" class="main-nav-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-2 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
+        <button type="button" onclick="switchMainTab('logs')" id="nav-logs" style="touch-action: manipulation;" class="main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200">
           <span>📜</span><span>Activity Logs</span>
         </button>
-        <button onclick="switchMainTab('admin')" id="nav-admin" class="main-nav-btn hidden px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-2 bg-emerald-800 text-white shadow">
+        <button type="button" onclick="switchMainTab('admin')" id="nav-admin" style="touch-action: manipulation;" class="main-nav-btn hidden cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-emerald-800 text-white shadow">
           <span>🛡️</span><span>Host Control Panel</span>
         </button>
       </div>
@@ -789,7 +789,7 @@
             <div>
               <span class="text-xs font-extrabold uppercase tracking-wider text-purple-700">Original Quality • Zero Compression</span>
               <h2 class="text-2xl font-extrabold text-red-950 mt-0.5">Sankranti 2027 HD Photo Vault</h2>
-              <p class="text-xs sm:text-sm text-stone-600 mt-1">All squad members can upload and download full-resolution HD photos anytime. Only Host Admin can delete photos.</p>
+              <p class="text-xs sm:text-sm text-stone-600 mt-1">All squad members can upload, download, and delete their own HD photos anytime. Host Admin can manage all photos.</p>
             </div>
             <div id="gallery-admin-upload-controls" class="flex flex-wrap items-center gap-2.5">
               <input id="photo-caption-input" type="text" placeholder="Caption (e.g., Bhogi Bonfire)" class="px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-bold text-red-950" />
@@ -3065,6 +3065,7 @@
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
       const actorName = getCurrentActorName();
+      const uploaderId = isAdminUnlocked ? 'admin' : currentRole;
       const caption = document.getElementById('photo-caption-input').value.trim() || `Sankranti 2027 Memory (by ${actorName})`;
 
       for (const file of files) {
@@ -3073,6 +3074,7 @@
           name: file.name,
           caption,
           uploadedBy: actorName,
+          uploaderId,
           sizeMB: (file.size / (1024 * 1024)).toFixed(2),
           uploadedAt: new Date().toLocaleString('en-IN'),
           blob: file
@@ -3092,16 +3094,28 @@
       showToast(`Uploaded ${files.length} HD photo(s)!`);
     }
 
+    function canDeletePhoto(photo) {
+      if (isAdminUnlocked) return true;
+      if (!photo) return false;
+      const actorName = getCurrentActorName();
+      return (photo.uploaderId && photo.uploaderId === currentRole) ||
+             (photo.uploadedBy && photo.uploadedBy === actorName);
+    }
+
     async function deleteHdPhoto(photoId) {
-      if (!requireAdmin('delete HD photos')) return;
       const photo = hdPhotosCache.find(p => p.id === photoId);
+      if (!canDeletePhoto(photo)) {
+        showToast('You can only delete photos you uploaded.', 'error');
+        return;
+      }
+      const actorName = getCurrentActorName();
       await deletePhotoFromDB(photoId);
       hdPhotosCache = await getAllPhotosFromDB();
       saveAppState({
-        actor: 'Host Admin',
+        actor: actorName,
         category: 'PHOTO',
         action: 'Deleted HD Photo',
-        msg: `Admin deleted HD photo "${photo ? photo.caption : photoId}".`
+        msg: `${actorName} deleted HD photo "${photo ? photo.caption : photoId}".`
       });
       showToast('HD photo deleted.');
     }
@@ -3178,8 +3192,8 @@
                 <button type="button" onclick="downloadHdPhoto('${p.id}')" class="flex-grow py-1.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold">
                   ⬇️ HD Download
                 </button>
-                ${isAdminUnlocked ? `
-                  <button type="button" onclick="deleteHdPhoto('${p.id}')" class="py-1.5 px-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 text-xs font-extrabold">
+                ${canDeletePhoto(p) ? `
+                  <button type="button" onclick="deleteHdPhoto('${p.id}')" title="Delete Photo" class="py-1.5 px-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 text-xs font-extrabold">
                     🗑️
                   </button>
                 ` : ''}

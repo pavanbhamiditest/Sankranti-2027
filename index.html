@@ -48,9 +48,9 @@
           <div>
             <div class="flex items-center gap-2">
               <h1 class="text-lg sm:text-xl font-black tracking-tight text-white">Sankranti 2027</h1>
-              <span id="cloud-sync-badge" class="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider">
+              <button type="button" id="cloud-sync-badge" onclick="diagnoseCloudSync()" class="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer">
                 Connecting...
-              </span>
+              </button>
             </div>
             <p class="text-[11px] sm:text-xs text-amber-200/90 font-medium">#DhummuLeputunnam • Bhogi • Sankranthi • Kanuma</p>
           </div>
@@ -753,7 +753,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, deleteDoc, getDocs, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'sankranti-2027-squad';
     const defaultFirebaseConfig = {
@@ -769,10 +769,12 @@
 
     window.__cloudSync = {
       ready: false,
+      lastError: '',
       user: null,
       db: null,
       appId,
       pendingOps: [],
+      forcePull: async () => {},
       pushGuest: async (guest) => {
         window.__cloudSync.pendingOps.push({ type: 'guest', data: JSON.parse(JSON.stringify(guest)) });
       },
@@ -795,8 +797,8 @@
       if (!badge) return;
       badge.textContent = text;
       badge.className = isOnline
-        ? 'px-2 py-0.5 rounded-full bg-emerald-400/25 border border-emerald-300/50 text-emerald-200 text-[10px] font-extrabold uppercase tracking-wider'
-        : 'px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider';
+        ? 'px-2 py-0.5 rounded-full bg-emerald-400/25 border border-emerald-300/50 text-emerald-200 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer'
+        : 'px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer';
     }
 
     if (firebaseConfig) {
@@ -821,6 +823,15 @@
           const expensesCol = collection(db, 'artifacts', appId, 'public', 'data', 'sankranti_expenses');
           const metaDoc = doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_meta', 'config');
 
+          window.__cloudSync.forcePull = async () => {
+            const snap = await getDocs(guestsCol);
+            const list = [];
+            snap.forEach(d => list.push(d.data()));
+            if (typeof window.__onRemoteGuestsUpdate === 'function') {
+              window.__onRemoteGuestsUpdate(list);
+            }
+          };
+
           window.__cloudSync.pushGuest = async (guest) => {
             if (!window.__cloudSync.user) return;
             try {
@@ -829,7 +840,8 @@
                 updatedAt: Date.now()
               }, { merge: true });
             } catch (err) {
-              console.error('Guest sync write error:', err);
+              window.__cloudSync.lastError = err.message || String(err);
+              setSyncBadge('⚠️ Rule Blocked', false);
             }
           };
 
@@ -902,6 +914,7 @@
             },
             (err) => {
               console.error('Guests listener error:', err);
+              window.__cloudSync.lastError = err.message || String(err);
               setSyncBadge('⚠️ Sync Error', false);
             }
           );
@@ -939,7 +952,8 @@
         }
       } catch (err) {
         console.error('Firebase init failed:', err);
-        setSyncBadge('🟠 Local Only', false);
+        window.__cloudSync.lastError = err.message || String(err);
+        setSyncBadge('⚠️ Auth Error', false);
       }
     } else {
       setSyncBadge('🟠 Local Only', false);
@@ -1049,6 +1063,10 @@
         });
       }
 
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {}
+
       if (window.__cloudSync) {
         if (syncTarget?.guest) {
           window.__cloudSync.pushGuest(syncTarget.guest);
@@ -1063,6 +1081,24 @@
           appState.expenses.forEach(e => window.__cloudSync.pushExpense(e));
         }
         window.__cloudSync.pushMeta({ adminPin: appState.adminPin, logs: appState.logs });
+      }
+    }
+
+    async function diagnoseCloudSync() {
+      if (!window.__cloudSync) return;
+      if (window.__cloudSync.lastError) {
+        showToast('Sync Error: ' + window.__cloudSync.lastError, 'error');
+        return;
+      }
+      if (window.__cloudSync.ready) {
+        try {
+          await window.__cloudSync.forcePull();
+          showToast(`🟢 Connected to Firebase (sankranti-2027)! Guests synced: ${appState.guests.length}`);
+        } catch (err) {
+          showToast('⚠️ Sync read failed: ' + (err.message || err), 'error');
+        }
+      } else {
+        showToast('🟠 Still connecting to Firebase...', 'info');
       }
     }
 

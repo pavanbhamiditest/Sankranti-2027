@@ -367,20 +367,31 @@
 
           <!-- Individual Feast Entries & Per-Item Expense Split -->
           <div class="pt-4 border-t border-amber-200 space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h4 class="text-base sm:text-lg font-black text-red-950 flex items-center gap-2">
-                  <span>🧾 Individual Feast Entries & Item-Wise Split</span>
-                  <span id="feast-orders-count" class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-extrabold">0</span>
-                </h4>
-                <p class="text-xs text-stone-600">Add or remove guests per item, enter the item amount (₹) and who paid—auto-splits equally among selected members!</p>
+            <!-- Squad Sneak Peek Banner -->
+            <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-wider text-red-950">👀 Squad Orders Sneak Peek</span>
+                <span id="feast-sneak-count" class="text-[11px] font-bold text-orange-800">0 items planned</span>
               </div>
-              <div class="px-3.5 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-black text-emerald-950">
-                Feast Bill Total: <span id="feast-orders-total">₹0</span>
+              <div id="feast-sneak-peek-strip" class="flex flex-wrap gap-2">
+                <!-- Populated dynamically -->
               </div>
             </div>
 
-            <div id="feast-orders-list" class="space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h4 class="text-base sm:text-lg font-black text-red-950 flex items-center gap-2">
+                  <span>🧾 Feast Ledger</span>
+                  <span id="feast-orders-count" class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-extrabold">0</span>
+                </h4>
+                <p class="text-xs text-stone-600">Shows chosen items & quantities. Add amounts and split members anytime on the <strong>💸 Expenses & Split</strong> page!</p>
+              </div>
+              <button type="button" onclick="switchMainTab('expenses')" class="px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-xs font-black text-emerald-950 transition">
+                💸 Settle & Split in Expenses →
+              </button>
+            </div>
+
+            <div id="feast-orders-list" class="space-y-2.5">
               <!-- Populated dynamically -->
             </div>
           </div>
@@ -1124,6 +1135,7 @@
     let isAdminUnlocked = false;
     let welcomeCountdownInterval = null;
     let isEditingTravelDetails = false;
+    let expandedExpenseId = null;
 
     window.__onRemoteGuestsUpdate = function(remoteGuests) {
       if (!Array.isArray(remoteGuests)) return;
@@ -1909,6 +1921,9 @@
       if (!Array.isArray(appState.feastOrders)) appState.feastOrders = [];
       appState.feastOrders.unshift(newOrder);
 
+      // Immediately capture this item in the Expenses ledger so amount & split can be set there
+      const linkedExp = syncFeastOrderToLinkedExpense(newOrder);
+
       if (document.getElementById('starter-other-input')) document.getElementById('starter-other-input').value = '';
       if (document.getElementById('starter-custom-qty-input')) document.getElementById('starter-custom-qty-input').value = '';
 
@@ -1916,86 +1931,86 @@
         actor: requestedByName,
         category: 'Feast & Bar',
         action: 'Added Starter Entry',
-        msg: `${requestedByName} added ${itemName} (${quantity}) to Feast & Bar.`
+        msg: `${requestedByName} added ${itemName} (${quantity}) to Feast & Bar and Expenses.`
       }, { feastOrder: newOrder });
-
-      showToast(`🍗 Added ${itemName} (${quantity})!`);
-      renderAllUI();
-    }
-
-    function toggleGuestOnFeastOrder(orderId, guestId) {
-      const order = (appState.feastOrders || []).find(o => o.id === orderId);
-      if (!order) return;
-      if (!Array.isArray(order.sharedWith)) order.sharedWith = [];
-      const idx = order.sharedWith.indexOf(guestId);
-      if (idx === -1) {
-        order.sharedWith.push(guestId);
-      } else {
-        order.sharedWith.splice(idx, 1);
-      }
-      order.updatedAt = Date.now();
-      syncFeastOrderToLinkedExpense(order);
-      saveAppState(null, { feastOrder: order });
-      renderAllUI();
-    }
-
-    function saveFeastOrderAmount(orderId) {
-      const order = (appState.feastOrders || []).find(o => o.id === orderId);
-      if (!order) return;
-      const amtInput = document.getElementById(`feast-amt-${orderId}`);
-      const paidBySelect = document.getElementById(`feast-paidby-${orderId}`);
-      const amt = parseFloat(amtInput?.value || '0');
-      const paidBy = paidBySelect?.value || order.paidBy || order.requestedById;
-
-      if (!(amt > 0)) {
-        showToast('Enter a valid amount in ₹ for this item.', 'error');
-        return;
-      }
-      if (!order.sharedWith || order.sharedWith.length === 0) {
-        showToast('Select at least 1 guest to split this item.', 'error');
-        return;
-      }
-
-      order.amount = amt;
-      order.paidBy = paidBy;
-      order.updatedAt = Date.now();
-      const linkedExp = syncFeastOrderToLinkedExpense(order);
-
-      const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Member';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : payerName,
-        category: 'Feast & Bar',
-        action: 'Priced & Split Item',
-        msg: `Set ₹${amt} for ${order.itemName} (${order.quantity}), split equally among ${order.sharedWith.length} member(s).`
-      }, { feastOrder: order });
 
       if (linkedExp && window.__cloudSync) {
         window.__cloudSync.pushExpense(linkedExp);
       }
 
-      showToast(`💸 ₹${amt} split among ${order.sharedWith.length} member(s)!`);
+      showToast(`🍗 Added ${itemName} (${quantity}) & synced to Expenses!`);
       renderAllUI();
+    }
+
+    function toggleGuestOnExpense(expId, guestId) {
+      const exp = appState.expenses.find(e => e.id === expId);
+      if (!exp) return;
+      if (!Array.isArray(exp.splitAmong)) exp.splitAmong = [];
+      const idx = exp.splitAmong.indexOf(guestId);
+      if (idx === -1) {
+        exp.splitAmong.push(guestId);
+      } else {
+        exp.splitAmong.splice(idx, 1);
+      }
+      exp.updatedAt = Date.now();
+      saveAppState(null, { expense: exp });
+      renderExpensesSection();
+    }
+
+    function saveExpenseInlineEdit(expId) {
+      const exp = appState.expenses.find(e => e.id === expId);
+      if (!exp) return;
+      const amtInput = document.getElementById(`exp-edit-amt-${expId}`);
+      const paidBySelect = document.getElementById(`exp-edit-paidby-${expId}`);
+      const amt = parseFloat(amtInput?.value || '0');
+      const paidBy = paidBySelect?.value || exp.paidBy;
+
+      if (!(amt > 0)) {
+        showToast('Enter a valid amount in ₹.', 'error');
+        return;
+      }
+      if (!exp.splitAmong || exp.splitAmong.length === 0) {
+        showToast('Select at least 1 guest to split this bill.', 'error');
+        return;
+      }
+
+      exp.amount = amt;
+      exp.paidBy = paidBy;
+      exp.updatedAt = Date.now();
+
+      const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Member';
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : payerName,
+        category: 'Expense',
+        action: 'Updated Expense & Split',
+        msg: `Updated ${exp.item} to ₹${amt}, paid by ${payerName}, split among ${exp.splitAmong.length} member(s).`
+      }, { expense: exp });
+
+      expandedExpenseId = null;
+      showToast(`💸 Saved ₹${amt} split among ${exp.splitAmong.length} member(s)!`);
+      renderAllUI();
+    }
+
+    function toggleExpenseEditDrawer(expId) {
+      expandedExpenseId = (expandedExpenseId === expId) ? null : expId;
+      renderExpensesSection();
     }
 
     function syncFeastOrderToLinkedExpense(order) {
       const linkedExpId = 'exp_feast_' + order.id;
-      if (!(order.amount > 0) || !order.sharedWith || order.sharedWith.length === 0) {
-        const hadExp = appState.expenses.some(e => e.id === linkedExpId);
-        appState.expenses = appState.expenses.filter(e => e.id !== linkedExpId);
-        if (hadExp && window.__cloudSync) {
-          window.__cloudSync.deleteExpense(linkedExpId);
-        }
-        return null;
-      }
-
       const payerId = order.paidBy || order.requestedById || appState.guests[0]?.id || '';
+      const sharedList = (order.sharedWith && order.sharedWith.length > 0)
+        ? [...order.sharedWith]
+        : (payerId ? [payerId] : []);
+
       const expObj = {
         id: linkedExpId,
+        feastOrderId: order.id,
         category: 'Starters & Food',
         item: `${order.itemName} (${order.quantity})`,
         paidBy: payerId,
-        amount: order.amount,
-        splitAmong: [...order.sharedWith],
+        amount: Number(order.amount) || 0,
+        splitAmong: sharedList,
         date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
         updatedAt: Date.now()
       };
@@ -2034,107 +2049,63 @@
     function renderFeastOrdersList() {
       const container = document.getElementById('feast-orders-list');
       const countEl = document.getElementById('feast-orders-count');
-      const totalEl = document.getElementById('feast-orders-total');
+      const sneakStrip = document.getElementById('feast-sneak-peek-strip');
+      const sneakCount = document.getElementById('feast-sneak-count');
       if (!container) return;
 
       const orders = appState.feastOrders || [];
       if (countEl) countEl.textContent = orders.length;
-      const totalAmt = orders.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
-      if (totalEl) totalEl.textContent = `₹${totalAmt.toLocaleString('en-IN')}`;
+      if (sneakCount) sneakCount.textContent = `${orders.length} item${orders.length === 1 ? '' : 's'} planned`;
+
+      if (sneakStrip) {
+        if (orders.length === 0) {
+          sneakStrip.innerHTML = `<span class="text-xs text-stone-500 italic">Nothing ordered yet — be the first to add a starter!</span>`;
+        } else {
+          sneakStrip.innerHTML = orders.map(o => `
+            <span class="px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-red-950 shadow-xs inline-flex items-center gap-1.5">
+              <span>🍗 <strong>${o.itemName}</strong> (${o.quantity})</span>
+              <span class="text-orange-700 font-extrabold">• ${o.requestedByName || 'Squad'}</span>
+            </span>
+          `).join('');
+        }
+      }
 
       if (orders.length === 0) {
         container.innerHTML = `
           <div class="p-6 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center space-y-1">
             <div class="text-2xl">🍗</div>
             <p class="text-xs sm:text-sm font-black text-red-950">No starters logged yet</p>
-            <p class="text-xs text-stone-600">Pick a starter dish & quantity above to log an entry and split its bill among specific guests.</p>
+            <p class="text-xs text-stone-600">Pick a starter dish & quantity above—it will automatically show up in Expenses for splitting!</p>
           </div>
         `;
         return;
       }
 
-      const eligibleGuests = appState.guests;
-
-      container.innerHTML = orders.map(order => {
-        const sharedSet = new Set(order.sharedWith || []);
-        const splitCount = sharedSet.size;
-        const amt = Number(order.amount) || 0;
-        const perHead = (amt > 0 && splitCount > 0) ? Math.round(amt / splitCount) : 0;
-        const payerOptions = eligibleGuests.length
-          ? eligibleGuests.map(g => `<option value="${g.id}" ${(order.paidBy || order.requestedById) === g.id ? 'selected' : ''}>${g.name}</option>`).join('')
-          : `<option value="">No guests</option>`;
-
-        const guestPillsHtml = eligibleGuests.length
-          ? eligibleGuests.map(g => {
-              const isSelected = sharedSet.has(g.id);
-              return `
-                <button type="button" onclick="toggleGuestOnFeastOrder('${order.id}', '${g.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition flex items-center gap-1 ${isSelected ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm' : 'bg-white text-stone-600 border-amber-200 hover:bg-amber-100'}">
-                  <span>${isSelected ? '✓' : '+'}</span>
-                  <span>${g.name}</span>
-                </button>
-              `;
-            }).join('')
-          : `<span class="text-xs text-stone-500 italic">Add guests to assign shares</span>`;
-
-        return `
-          <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3.5">
-            <div class="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="text-base font-black text-red-950">🍗 ${order.itemName}</span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-extrabold">${order.quantity}</span>
-                  ${amt > 0 && splitCount > 0 ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black">₹${perHead.toLocaleString('en-IN')} / head</span>` : ''}
-                </div>
-                <p class="text-[11px] text-stone-600 mt-0.5">Added by <strong>${order.requestedByName || 'Squad'}</strong> • Split equally among <strong>${splitCount}</strong> selected member(s)</p>
-              </div>
-              <button type="button" onclick="deleteFeastOrder('${order.id}')" title="Remove entry" class="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-extrabold transition">
-                🗑️ Remove
-              </button>
-            </div>
-
-            <!-- Add/Remove Individual Guests for this Item -->
-            <div class="space-y-1.5">
-              <div class="text-[11px] font-extrabold uppercase tracking-wider text-red-900">👥 Sharing This Item (Tap to Add / Remove):</div>
-              <div class="flex flex-wrap gap-1.5">
-                ${guestPillsHtml}
-              </div>
-            </div>
-
-            <!-- Amount & Payer Controls (Admin & Guests can assign expense) -->
-            <div class="pt-2.5 border-t border-amber-200/80 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-              <div class="sm:col-span-5">
-                <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Paid By</label>
-                <select id="feast-paidby-${order.id}" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
-                  ${payerOptions}
-                </select>
-              </div>
-              <div class="sm:col-span-4">
-                <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Item Amount (₹)</label>
-                <input id="feast-amt-${order.id}" type="number" min="0" value="${amt > 0 ? amt : ''}" placeholder="e.g., 650" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-black text-red-950 outline-none focus:border-orange-500" />
-              </div>
-              <div class="sm:col-span-3">
-                <button type="button" onclick="saveFeastOrderAmount('${order.id}')" class="w-full py-2 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow transition">
-                  💸 Split ₹
-                </button>
-              </div>
-            </div>
+      container.innerHTML = orders.map(order => `
+        <div class="px-4 py-3 rounded-2xl bg-amber-50/50 border border-amber-200 flex items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2 min-w-0">
+            <span class="text-sm sm:text-base font-black text-red-950">🍗 ${order.itemName}</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-extrabold">${order.quantity}</span>
+            <span class="text-[11px] font-semibold text-stone-500">• Added by ${order.requestedByName || 'Squad'}</span>
           </div>
-        `;
-      }).join('');
+          <button type="button" onclick="deleteFeastOrder('${order.id}')" title="Remove item" class="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-extrabold transition shrink-0">
+            🗑️
+          </button>
+        </div>
+      `).join('');
     }
 
-    // ==================== EXPENSES & SPLITWISE SETTLEMENTS ====================
+    // ==================== EXPENSES & SPLITWISE ENGINE ====================
     function handleExpenseCategoryChange() {
       const cat = document.getElementById('exp-category')?.value || 'Fuel';
       const itemSelect = document.getElementById('exp-item-select');
       const fuelHelper = document.getElementById('exp-fuel-helper');
       if (fuelHelper) {
-        if (cat === 'Fuel') fuelHelper.classList.remove('hidden');
-        else fuelHelper.classList.add('hidden');
+        fuelHelper.classList.toggle('hidden', cat !== 'Fuel');
       }
       if (itemSelect) {
-        const items = EXPENSE_ITEM_CATALOG[cat] || ['Custom / Other'];
-        itemSelect.innerHTML = items.map(i => `<option value="${i}">${i}</option>`).join('');
+        const options = EXPENSE_ITEM_CATALOG[cat] || ['Custom / Other'];
+        itemSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
       }
       toggleCustomExpenseItemInput();
     }
@@ -2142,9 +2113,9 @@
     function toggleCustomExpenseItemInput() {
       const val = document.getElementById('exp-item-select')?.value || '';
       const wrap = document.getElementById('exp-custom-item-wrap');
-      if (!wrap) return;
-      if (val === 'Custom / Other') wrap.classList.remove('hidden');
-      else wrap.classList.add('hidden');
+      if (wrap) {
+        wrap.classList.toggle('hidden', val !== 'Custom / Other');
+      }
     }
 
     function recalcFuelFromDistance() {
@@ -2160,49 +2131,47 @@
     function toggleCustomSplitCheckboxes() {
       const mode = document.getElementById('exp-split-mode')?.value || 'equal';
       const box = document.getElementById('exp-custom-split-box');
-      if (!box) return;
-      if (mode === 'custom') box.classList.remove('hidden');
-      else box.classList.add('hidden');
+      if (box) {
+        box.classList.toggle('hidden', mode !== 'custom');
+      }
     }
 
     function saveExpenseForm() {
       const category = document.getElementById('exp-category')?.value || 'Other';
-      const selectedItem = document.getElementById('exp-item-select')?.value || '';
+      const selectedItem = document.getElementById('exp-item-select')?.value || 'Expense';
       const customItem = (document.getElementById('exp-custom-item-name')?.value || '').trim();
-      const item = selectedItem === 'Custom / Other' ? (customItem || category) : selectedItem;
+      const item = selectedItem === 'Custom / Other' ? (customItem || 'Custom Expense') : selectedItem;
       const paidBy = document.getElementById('exp-paid-by')?.value || '';
       const splitMode = document.getElementById('exp-split-mode')?.value || 'equal';
       const amount = parseFloat(document.getElementById('exp-amount')?.value || '0');
 
+      if (!paidBy) {
+        showToast('Please add at least one guest before logging an expense.', 'error');
+        return;
+      }
       if (!(amount > 0)) {
         showToast('Please enter a valid expense amount in ₹.', 'error');
         return;
       }
 
-      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
-      const pool = confirmedGuests.length > 0 ? confirmedGuests : appState.guests;
-      if (pool.length === 0) {
-        showToast('Add at least one guest before logging expenses.', 'error');
+      let splitAmong = [];
+      if (splitMode === 'custom') {
+        splitAmong = Array.from(document.querySelectorAll('.custom-split-cb:checked')).map(cb => cb.value);
+      } else {
+        const confirmed = appState.guests.filter(g => g.rsvp === 'accepted').map(g => g.id);
+        splitAmong = confirmed.length > 0 ? confirmed : appState.guests.map(g => g.id);
+      }
+
+      if (splitAmong.length === 0) {
+        showToast('Select at least one member to split this expense.', 'error');
         return;
       }
 
-      let splitAmong = pool.map(g => g.id);
-      if (splitMode === 'custom') {
-        const checked = Array.from(document.querySelectorAll('.custom-split-cb:checked')).map(cb => cb.value);
-        if (checked.length === 0) {
-          showToast('Select at least one member for custom split.', 'error');
-          return;
-        }
-        splitAmong = checked;
-      }
-
-      const payerId = paidBy || pool[0].id;
-      const payerName = appState.guests.find(g => g.id === payerId)?.name || 'Member';
       const newExp = {
         id: 'exp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
         category,
         item,
-        paidBy: payerId,
+        paidBy,
         amount,
         splitAmong,
         date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
@@ -2210,47 +2179,58 @@
       };
 
       appState.expenses.unshift(newExp);
-      if (document.getElementById('exp-amount')) document.getElementById('exp-amount').value = '';
-      if (document.getElementById('exp-custom-item-name')) document.getElementById('exp-custom-item-name').value = '';
-
+      const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Member';
       saveAppState({
         actor: payerName,
         category: 'Expense',
         action: 'Logged Expense',
-        msg: `${payerName} paid ₹${amount.toLocaleString('en-IN')} for ${item} (${category}).`
+        msg: `${payerName} logged ₹${amount} for ${item} (${category}), split among ${splitAmong.length} member(s).`
       }, { expense: newExp });
 
-      showToast(`💸 Logged ₹${amount.toLocaleString('en-IN')} for ${item}!`);
+      if (document.getElementById('exp-amount')) document.getElementById('exp-amount').value = '';
+      if (document.getElementById('exp-custom-item-name')) document.getElementById('exp-custom-item-name').value = '';
+      showToast(`💸 Logged ₹${amount} for ${item}!`);
       renderAllUI();
     }
 
     function deleteExpense(expId) {
-      const exp = appState.expenses.find(e => e.id === expId);
+      const target = appState.expenses.find(e => e.id === expId);
       appState.expenses = appState.expenses.filter(e => e.id !== expId);
+
+      // If this expense came from a Feast & Bar starter, also clean up that entry
+      if (target && target.id.startsWith('exp_feast_')) {
+        const feastId = target.id.replace('exp_feast_', '');
+        appState.feastOrders = (appState.feastOrders || []).filter(o => o.id !== feastId);
+        if (window.__cloudSync) {
+          window.__cloudSync.deleteFeastOrder(feastId);
+        }
+      }
+
       saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : 'Squad',
+        actor: isAdminUnlocked ? 'Host Admin' : (getActiveGuestObj()?.name || 'Squad'),
         category: 'Expense',
         action: 'Deleted Expense',
-        msg: `Deleted expense: ${exp?.item || 'Entry'} (₹${exp?.amount || 0}).`
+        msg: `Removed ${target?.item || 'an expense entry'} from the ledger.`
       }, { deleteExpenseId: expId });
-      showToast('🗑️ Expense deleted.', 'info');
+      showToast('🗑️ Expense removed.', 'info');
       renderAllUI();
     }
 
-    function computeSettlements() {
+    function calculateSettlements() {
       const balances = {};
       appState.guests.forEach(g => { balances[g.id] = 0; });
 
       appState.expenses.forEach(exp => {
         const amt = Number(exp.amount) || 0;
-        const members = (exp.splitAmong || []).filter(id => balances[id] !== undefined);
+        const members = (exp.splitAmong || []).filter(id => id in balances);
         if (amt <= 0 || members.length === 0) return;
-        if (balances[exp.paidBy] !== undefined) {
+
+        if (exp.paidBy in balances) {
           balances[exp.paidBy] += amt;
         }
         const share = amt / members.length;
-        members.forEach(id => {
-          balances[id] -= share;
+        members.forEach(mId => {
+          balances[mId] -= share;
         });
       });
 
@@ -2265,7 +2245,8 @@
       creditors.sort((a, b) => b.amount - a.amount);
 
       const transfers = [];
-      let i = 0, j = 0;
+      let i = 0;
+      let j = 0;
       while (i < debtors.length && j < creditors.length) {
         const pay = Math.min(debtors[i].amount, creditors[j].amount);
         if (pay >= 1) {
@@ -2283,279 +2264,153 @@
       return transfers;
     }
 
-    // ==================== SYNC MODAL, LOGS & COUNTDOWN ====================
-    function openSyncModal() {
-      const ta = document.getElementById('sync-json-textarea');
-      if (ta) {
-        ta.value = JSON.stringify(appState, null, 2);
-      }
-      document.getElementById('sync-modal')?.classList.remove('hidden');
+    // ==================== MASTER UI RENDERING ====================
+    function renderAdminKpiDashlets() {
+      const grid = document.getElementById('admin-kpi-grid');
+      if (!grid) return;
+      const accepted = appState.guests.filter(g => g.rsvp === 'accepted');
+      const pending = appState.guests.filter(g => g.rsvp === 'pending');
+      const declined = appState.guests.filter(g => g.rsvp === 'declined');
+      const totalSpend = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+      const cards = [
+        { label: 'Confirmed', val: accepted.length, color: 'bg-emerald-50 border-emerald-300 text-emerald-950' },
+        { label: 'Pending', val: pending.length, color: 'bg-amber-50 border-amber-300 text-amber-950' },
+        { label: 'Declined', val: declined.length, color: 'bg-red-50 border-red-300 text-red-950' },
+        { label: 'Starters', val: (appState.feastOrders || []).length, color: 'bg-orange-50 border-orange-300 text-orange-950' },
+        { label: 'Total Spend', val: '₹' + totalSpend.toLocaleString('en-IN'), color: 'bg-indigo-50 border-indigo-300 text-indigo-950' },
+        { label: 'Activity Logs', val: appState.logs.length, color: 'bg-stone-50 border-stone-300 text-stone-900' }
+      ];
+
+      grid.innerHTML = cards.map(c => `
+        <div class="p-3.5 rounded-2xl border ${c.color} text-center shadow-xs">
+          <div class="text-lg sm:text-xl font-black">${c.val}</div>
+          <div class="text-[11px] font-extrabold uppercase tracking-wider opacity-80">${c.label}</div>
+        </div>
+      `).join('');
     }
 
-    function copySyncJson() {
-      const ta = document.getElementById('sync-json-textarea');
-      if (!ta) return;
-      ta.select();
-      document.execCommand('copy');
-      showToast('📋 Trip JSON copied to clipboard!');
-    }
-
-    function importSyncJson() {
-      const ta = document.getElementById('sync-json-textarea');
-      if (!ta) return;
-      try {
-        const parsed = JSON.parse(ta.value);
-        if (Array.isArray(parsed.guests)) {
-          const map = new Map(appState.guests.map(g => [g.id, g]));
-          parsed.guests.forEach(g => map.set(g.id, g));
-          appState.guests = Array.from(map.values());
-        }
-        if (Array.isArray(parsed.expenses)) {
-          const map = new Map(appState.expenses.map(e => [e.id, e]));
-          parsed.expenses.forEach(e => map.set(e.id, e));
-          appState.expenses = Array.from(map.values());
-        }
-        if (Array.isArray(parsed.feastOrders)) {
-          const map = new Map((appState.feastOrders || []).map(o => [o.id, o]));
-          parsed.feastOrders.forEach(o => map.set(o.id, o));
-          appState.feastOrders = Array.from(map.values());
-        }
-        saveAppState({
-          actor: 'Host Admin',
-          category: 'Sync',
-          action: 'Imported JSON',
-          msg: 'Merged trip snapshot from JSON.'
-        }, { fullSync: true });
-        closeModal('sync-modal');
-        showToast('✅ Trip data merged & synced!');
-        renderAllUI();
-      } catch (e) {
-        showToast('❌ Invalid JSON format.', 'error');
-      }
-    }
-
-    function copyLogsReport() {
-      const text = appState.logs.map(l => `[${l.time}] (${l.category}) ${l.msg}`).join('\n');
-      const ta = document.createElement('textarea');
-      ta.value = text || 'No activity logs yet.';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast('📋 Activity log report copied!');
-    }
-
-    function exportLogsCsv() {
-      const rows = [['Time', 'Actor', 'Category', 'Action', 'Details']];
-      appState.logs.forEach(l => {
-        rows.push([l.time, l.actor, l.category, l.action, l.msg].map(v => `"${String(v || '').replace(/"/g, '""')}"`));
-      });
-      const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Sankranti2027_Activity_Logs.csv';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    }
-
-    function updateCountdownTimer() {
-      const el = document.getElementById('sankranti-countdown');
-      if (!el) return;
-      const target = new Date('2027-01-14T06:00:00+05:30').getTime();
-      const diff = target - Date.now();
-      if (diff <= 0) {
-        el.textContent = '🎉 LIVE NOW!';
-        return;
-      }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      el.textContent = `${days}d ${hours}h`;
-    }
-
-    // ==================== RENDER FUNCTIONS ====================
     async function renderAllUI() {
-      updateCountdownTimer();
-
-      // 1. Admin Header & Nav Visibility
-      const adminLabel = document.getElementById('admin-toggle-label');
-      const adminIcon = document.getElementById('admin-lock-icon');
-      if (adminLabel) adminLabel.textContent = isAdminUnlocked ? 'Host Admin' : 'Guest Mode';
-      if (adminIcon) adminIcon.textContent = isAdminUnlocked ? '🛡️' : '🔒';
+      // Admin vs Guest Header & Tab visibility
+      const lockIcon = document.getElementById('admin-lock-icon');
+      const toggleLabel = document.getElementById('admin-toggle-label');
+      if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🛡️' : '🔒';
+      if (toggleLabel) toggleLabel.textContent = isAdminUnlocked ? 'Host Admin' : 'Guest Mode';
 
       ['nav-tab-rsvp', 'nav-tab-logs', 'nav-tab-admin', 'admin-home-dashlets', 'home-manage-invites-btn'].forEach(id => {
         const el = document.getElementById(id);
-        if (!el) return;
-        if (isAdminUnlocked) el.classList.remove('hidden');
-        else el.classList.add('hidden');
+        if (el) el.classList.toggle('hidden', !isAdminUnlocked);
       });
 
-      // 2. Admin KPI Dashlets
-      const kpiGrid = document.getElementById('admin-kpi-grid');
-      if (kpiGrid && isAdminUnlocked) {
-        const accepted = appState.guests.filter(g => g.rsvp === 'accepted').length;
-        const pending = appState.guests.filter(g => g.rsvp === 'pending').length;
-        const declined = appState.guests.filter(g => g.rsvp === 'declined').length;
-        const totalSpend = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-        const feastCount = (appState.feastOrders || []).length;
-        const photos = await getAllHdPhotos();
+      if (isAdminUnlocked) renderAdminKpiDashlets();
 
-        const cards = [
-          { label: 'Confirmed', val: accepted, color: 'bg-emerald-50 border-emerald-200 text-emerald-900' },
-          { label: 'Pending', val: pending, color: 'bg-amber-50 border-amber-200 text-amber-900' },
-          { label: 'Declined', val: declined, color: 'bg-red-50 border-red-200 text-red-900' },
-          { label: 'Feast Items', val: feastCount, color: 'bg-orange-50 border-orange-200 text-orange-900' },
-          { label: 'Total Spend', val: `₹${totalSpend.toLocaleString('en-IN')}`, color: 'bg-indigo-50 border-indigo-200 text-indigo-900' },
-          { label: 'HD Photos', val: photos.length, color: 'bg-purple-50 border-purple-200 text-purple-900' }
-        ];
-        kpiGrid.innerHTML = cards.map(c => `
-          <div class="p-3.5 rounded-2xl border ${c.color} shadow-sm">
-            <div class="text-[11px] font-extrabold uppercase opacity-75">${c.label}</div>
-            <div class="text-lg sm:text-xl font-black mt-0.5">${c.val}</div>
-          </div>
-        `).join('');
-      }
-
-      // 3. Confirmed Squad Strip (Read-only for guests; clickable switcher for Admin)
-      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      // Confirmed Squad Strip (Read-only for guests; clickable switcher only for Admin)
+      const acceptedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
       const countBadge = document.getElementById('confirmed-squad-count');
-      const squadListEl = document.getElementById('home-confirmed-squad-list');
-      if (countBadge) countBadge.textContent = confirmedGuests.length;
-      if (squadListEl) {
-        if (confirmedGuests.length === 0) {
-          squadListEl.innerHTML = `<p class="text-xs text-stone-500 italic">No confirmed guests yet. Once friends accept their invite, they appear right here!</p>`;
+      const squadList = document.getElementById('home-confirmed-squad-list');
+      if (countBadge) countBadge.textContent = acceptedGuests.length;
+      if (squadList) {
+        if (acceptedGuests.length === 0) {
+          squadList.innerHTML = `<span class="text-xs text-stone-500 italic">No confirmed squad members yet. Once guests accept their invite, they appear right here!</span>`;
         } else {
-          squadListEl.innerHTML = confirmedGuests.map(g => {
-            const routeText = g.fromCity ? ` • ${g.fromCity}` : '';
+          squadList.innerHTML = acceptedGuests.map(g => {
+            const routeChip = g.fromCity ? ` • ${g.fromCity}` : '';
             if (isAdminUnlocked) {
-              return `
-                <button type="button" onclick="handleRoleSwitch('${g.id}')" class="px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-950 text-xs font-extrabold flex items-center gap-1.5 transition">
-                  <span>✅</span>
-                  <span>${g.name}${routeText}</span>
-                </button>
-              `;
+              return `<button type="button" onclick="handleRoleSwitch('${g.id}')" class="px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-950 text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition"><span>✅</span><span>${g.name}${routeChip}</span></button>`;
             }
-            return `
-              <div class="px-3.5 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-extrabold flex items-center gap-1.5 select-none">
-                <span>✅</span>
-                <span>${g.name}${routeText}</span>
-              </div>
-            `;
+            return `<div class="px-3.5 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-extrabold flex items-center gap-1.5"><span>✅</span><span>${g.name}${routeChip}</span></div>`;
           }).join('');
         }
       }
 
-      // 4. Render All Sub-Views
       renderHomeGuestForms();
       renderFeastOrdersList();
       renderRsvpList();
       renderExpensesSection();
-      await renderGallerySection();
       renderLogsSection();
+      await renderGallerySection();
     }
 
     function renderHomeGuestForms() {
-      const selectEl = document.getElementById('home-active-guest-select');
-      const wishlistSelectEl = document.getElementById('wishlist-active-guest-select');
-      const wishlistBadgeEl = document.getElementById('wishlist-active-guest-badge');
-      const headingEl = document.getElementById('home-guest-name-heading');
-      const declineBtn = document.getElementById('home-decline-after-accept-btn');
-      const inputsGrid = document.getElementById('home-travel-inputs-grid');
-      const summaryBar = document.getElementById('home-travel-summary-bar');
-      const summaryRoute = document.getElementById('summary-route-text');
-      const summaryDates = document.getElementById('summary-dates-text');
-
-      const optionsHtml = appState.guests.length === 0
-        ? `<option value="public">No guests added yet</option>`
-        : appState.guests.map(g => `<option value="${g.id}" ${getActiveGuestObj()?.id === g.id ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`).join('');
-
-      if (selectEl) {
-        selectEl.innerHTML = optionsHtml;
-        if (isAdminUnlocked) selectEl.classList.remove('hidden');
-        else selectEl.classList.add('hidden');
-      }
-
-      if (wishlistSelectEl) {
-        wishlistSelectEl.innerHTML = optionsHtml;
-        if (isAdminUnlocked) {
-          wishlistSelectEl.classList.remove('hidden');
-          wishlistBadgeEl?.classList.add('hidden');
-        } else {
-          wishlistSelectEl.classList.add('hidden');
-          wishlistBadgeEl?.classList.remove('hidden');
-        }
-      }
-
       const activeGuest = getActiveGuestObj();
-      if (headingEl) headingEl.textContent = activeGuest ? activeGuest.name : 'Guest';
-      if (wishlistBadgeEl) wishlistBadgeEl.textContent = activeGuest ? activeGuest.name : 'Guest';
+      const guestHeading = document.getElementById('home-guest-name-heading');
+      const wishlistBadge = document.getElementById('wishlist-active-guest-badge');
+      if (guestHeading) guestHeading.textContent = activeGuest ? activeGuest.name : 'Guest';
+      if (wishlistBadge) wishlistBadge.textContent = activeGuest ? activeGuest.name : (isAdminUnlocked ? 'Host Admin' : 'Guest');
 
+      // Switcher dropdowns (only visible when Admin is unlocked)
+      const homeSelect = document.getElementById('home-active-guest-select');
+      const wishSelect = document.getElementById('wishlist-active-guest-select');
+      const optionsHtml = appState.guests.length
+        ? appState.guests.map(g => `<option value="${g.id}" ${activeGuest?.id === g.id ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`).join('')
+        : `<option value="public">No guests yet</option>`;
+
+      if (homeSelect) {
+        homeSelect.innerHTML = optionsHtml;
+        homeSelect.classList.toggle('hidden', !isAdminUnlocked || appState.guests.length === 0);
+      }
+      if (wishSelect) {
+        wishSelect.innerHTML = optionsHtml;
+        wishSelect.classList.toggle('hidden', !isAdminUnlocked || appState.guests.length === 0);
+      }
+
+      const declineBtn = document.getElementById('home-decline-after-accept-btn');
       if (declineBtn) {
-        if (activeGuest && activeGuest.rsvp === 'accepted') declineBtn.classList.remove('hidden');
-        else declineBtn.classList.add('hidden');
+        declineBtn.classList.toggle('hidden', !(activeGuest && activeGuest.rsvp === 'accepted'));
       }
 
       // Travel Form vs Minimized Summary Bar
-      const fromInput = document.getElementById('home-from-city');
-      const toInput = document.getElementById('home-to-city');
-      const arrInput = document.getElementById('home-arrival-date');
-      const depInput = document.getElementById('home-departure-date');
-
-      if (activeGuest) {
-        if (fromInput) fromInput.value = activeGuest.fromCity || '';
-        if (toInput) toInput.value = activeGuest.toCity || '';
-        if (arrInput) arrInput.value = activeGuest.arrivalDate || '2027-01-13';
-        if (depInput) depInput.value = activeGuest.departureDate || '2027-01-17';
-
-        if (activeGuest.travelSubmitted) {
-          inputsGrid?.classList.add('hidden');
-          summaryBar?.classList.remove('hidden');
-          if (summaryRoute) summaryRoute.textContent = `🛫 ${activeGuest.fromCity || 'Origin'} → 🛬 ${activeGuest.toCity || 'Arrival Hub'}`;
-          if (summaryDates) summaryDates.textContent = `📅 ${activeGuest.arrivalDate || '2027-01-13'} to ${activeGuest.departureDate || '2027-01-17'}`;
-        } else {
-          inputsGrid?.classList.remove('hidden');
-          summaryBar?.classList.add('hidden');
-        }
+      const summaryBar = document.getElementById('home-travel-summary-bar');
+      const inputsGrid = document.getElementById('home-travel-inputs-grid');
+      if (activeGuest && activeGuest.travelSubmitted && !isEditingTravelDetails) {
+        if (summaryBar) summaryBar.classList.remove('hidden');
+        if (inputsGrid) inputsGrid.classList.add('hidden');
+        const routeEl = document.getElementById('summary-route-text');
+        const datesEl = document.getElementById('summary-dates-text');
+        if (routeEl) routeEl.textContent = `🛫 ${activeGuest.fromCity || 'Origin'} → 🛬 ${activeGuest.toCity || 'Arrival Hub'}`;
+        if (datesEl) datesEl.textContent = `📅 ${activeGuest.arrivalDate || '2027-01-13'} to ${activeGuest.departureDate || '2027-01-17'}`;
       } else {
-        inputsGrid?.classList.remove('hidden');
-        summaryBar?.classList.add('hidden');
+        if (summaryBar) summaryBar.classList.add('hidden');
+        if (inputsGrid) inputsGrid.classList.remove('hidden');
+        if (activeGuest) {
+          const fromEl = document.getElementById('home-from-city');
+          const toEl = document.getElementById('home-to-city');
+          const arrEl = document.getElementById('home-arrival-date');
+          const depEl = document.getElementById('home-departure-date');
+          if (fromEl && document.activeElement !== fromEl) fromEl.value = activeGuest.fromCity || '';
+          if (toEl && document.activeElement !== toEl) toEl.value = activeGuest.toCity || '';
+          if (arrEl && document.activeElement !== arrEl) arrEl.value = activeGuest.arrivalDate || '2027-01-13';
+          if (depEl && document.activeElement !== depEl) depEl.value = activeGuest.departureDate || '2027-01-17';
+        }
       }
 
       // Packing Checklist
       const packingGrid = document.getElementById('packing-checklist-grid');
-      const progressText = document.getElementById('packing-progress-text');
-      const allItems = [
-        ...DEFAULT_PACKING_ITEMS,
-        ...(activeGuest?.customPackingItems || [])
-      ];
+      const packingProgress = document.getElementById('packing-progress-text');
+      const allPackingItems = [...DEFAULT_PACKING_ITEMS, ...(activeGuest?.customPackingItems || [])];
       const packedSet = new Set(activeGuest?.packedItems || []);
-      if (progressText) {
-        const packedCount = allItems.filter(i => packedSet.has(i.id)).length;
-        progressText.textContent = `${packedCount} / ${allItems.length}`;
-      }
+      if (packingProgress) packingProgress.textContent = `${packedSet.size} / ${allPackingItems.length}`;
       if (packingGrid) {
-        packingGrid.innerHTML = allItems.map(item => {
-          const isChecked = packedSet.has(item.id);
+        packingGrid.innerHTML = allPackingItems.map(item => {
+          const checked = packedSet.has(item.id);
           return `
-            <button type="button" onclick="togglePackingItem('${item.id}')" class="p-3 rounded-2xl border text-left text-xs font-bold flex items-center gap-2.5 transition ${isChecked ? 'bg-emerald-50 border-emerald-400 text-emerald-950 line-through opacity-85' : 'bg-amber-50/60 border-amber-200 text-red-950 hover:bg-amber-100/70'}">
-              <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${isChecked ? 'bg-emerald-600 text-white' : 'bg-white border border-amber-300 text-transparent'}">✓</span>
+            <button type="button" onclick="togglePackingItem('${item.id}')" class="p-3 rounded-2xl border text-left text-xs font-bold flex items-center gap-2.5 transition ${checked ? 'bg-emerald-50 border-emerald-400 text-emerald-950 line-through opacity-80' : 'bg-amber-50/60 border-amber-200 text-red-950 hover:bg-amber-100'}">
+              <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${checked ? 'bg-emerald-600 text-white' : 'bg-white border border-amber-300 text-transparent'}">✓</span>
               <span>${item.label}</span>
             </button>
           `;
         }).join('');
       }
 
-      // Quick Spirits Chips on Feast & Bar Tab
-      const spiritsChips = document.getElementById('quick-spirits-chips');
-      if (spiritsChips) {
-        const selectedSpirits = new Set(activeGuest?.spirits || []);
-        spiritsChips.innerHTML = QUICK_SPIRIT_CHOICES.map(sp => {
-          const active = selectedSpirits.has(sp);
+      // Spirits chips in Feast & Bar
+      const spiritsWrap = document.getElementById('quick-spirits-chips');
+      const guestSpirits = new Set(activeGuest?.spirits || []);
+      if (spiritsWrap) {
+        spiritsWrap.innerHTML = QUICK_SPIRIT_CHOICES.map(drink => {
+          const active = guestSpirits.has(drink);
           return `
-            <button type="button" onclick="toggleCravingChip('spirits', '${sp.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ${active ? 'bg-red-900 text-white border-red-900 shadow-sm' : 'bg-white text-red-950 border-amber-200 hover:bg-amber-100'}">
-              ${active ? '✓ ' : '+ '}${sp}
+            <button type="button" onclick="toggleCravingChip('spirits', '${drink.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ${active ? 'bg-red-900 text-amber-100 border-red-900 shadow-xs' : 'bg-white text-red-950 border-amber-200 hover:bg-amber-100'}">
+              ${active ? '✓ ' : '+ '}${drink}
             </button>
           `;
         }).join('');
@@ -2571,24 +2426,22 @@
       }
       container.innerHTML = appState.guests.map(g => {
         const badge = g.rsvp === 'accepted'
-          ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[11px] font-black uppercase">✅ Accepted</span>`
+          ? '<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[11px] font-black">✅ Accepted</span>'
           : g.rsvp === 'declined'
-            ? `<span class="px-2.5 py-0.5 rounded-full bg-red-100 text-red-900 text-[11px] font-black uppercase">❌ Declined</span>`
-            : `<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-black uppercase">⏳ Pending</span>`;
+            ? '<span class="px-2.5 py-0.5 rounded-full bg-red-100 text-red-900 text-[11px] font-black">❌ Declined</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-black">⏳ Pending</span>';
 
         return `
-          <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div class="flex items-center gap-2">
-                <span class="font-black text-red-950 text-sm">${g.name}</span>
+                <span class="font-black text-red-950 text-sm sm:text-base">${g.name}</span>
                 ${badge}
               </div>
-              <p class="text-[11px] text-stone-600 mt-0.5">
-                ${g.phone ? '📱 +' + g.phone : '📱 No phone saved'} • ${g.fromCity ? `🛫 ${g.fromCity} → ${g.toCity || 'TBD'}` : 'Travel details pending'}
-              </p>
+              <p class="text-xs text-stone-600 mt-0.5">${g.phone ? '📞 +' + g.phone : 'No phone saved (opens WhatsApp contact picker)'}</p>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button type="button" onclick="openWhatsAppInvite('${g.id}')" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-sm transition">
+              <button type="button" onclick="openWhatsAppInvite('${g.id}')" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-xs transition">
                 💬 Send WhatsApp Invite
               </button>
               <button type="button" onclick="copyInviteLink('${g.id}')" class="px-3 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold transition">
@@ -2613,36 +2466,38 @@
       const transfersEl = document.getElementById('settlement-transfers-list');
       const ledgerEl = document.getElementById('expenses-ledger-list');
 
+      const guests = appState.guests;
       if (paidBySelect) {
-        paidBySelect.innerHTML = appState.guests.length
-          ? appState.guests.map(g => `<option value="${g.id}">${g.name}</option>`).join('')
+        const prev = paidBySelect.value;
+        paidBySelect.innerHTML = guests.length
+          ? guests.map(g => `<option value="${g.id}" ${prev === g.id ? 'selected' : ''}>${g.name}</option>`).join('')
           : `<option value="">Add guests first</option>`;
       }
 
       if (customSplitList) {
-        customSplitList.innerHTML = appState.guests.map(g => `
-          <label class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-extrabold text-red-950 flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" class="custom-split-cb accent-emerald-700" value="${g.id}" checked />
+        customSplitList.innerHTML = guests.map(g => `
+          <label class="px-3 py-1.5 rounded-xl bg-white border border-amber-200 text-xs font-bold text-red-950 flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" value="${g.id}" checked class="custom-split-cb accent-emerald-700" />
             <span>${g.name}</span>
           </label>
         `).join('');
       }
 
-      const totalSpend = appState.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const totalSpend = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
       if (totalSpendEl) totalSpendEl.textContent = `₹${totalSpend.toLocaleString('en-IN')}`;
 
       if (transfersEl) {
-        const transfers = computeSettlements();
+        const transfers = calculateSettlements();
         if (transfers.length === 0) {
-          transfersEl.innerHTML = `<p class="text-xs text-stone-500 italic">All settled up! No pending transfers.</p>`;
+          transfersEl.innerHTML = `<p class="text-xs text-stone-500 italic">All settled up! Log expenses to see who owes whom.</p>`;
         } else {
           transfersEl.innerHTML = transfers.map(t => {
-            const fromName = appState.guests.find(g => g.id === t.fromId)?.name || 'Member';
-            const toName = appState.guests.find(g => g.id === t.toId)?.name || 'Member';
+            const fromName = guests.find(g => g.id === t.fromId)?.name || 'Member';
+            const toName = guests.find(g => g.id === t.toId)?.name || 'Member';
             return `
-              <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs font-extrabold text-emerald-950">
-                <span>💸 ${fromName} → ${toName}</span>
-                <span class="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-black">₹${t.amount.toLocaleString('en-IN')}</span>
+              <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs font-extrabold">
+                <span><strong class="text-red-900">${fromName}</strong> → <strong class="text-emerald-900">${toName}</strong></span>
+                <span class="px-2.5 py-1 rounded-xl bg-emerald-700 text-white">₹${t.amount.toLocaleString('en-IN')}</span>
               </div>
             `;
           }).join('');
@@ -2653,20 +2508,80 @@
         if (appState.expenses.length === 0) {
           ledgerEl.innerHTML = `<p class="text-xs text-stone-500 italic">No expenses recorded yet.</p>`;
         } else {
-          ledgerEl.innerHTML = appState.expenses.map(e => {
-            const payerName = appState.guests.find(g => g.id === e.paidBy)?.name || 'Member';
-            const splitNames = (e.splitAmong || []).map(id => appState.guests.find(g => g.id === id)?.name).filter(Boolean).join(', ');
+          ledgerEl.innerHTML = appState.expenses.map(exp => {
+            const payer = guests.find(g => g.id === exp.paidBy)?.name || 'TBD';
+            const sharedSet = new Set(exp.splitAmong || []);
+            const splitCount = sharedSet.size;
+            const amt = Number(exp.amount) || 0;
+            const perHead = (amt > 0 && splitCount > 0) ? Math.round(amt / splitCount) : 0;
+            const isExpanded = expandedExpenseId === exp.id;
+            const sharedNames = guests.filter(g => sharedSet.has(g.id)).map(g => g.name).join(', ') || 'None';
+
+            const payerOptions = guests.length
+              ? guests.map(g => `<option value="${g.id}" ${exp.paidBy === g.id ? 'selected' : ''}>${g.name}</option>`).join('')
+              : `<option value="">Add guests first</option>`;
+
+            const guestPillsHtml = guests.length
+              ? guests.map(g => {
+                  const isSelected = sharedSet.has(g.id);
+                  return `
+                    <button type="button" onclick="toggleGuestOnExpense('${exp.id}', '${g.id}')" class="px-2.5 py-1 rounded-xl text-xs font-extrabold border transition flex items-center gap-1 ${isSelected ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-stone-600 border-amber-200 hover:bg-amber-100'}">
+                      <span>${isSelected ? '✓' : '+'}</span>
+                      <span>${g.name}</span>
+                    </button>
+                  `;
+                }).join('')
+              : `<span class="text-xs text-stone-500 italic">Add guests to assign split</span>`;
+
             return `
-              <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div>
-                  <span class="px-2 py-0.5 rounded-md bg-amber-200 text-red-950 font-extrabold mr-1.5">${e.category}</span>
-                  <span class="font-black text-red-950">${e.item}</span>
-                  <p class="text-[11px] text-stone-600 mt-0.5">Paid by <strong>${payerName}</strong> • Split (${(e.splitAmong || []).length}): ${splitNames || 'Squad'}</p>
+              <div class="rounded-2xl bg-white border ${isExpanded ? 'border-orange-400 shadow-md' : 'border-amber-200'} overflow-hidden transition">
+                <div class="p-3.5 bg-amber-50/60 flex flex-wrap items-center justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="text-xs sm:text-sm font-black text-red-950">${exp.item}</span>
+                      <span class="text-[11px] font-bold text-orange-800">(${exp.category})</span>
+                      ${amt === 0 ? `<span class="px-2 py-0.5 rounded-full bg-amber-200 text-red-950 text-[10px] font-black uppercase">Amount Pending</span>` : ''}
+                    </div>
+                    <div class="text-[11px] text-stone-600 mt-0.5">
+                      Paid by <strong>${payer}</strong> • Split (${splitCount}): <span class="font-semibold text-red-950">${sharedNames}</span>${perHead > 0 ? ` • <strong>₹${perHead}/head</strong>` : ''}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="text-sm font-black ${amt > 0 ? 'text-emerald-900' : 'text-stone-400'}">₹${amt.toLocaleString('en-IN')}</span>
+                    <button type="button" onclick="toggleExpenseEditDrawer('${exp.id}')" class="px-3 py-1.5 rounded-xl ${isExpanded ? 'bg-red-900 text-white' : 'bg-amber-100 hover:bg-amber-200 text-red-950'} text-xs font-extrabold transition">
+                      ${isExpanded ? '▲ Close' : '✏️ Amount & Split'}
+                    </button>
+                    <button type="button" onclick="deleteExpense('${exp.id}')" class="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold">🗑️</button>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-black text-emerald-800">₹${Number(e.amount).toLocaleString('en-IN')}</span>
-                  <button type="button" onclick="deleteExpense('${e.id}')" class="px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold">🗑️</button>
-                </div>
+
+                ${isExpanded ? `
+                  <div class="p-4 border-t border-amber-200 bg-amber-50/90 space-y-3 animate-panel">
+                    <div class="space-y-1.5">
+                      <div class="text-[11px] font-extrabold uppercase tracking-wider text-red-900">👥 Select Guests Sharing This Item:</div>
+                      <div class="flex flex-wrap gap-1.5">
+                        ${guestPillsHtml}
+                      </div>
+                    </div>
+                    <div class="pt-2 border-t border-amber-200/70 grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                      <div class="sm:col-span-5">
+                        <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Paid By</label>
+                        <select id="exp-edit-paidby-${exp.id}" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
+                          ${payerOptions}
+                        </select>
+                      </div>
+                      <div class="sm:col-span-4">
+                        <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Amount (₹)</label>
+                        <input id="exp-edit-amt-${exp.id}" type="number" min="1" value="${amt > 0 ? amt : ''}" placeholder="e.g., 650" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-black text-red-950 outline-none focus:border-orange-500" />
+                      </div>
+                      <div class="sm:col-span-3">
+                        <button type="button" onclick="saveExpenseInlineEdit('${exp.id}')" class="w-full py-2 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow transition">
+                          💾 Save Split
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ` : ''}
               </div>
             `;
           }).join('');
@@ -2679,17 +2594,18 @@
       if (!grid) return;
       const photos = await getAllHdPhotos();
       if (photos.length === 0) {
-        grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center text-xs text-stone-600">No HD photos uploaded yet. Tap <strong>⬆️ Upload HD Photos</strong> to preserve uncompressed memories!</div>`;
+        grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center text-xs text-stone-600">No HD photos uploaded yet. Tap <strong>⬆️ Upload HD Photos</strong> above to add full-resolution memories!</div>`;
         return;
       }
       grid.innerHTML = photos.map(p => {
         const url = URL.createObjectURL(p.blob);
+        const caption = `${p.name} • By ${p.uploadedBy}`;
         return `
-          <div class="rounded-2xl overflow-hidden bg-stone-900 border border-amber-200 shadow-sm flex flex-col">
-            <img src="${url}" alt="${p.name}" onclick="openLightbox('${url}', 'Uploaded by ${p.uploadedBy}')" class="w-full h-40 object-cover cursor-pointer hover:opacity-90 transition" />
+          <div class="rounded-2xl overflow-hidden bg-stone-100 border border-amber-200 shadow-xs flex flex-col">
+            <img src="${url}" alt="${p.name}" onclick="openLightbox('${url}', '${caption.replace(/'/g, "\\'")}')" class="w-full h-40 object-cover cursor-pointer hover:opacity-95 transition" />
             <div class="p-2.5 bg-white flex items-center justify-between gap-1 text-[11px]">
               <span class="font-bold text-red-950 truncate">${p.uploadedBy}</span>
-              <div class="flex gap-1 shrink-0">
+              <div class="flex gap-1">
                 <button type="button" onclick="downloadHdPhoto('${p.id}')" class="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold">⬇️</button>
                 <button type="button" onclick="deleteHdPhoto('${p.id}')" class="px-2 py-1 rounded-lg bg-red-100 text-red-800 font-extrabold">🗑️</button>
               </div>
@@ -2702,25 +2618,93 @@
     function renderLogsSection() {
       const list = document.getElementById('activity-logs-list');
       if (!list) return;
-      if (appState.logs.length === 0) {
-        list.innerHTML = `<p class="text-xs text-stone-500 italic">No activity logs recorded yet.</p>`;
+      if (!appState.logs.length) {
+        list.innerHTML = `<p class="text-xs text-stone-500 italic">No activity logged yet.</p>`;
         return;
       }
       list.innerHTML = appState.logs.map(l => `
-        <div class="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
+        <div class="p-3 rounded-2xl bg-amber-50/50 border border-amber-200 text-xs flex flex-wrap items-center justify-between gap-2">
           <div>
-            <span class="px-2 py-0.5 rounded-md bg-amber-200 text-red-950 font-extrabold mr-1.5">${l.category}</span>
-            <span class="font-bold text-red-950">${l.msg}</span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-200 text-red-950 font-black text-[10px] mr-1.5">${l.category}</span>
+            <strong class="text-red-950">${l.msg}</strong>
           </div>
-          <span class="text-[11px] text-stone-500 shrink-0">${l.time}</span>
+          <span class="text-[11px] text-stone-500">${l.time}</span>
         </div>
       `).join('');
+    }
+
+    function copyLogsReport() {
+      const text = appState.logs.map(l => `[${l.time}] (${l.category}) ${l.msg}`).join('\n');
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('📋 Activity log copied!');
+    }
+
+    function exportLogsCsv() {
+      const rows = [['Time', 'Actor', 'Category', 'Action', 'Details'], ...appState.logs.map(l => [l.time, l.actor, l.category, l.action, l.msg])];
+      const csv = rows.map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Sankranti2027_Logs.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function openSyncModal() {
+      const ta = document.getElementById('sync-json-textarea');
+      if (ta) ta.value = JSON.stringify(appState, null, 2);
+      document.getElementById('sync-modal')?.classList.remove('hidden');
+    }
+
+    function copySyncJson() {
+      const ta = document.getElementById('sync-json-textarea');
+      if (!ta) return;
+      ta.select();
+      document.execCommand('copy');
+      showToast('📋 Trip JSON copied!');
+    }
+
+    function importSyncJson() {
+      const ta = document.getElementById('sync-json-textarea');
+      try {
+        const parsed = JSON.parse(ta?.value || '{}');
+        if (Array.isArray(parsed.guests)) appState.guests = parsed.guests;
+        if (Array.isArray(parsed.expenses)) appState.expenses = parsed.expenses;
+        if (Array.isArray(parsed.feastOrders)) appState.feastOrders = parsed.feastOrders;
+        saveAppState({ actor: 'Host Admin', category: 'Sync', action: 'Imported JSON', msg: 'Merged trip data from JSON snapshot.' }, { fullSync: true });
+        closeModal('sync-modal');
+        showToast('✅ Trip data imported & synced!');
+        renderAllUI();
+      } catch (e) {
+        showToast('❌ Invalid JSON format.', 'error');
+      }
+    }
+
+    // ==================== COUNTDOWN & INCOMING INVITE CHECK ====================
+    function updateSankrantiCountdown() {
+      const el = document.getElementById('sankranti-countdown');
+      if (!el) return;
+      const target = new Date('2027-01-14T06:00:00+05:30').getTime();
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        el.textContent = '🔥 Happy Bhogi!';
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      el.textContent = `${days}d ${hours}h`;
     }
 
     function checkIncomingInviteLink() {
       const params = new URLSearchParams(window.location.search);
       const inviteId = params.get('invite');
-      const inviteName = (params.get('name') || '').trim();
+      const inviteName = params.get('name');
       if (!inviteId) return;
 
       let guest = appState.guests.find(g => g.id === inviteId);
@@ -2752,9 +2736,10 @@
       }
     }
 
-    // ==================== STARTUP ====================
-    document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', () => {
       handleExpenseCategoryChange();
+      updateSankrantiCountdown();
+      setInterval(updateSankrantiCountdown, 60000);
       checkIncomingInviteLink();
       renderAllUI();
     });

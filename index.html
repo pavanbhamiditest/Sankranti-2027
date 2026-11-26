@@ -252,6 +252,11 @@
                 <label class="block text-xs font-extrabold text-red-950 uppercase tracking-wide mb-1.5">🔙 Departure Date</label>
                 <input id="home-departure-date" type="date" value="2027-01-17" class="w-full px-4 py-3 rounded-2xl bg-amber-50/70 border border-amber-200 focus:border-orange-500 focus:bg-white outline-none text-sm font-semibold text-red-950" />
               </div>
+              <div class="sm:col-span-2 lg:col-span-4 flex justify-end pt-1">
+                <button type="button" onclick="saveGuestPreferences('home')" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-xs sm:text-sm shadow-lg transition">
+                  💾 Submit Details
+                </button>
+              </div>
             </div>
 
             <!-- Step 2: Cheeky Packing Checklist (Always Visible!) -->
@@ -1392,15 +1397,14 @@
 
       showToast(`✅ Travel details saved & minimized for ${guest.name}!`);
       renderAllUI();
-    }
 
-    function editTravelDetails() {
-      const guest = getActiveGuestObj();
-      if (!guest) return;
-      guest.travelSubmitted = false;
-      renderHomeGuestForms();
-      const fromEl = document.getElementById('home-from-city');
-      if (fromEl) fromEl.focus();
+      // Smoothly take the guest down to Step 2: Travel Essentials Packing Checklist
+      const packingSection = document.getElementById('home-packing-unlocked-box');
+      if (packingSection) {
+        setTimeout(() => {
+          packingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
+      }
     }
 
     function togglePackingItem(itemId) {
@@ -1885,10 +1889,6 @@
       if (wishlistSelectEl) wishlistSelectEl.innerHTML = optionsHtml;
 
       const activeGuest = getActiveGuestObj();
-      const travelGrid = document.getElementById('home-travel-inputs-grid');
-      const travelMinimizedBar = document.getElementById('home-travel-minimized-bar');
-      const submitTravelBtn = document.getElementById('home-submit-travel-btn');
-      const travelSubtitle = document.getElementById('home-travel-subtitle');
 
       if (!activeGuest) {
         if (headingEl) headingEl.textContent = 'Guest';
@@ -1931,9 +1931,6 @@
       if (depEl) depEl.value = activeGuest.departureDate || '2027-01-17';
 
       // Toggle Minimized Summary Bar vs Expanded 4-Field Form
-      const inputsGrid = document.getElementById('home-travel-inputs-grid');
-      const summaryBar = document.getElementById('home-travel-summary-bar');
-      const submitBtn = document.getElementById('home-submit-travel-btn');
       const subtitleEl = document.getElementById('home-travel-subtitle');
 
       if (activeGuest.travelSubmitted) {

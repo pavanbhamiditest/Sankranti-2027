@@ -57,7 +57,7 @@
         </div>
 
         <!-- Top-Right Admin Switcher -->
-        <div class="flex items-center gap-2 bg-red-950/60 border border-amber-400/30 rounded-full px-3 py-1.5 shadow-sm">
+        <div class="flex items-center gap-2.5 bg-red-950/60 border border-amber-400/30 rounded-full px-3.5 py-1.5 shadow-sm shrink-0">
           <button
             id="guest-side-label"
             type="button"
@@ -73,11 +73,11 @@
             aria-checked="false"
             aria-label="Toggle between Guest and Admin mode"
             onclick="handleAdminModeToggle()"
-            class="relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-amber-300/50 bg-rose-600 p-1 transition-colors duration-200 focus:outline-none"
+            class="relative inline-flex h-7 w-[52px] shrink-0 cursor-pointer items-center rounded-full border border-amber-300/50 bg-rose-600 p-1 transition-colors duration-200 focus:outline-none"
           >
             <span
               id="admin-mode-toggle-knob"
-              class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-0"
+              class="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 translate-x-0"
             ></span>
           </button>
           <button
@@ -2407,8 +2407,12 @@
     }
 
     function deleteExpense(expId) {
+      if (!isAdminUnlocked) {
+        showToast('🔒 Only Host Admin can delete expenses.', 'error');
+        return;
+      }
       appState.expenses = appState.expenses.filter(e => e.id !== expId);
-      saveAppState({ actor: 'Squad', category: 'Expenses', action: 'Deleted Expense', msg: 'Removed an expense entry.' }, { deleteExpenseId: expId });
+      saveAppState({ actor: 'Host Admin', category: 'Expenses', action: 'Deleted Expense', msg: 'Removed an expense entry.' }, { deleteExpenseId: expId });
       showToast('🗑️ Expense removed.', 'info');
       renderAllUI();
     }
@@ -2807,7 +2811,9 @@
                     <button type="button" onclick="toggleExpenseEditDrawer('${exp.id}')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold">
                       ${isExpanded ? 'Close' : '✏️ Amount & Split'}
                     </button>
-                    <button type="button" onclick="deleteExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">✕</button>
+                    ${isAdminUnlocked
+                      ? `<button type="button" onclick="deleteExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">✕</button>`
+                      : ''}
                   </div>
                 </div>
 
@@ -2898,13 +2904,13 @@
       if (toggleBtn) {
         toggleBtn.setAttribute('aria-checked', String(isAdminUnlocked));
         toggleBtn.className = isAdminUnlocked
-          ? 'relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-emerald-300 bg-emerald-600 p-1 transition-colors duration-200 focus:outline-none'
-          : 'relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-rose-300/60 bg-rose-600 p-1 transition-colors duration-200 focus:outline-none';
+          ? 'relative inline-flex h-7 w-[52px] shrink-0 cursor-pointer items-center rounded-full border border-emerald-300 bg-emerald-600 p-1 transition-colors duration-200 focus:outline-none'
+          : 'relative inline-flex h-7 w-[52px] shrink-0 cursor-pointer items-center rounded-full border border-rose-300/60 bg-rose-600 p-1 transition-colors duration-200 focus:outline-none';
       }
       if (toggleKnob) {
         toggleKnob.className = isAdminUnlocked
-          ? 'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-6'
-          : 'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-0';
+          ? 'inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 translate-x-[22px]'
+          : 'inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 translate-x-0';
       }
       if (guestLabel) {
         guestLabel.className = isAdminUnlocked

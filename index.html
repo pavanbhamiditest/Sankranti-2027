@@ -1354,6 +1354,24 @@
       renderAllUI();
     }
 
+    function resetAndReinviteGuest(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      const oldId = guest.id;
+      guest.id = guest.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36).slice(-4);
+      guest.rsvp = 'pending';
+      guest.travelSubmitted = false;
+      if (currentRole === oldId) currentRole = guest.id;
+      saveAppState({
+        actor: 'Host Admin',
+        category: 'Invite',
+        action: 'Reset & Re-Invited Guest',
+        msg: `Generated a fresh invite link and reset RSVP status for ${guest.name}.`
+      });
+      showToast(`🔄 Fresh invite ready for ${guest.name}! Tap Send WhatsApp Invite.`);
+      renderAllUI();
+    }
+
     // ==================== TRAVEL DETAILS, PACKING CHECKLIST & CRAVINGS ====================
     function saveGuestPreferences() {
       const guest = getActiveGuestObj();
@@ -1989,6 +2007,9 @@
                 </button>
               `}
               ${isAdminUnlocked ? `
+                <button type="button" onclick="resetAndReinviteGuest('${guest.id}')" title="Generate fresh invite link & reset status" class="px-3.5 py-2.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-extrabold transition">
+                  🔄 Reset & Re-Invite
+                </button>
                 <button type="button" onclick="removeGuest('${guest.id}')" class="px-3 py-2.5 rounded-2xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-extrabold">
                   🗑️
                 </button>

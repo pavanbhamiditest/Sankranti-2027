@@ -756,7 +756,16 @@
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'sankranti-2027-squad';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    const defaultFirebaseConfig = {
+      apiKey: "AIzaSyCWa0VXKqgJAd39i5UPkX8JWkOV00Ir4ew",
+      authDomain: "sankranti-2027.firebaseapp.com",
+      projectId: "sankranti-2027",
+      storageBucket: "sankranti-2027.firebasestorage.app",
+      messagingSenderId: "511280597073",
+      appId: "1:511280597073:web:e038ec98f29af638c75070",
+      measurementId: "G-LK2K7KJPSZ"
+    };
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
 
     window.__cloudSync = {
       ready: false,

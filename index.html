@@ -545,7 +545,7 @@
 
           <!-- Quick Add & Invite Guest Bar -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-amber-50/80 p-4 rounded-2xl border border-amber-200">
-            <input id="rsvp-new-name" type="text" autocomplete="name" placeholder="Friend's Name (e.g., Karthik)" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+            <input id="rsvp-new-name" type="text" autocomplete="name" placeholder="Friend's Name" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
             <input id="rsvp-new-phone" type="tel" autocomplete="tel" placeholder="Mobile Number (optional for WhatsApp)" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
             <button type="button" onclick="addGuestFromForm('rsvp')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-red-900 to-orange-700 hover:from-red-800 hover:to-orange-600 text-white text-sm font-extrabold shadow transition">
               + Add & Prepare Invite
@@ -728,8 +728,8 @@
               </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input id="admin-new-name" type="text" autocomplete="name" placeholder="Guest Name (e.g., Karthik)" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none" />
-              <input id="admin-new-phone" type="tel" autocomplete="tel" placeholder="Phone (e.g., 9876543210)" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none" />
+              <input id="admin-new-name" type="text" autocomplete="name" placeholder="Guest Name" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none" />
+              <input id="admin-new-phone" type="tel" autocomplete="tel" placeholder="Phone (optional)" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none" />
               <button type="button" onclick="addGuestFromForm('admin')" class="px-5 py-3 rounded-2xl bg-emerald-800 hover:bg-emerald-700 text-white text-sm font-extrabold shadow transition">
                 + Add Guest
               </button>
@@ -801,26 +801,18 @@
 
       <!-- Decline Screen: Pleading Puppy-Eyes Brahmanandam (Namaskaram) Sticker + Telugu Dosti Dialogue -->
       <div id="gate-declined-notice" class="hidden p-5 rounded-3xl bg-gradient-to-b from-amber-50 to-red-50 border-2 border-amber-300 space-y-4 shadow-inner animate-panel">
-        <!-- Custom Pleading Puppy-Eyes Brahmanandam (Namaskaram) SVG Sticker -->
         <div class="relative mx-auto w-36 h-36 rounded-3xl bg-gradient-to-br from-amber-200 via-orange-100 to-amber-300 border-2 border-amber-400 shadow-lg flex flex-col items-center justify-center p-2">
           <svg viewBox="0 0 160 150" class="w-32 h-32 drop-shadow" aria-label="Pleading Namaskaram Sticker">
-            <!-- Halo / Drama Rays -->
             <circle cx="80" cy="68" r="54" fill="#fef3c7" opacity="0.7" />
-            <!-- Ears -->
             <ellipse cx="42" cy="66" rx="8" ry="13" fill="#d99b66" stroke="#78350f" stroke-width="2.5" />
             <ellipse cx="118" cy="66" rx="8" ry="13" fill="#d99b66" stroke="#78350f" stroke-width="2.5" />
-            <!-- Face -->
             <ellipse cx="80" cy="66" rx="36" ry="40" fill="#e5a973" stroke="#78350f" stroke-width="2.5" />
-            <!-- Classic Receding Hair & Side Tufts -->
             <path d="M45 55 C44 35, 62 28, 80 28 C98 28, 116 35, 115 55 C110 42, 98 38, 80 38 C62 38, 50 42, 45 55 Z" fill="#1c1917" />
             <path d="M44 52 Q40 62 45 68" stroke="#1c1917" stroke-width="4" fill="none" stroke-linecap="round" />
             <path d="M116 52 Q120 62 115 68" stroke="#1c1917" stroke-width="4" fill="none" stroke-linecap="round" />
-            <!-- Tilak / Bindi -->
             <ellipse cx="80" cy="46" rx="2.2" ry="5" fill="#dc2626" />
-            <!-- Pleading Worried Eyebrows -->
             <path d="M54 54 Q64 47 72 53" stroke="#1c1917" stroke-width="3" fill="none" stroke-linecap="round" />
             <path d="M88 53 Q96 47 106 54" stroke="#1c1917" stroke-width="3" fill="none" stroke-linecap="round" />
-            <!-- Big Puppy Eyes with Sparkles -->
             <circle cx="64" cy="64" r="9.5" fill="#ffffff" stroke="#451a03" stroke-width="2" />
             <circle cx="96" cy="64" r="9.5" fill="#ffffff" stroke="#451a03" stroke-width="2" />
             <circle cx="65" cy="64" r="6" fill="#1c1917" />
@@ -829,16 +821,11 @@
             <circle cx="93" cy="61" r="2.4" fill="#ffffff" />
             <circle cx="67" cy="66" r="1.2" fill="#ffffff" />
             <circle cx="97" cy="66" r="1.2" fill="#ffffff" />
-            <!-- Teardrops -->
             <path d="M53 72 Q49 80 53 84 Q57 80 53 72 Z" fill="#38bdf8" />
             <path d="M107 72 Q103 80 107 84 Q111 80 107 72 Z" fill="#38bdf8" />
-            <!-- Nose -->
             <path d="M80 65 Q76 75 81 77" stroke="#92400e" stroke-width="2.3" fill="none" stroke-linecap="round" />
-            <!-- Classic Mustache -->
             <path d="M64 85 Q80 79 96 85 Q88 89 80 86 Q72 89 64 85 Z" fill="#1c1917" />
-            <!-- Pleading Wobbly Mouth -->
             <path d="M72 93 Q80 89 88 93" stroke="#7f1d1d" stroke-width="2.5" fill="none" stroke-linecap="round" />
-            <!-- Folded Namaskaram Hands -->
             <path d="M64 138 L74 103 Q80 96 86 103 L96 138 Z" fill="#e5a973" stroke="#78350f" stroke-width="2.5" stroke-linejoin="round" />
             <line x1="80" y1="100" x2="80" y2="138" stroke="#78350f" stroke-width="2" />
           </svg>
@@ -847,7 +834,6 @@
           </span>
         </div>
 
-        <!-- Telugu Dosti Dialogue -->
         <p class="text-sm sm:text-base font-black text-red-950 leading-snug">
           🙉 Noooooo!!!! Okati takkuvaindi pushpa.... adi nuvve. Manasu marchuko mama, <span class="text-emerald-700 underline decoration-amber-400 decoration-2">ACCEPT</span> kottu, chilled beer pattu! 🍻
         </p>
@@ -1265,10 +1251,6 @@
       { id: 'pack_flipflops', label: '🩴 Comfy Flip-Flops & Sneakers' }
     ];
 
-    const QUICK_SPIRIT_CHOICES = [
-      'Budweiser', 'Bud Magnum', 'Heineken', 'KF Ultra', 'Jameson', 'Black Label', 'Old Monk', 'Absolut Vodka'
-    ];
-
     function getDefaultState() {
       return {
         adminPin: '0089',
@@ -1467,7 +1449,6 @@
 
             let q = quality;
             let dataUrl = canvas.toDataURL('image/jpeg', q);
-            // Ensure payload stays safely under Firestore 1MB document ceiling (~850KB)
             while (dataUrl.length > 850000 && q > 0.35) {
               q -= 0.12;
               dataUrl = canvas.toDataURL('image/jpeg', q);
@@ -1504,7 +1485,6 @@
       const merged = [];
       const seenIds = new Set();
 
-      // Include all shared cloud photos so every guest sees everyone's uploads
       sharedCloudPhotos.forEach(cp => {
         seenIds.add(cp.id);
         const localMatch = localMap.get(cp.id);
@@ -1515,7 +1495,6 @@
         });
       });
 
-      // Also include any local-only photos not yet in cloud
       localMap.forEach((lr, id) => {
         if (!seenIds.has(id)) {
           merged.push(lr);
@@ -1563,7 +1542,6 @@
           }
           savedCount++;
 
-          // Share with all guests via Firestore live sync
           try {
             const dataUrl = await encodeImageFileForCloudShare(file);
             const cloudDoc = {
@@ -1671,12 +1649,10 @@
       const adminOnlyTabs = ['rsvp', 'logs', 'admin'];
       let targetTab = validTabs.includes(tabName) ? tabName : 'home';
 
-      // Enforce Admin-only access on Manage Invites, Activity Logs & Host Control Panel
       if (adminOnlyTabs.includes(targetTab) && !isAdminUnlocked) {
         targetTab = 'home';
       }
 
-      // Ensure admin-only tabs remain hidden for non-admin guests
       ['nav-tab-rsvp', 'nav-tab-logs', 'nav-tab-admin', 'admin-home-dashlets', 'home-manage-invites-btn'].forEach(elId => {
         const el = document.getElementById(elId);
         if (!el) return;
@@ -2012,17 +1988,6 @@
       renderHomeGuestForms();
     }
 
-    function toggleCravingChip(type, item) {
-      const guest = getActiveGuestObj();
-      if (!guest) return;
-      if (!Array.isArray(guest[type])) guest[type] = [];
-      const idx = guest[type].indexOf(item);
-      if (idx >= 0) guest[type].splice(idx, 1);
-      else guest[type].push(item);
-      saveAppState(null, { guest });
-      renderHomeGuestForms();
-    }
-
     // ==================== FEAST, BAR & ESSENTIALS PLANNER + CONSOLIDATED ROLL-UP ====================
     function toggleFeastOtherInput(prefix) {
       const select = document.getElementById(`${prefix}-item-select`);
@@ -2177,7 +2142,6 @@
       if (!Array.isArray(appState.feastOrders)) appState.feastOrders = [];
       appState.feastOrders.unshift(newOrder);
 
-      // Sync corresponding expense entry
       const defaultSplit = appState.guests.length ? appState.guests.map(g => g.id) : [requestedById];
       const linkedExpense = {
         id: 'exp_' + newOrder.id,
@@ -2627,7 +2591,6 @@
         }
       }
 
-      // Packing Checklist
       const customItems = Array.isArray(activeGuest?.customPackingItems) ? activeGuest.customPackingItems : [];
       const allPackItems = [...DEFAULT_PACKING_ITEMS, ...customItems];
       const packedIds = Array.isArray(activeGuest?.packedItems) ? activeGuest.packedItems : [];
@@ -2860,7 +2823,6 @@
     }
 
     async function renderAllUI() {
-      // Admin vs Guest Header & Nav visibility (strictly hide admin panels for guests)
       const lockIcon = document.getElementById('admin-lock-icon');
       const toggleLabel = document.getElementById('admin-toggle-label');
       if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🛡️' : '🔒';
@@ -2879,7 +2841,6 @@
         }
       });
 
-      // If currently viewing an admin-only section when locked, return to Home
       const adminOnlyTabs = ['rsvp', 'logs', 'admin'];
       if (!isAdminUnlocked) {
         adminOnlyTabs.forEach(tabKey => {
@@ -2901,7 +2862,6 @@
       }
     }
 
-    // Expose functions globally for inline HTML event handlers inside <script type="module">
     Object.assign(window, {
       switchMainTab,
       diagnoseCloudSync,
@@ -2951,7 +2911,6 @@
     });
 
     function initAppBoot() {
-      // Attach explicit DOM click listeners so tab navigation & admin modal always work
       document.querySelectorAll('.nav-tab-btn').forEach(btn => {
         const tabKey = btn.getAttribute('data-tab');
         if (tabKey) {
@@ -2975,7 +2934,6 @@
       checkIncomingInviteLink();
       renderAllUI();
 
-      // Restore the exact tab the user was on before page refresh
       const hashTab = (window.location.hash || '').replace('#', '').trim();
       let savedTab = '';
       try {

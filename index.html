@@ -535,45 +535,32 @@
         <div class="rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-amber-100 pb-4">
             <div>
-              <h2 class="text-xl sm:text-2xl font-black text-red-950">💌 Squad Invites & RSVP Directory</h2>
-              <p class="text-xs sm:text-sm text-stone-600">Send personalized WhatsApp invite links, import mobile contacts, or manage RSVPs.</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 self-start">
-            <button type="button" onclick="pickContactFromMobile('rsvp')" class="px-4 py-2.5 rounded-2xl bg-amber-100 hover:bg-amber-200 text-red-950 border border-amber-300 text-xs sm:text-sm font-extrabold flex items-center gap-2 transition">
-              <span>📱 Pull from Contacts</span>
-            </button>
-            <button type="button" onclick="toggleQuickPasteContact('rsvp')" class="px-3.5 py-2.5 rounded-2xl bg-white hover:bg-amber-50 text-red-950 border border-amber-300 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition">
-              <span>📋 Quick Paste</span>
+              <h2 class="text-xl sm:text-2xl font-black text-red-950">💌 Squad Invites & Accepted Guests</h2>
+              <p class="text-xs sm:text-sm text-stone-600">Share WhatsApp invites and review guests who have accepted. Only Host Admin can make changes.</p>
+            </div>
+            <button type="button" onclick="openShareWhatsAppInviteModalOrAction()" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow transition self-start">
+              <span>💬 Share WhatsApp Invite</span>
             </button>
           </div>
-        </div>
 
-        <!-- Quick Paste Contact Bar (Parses pasted text like "Karthik +91 9876543210") -->
-        <div id="rsvp-quick-paste-box" class="hidden p-3.5 rounded-2xl bg-amber-50 border border-amber-300 space-y-2 animate-panel">
-          <p class="text-xs font-extrabold text-red-950">📋 Paste copied contact text (Name & Phone in any order):</p>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <input id="rsvp-quick-paste-input" type="text" placeholder="e.g., Karthik Reddy +91 98765 43210" class="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
-            <button type="button" onclick="applyQuickPasteContact('rsvp')" class="px-4 py-2.5 rounded-xl bg-red-900 hover:bg-red-800 text-white text-xs font-extrabold transition">
-              ✨ Fill Fields
-            </button>
-          </div>
-        </div>
-
-        <!-- Quick Add & Invite Guest Bar -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-amber-50/80 p-4 rounded-2xl border border-amber-200">
+          <!-- Admin-Only Add & Prepare Invite Bar -->
+          <div id="rsvp-admin-add-bar" class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-amber-50/80 p-4 rounded-2xl border border-amber-200">
             <input id="rsvp-new-name" type="text" autocomplete="name" placeholder="Friend's Name" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
             <input id="rsvp-new-phone" type="tel" autocomplete="tel" placeholder="Mobile Number (optional for WhatsApp)" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
             <button type="button" onclick="addGuestFromForm('rsvp')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-red-900 to-orange-700 hover:from-red-800 hover:to-orange-600 text-white text-sm font-extrabold shadow transition">
-              + Add & Prepare Invite
+              + Add & Share WhatsApp Invite
             </button>
           </div>
 
-          <!-- Hidden VCF File Picker for iOS Contacts -->
-          <input id="vcf-file-input" type="file" accept=".vcf,text/vcard" class="hidden" onchange="handleVcfUpload(event)" />
-
-          <!-- Guest List -->
-          <div id="rsvp-guest-cards" class="space-y-3">
-            <!-- Populated dynamically -->
+          <!-- Accepted Guests List (Admin-only actions) -->
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-black uppercase tracking-wider text-red-950">✅ Accepted Invites</h3>
+              <span id="rsvp-accepted-count" class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-extrabold">0</span>
+            </div>
+            <div id="rsvp-guest-cards" class="space-y-3">
+              <!-- Populated dynamically -->
+            </div>
           </div>
         </div>
       </section>
@@ -740,21 +727,13 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h3 class="text-sm font-black text-red-950">➕ Add & Invite Squad Member</h3>
               <div class="flex flex-wrap items-center gap-2">
-                <button type="button" onclick="pickContactFromMobile('admin')" class="px-3.5 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold transition">
-                  📱 Pick / Import Contact
-                </button>
-                <button type="button" onclick="toggleQuickPasteContact('admin')" class="px-3.5 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold transition">
-                  📋 Quick Paste
-                </button>
-              </div>
-            </div>
-            <div id="admin-quick-paste-box" class="hidden p-3 rounded-xl bg-white border border-amber-200 space-y-2 animate-panel">
-              <div class="flex flex-col sm:flex-row gap-2">
-                <input id="admin-quick-paste-input" type="text" placeholder="Paste name & phone (e.g., Karthik +91 9876543210)" class="flex-1 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-red-950 outline-none" />
-                <button type="button" onclick="applyQuickPasteContact('admin')" class="px-3.5 py-2 rounded-xl bg-emerald-800 text-white text-xs font-extrabold">
-                  ✨ Fill Fields
-                </button>
-              </div>
+          <!-- Add Guest -->
+          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-black text-red-950">➕ Add & Invite Squad Member</h3>
+              <button type="button" onclick="openShareWhatsAppInviteModalOrAction()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold transition">
+                💬 Share WhatsApp Invite
+              </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <input id="admin-new-name" type="text" autocomplete="name" placeholder="Guest Name" class="px-4 py-3 rounded-2xl bg-white border border-amber-200 text-sm font-semibold text-red-950 outline-none" />
@@ -1781,12 +1760,29 @@
     }
 
     // ==================== GUEST INVITES, RSVP & CONTACTS ====================
-    function buildInviteUrl(guest) {
+    function buildInviteUrl(guest = null) {
       const base = window.location.origin + window.location.pathname;
+      if (!guest) return base;
       return `${base}?invite=${encodeURIComponent(guest.id)}&name=${encodeURIComponent(guest.name)}`;
     }
 
+    function openShareWhatsAppInviteModalOrAction() {
+      const nameInput = document.getElementById('rsvp-new-name')?.value?.trim() || document.getElementById('admin-new-name')?.value?.trim() || '';
+      const phoneInput = normalizePhone(document.getElementById('rsvp-new-phone')?.value || document.getElementById('admin-new-phone')?.value || '');
+      const link = buildInviteUrl();
+      const greetingName = nameInput ? `*${nameInput}*` : 'there';
+      const msg = `🪁 *Sankranti 2027 Squad Invite!* 🔥\n\nHey ${greetingName}, gear up for 3 days of Bhogi bonfires, Sankranthi feast & Kanuma vibes (Jan 14–16, 2027)!\n\nTap the invite link to accept & set your travel/feast picks:\n${link}`;
+      const waUrl = phoneInput
+        ? `https://wa.me/${phoneInput}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank');
+    }
+
     function addGuestFromForm(source) {
+      if (!isAdminUnlocked) {
+        showToast('🔒 Only Host Admin can add or modify guests.', 'error');
+        return;
+      }
       const nameEl = document.getElementById(`${source}-new-name`);
       const phoneEl = document.getElementById(`${source}-new-phone`);
       const name = (nameEl?.value || '').trim();
@@ -1814,183 +1810,9 @@
       if (nameEl) nameEl.value = '';
       if (phoneEl) phoneEl.value = '';
       saveAppState({ actor: 'Host Admin', category: 'RSVP', action: 'Added Guest', msg: `Added ${name} to the squad list.` }, { guest: newGuest });
-      showToast(`✅ ${name} added! Ready to share invite.`);
+      showToast(`✅ ${name} added! Opening WhatsApp invite...`);
       renderAllUI();
-    }
-
-    async function pickContactFromMobile(source) {
-      if (source) {
-        try {
-          sessionStorage.setItem('sankranti_2027_contact_source', source);
-        } catch (e) {}
-      }
-
-      const isTopFrame = window.self === window.top;
-      if (
-        isTopFrame &&
-        'contacts' in navigator &&
-        navigator.contacts &&
-        typeof navigator.contacts.select === 'function'
-      ) {
-        try {
-          const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: true });
-          if (Array.isArray(contacts) && contacts.length > 0) {
-            const c = contacts[0];
-            const firstName = Array.isArray(c.name) ? c.name[0] : (c.name || '');
-            const firstTel = Array.isArray(c.tel) ? c.tel[0] : (c.tel || '');
-            const nameEl = document.getElementById(`${source}-new-name`);
-            const phoneEl = document.getElementById(`${source}-new-phone`);
-            if (nameEl && firstName) nameEl.value = firstName;
-            if (phoneEl && firstTel) phoneEl.value = firstTel;
-
-            // If multiple contacts were picked, add extra ones straight to the squad list
-            let addedExtra = 0;
-            for (let idx = 1; idx < contacts.length; idx++) {
-              const extra = contacts[idx];
-              const extraName = (Array.isArray(extra.name) ? extra.name[0] : (extra.name || '')).trim();
-              const extraPhone = normalizePhone(Array.isArray(extra.tel) ? extra.tel[0] : (extra.tel || ''));
-              if (extraName) {
-                const newGuest = {
-                  id: 'guest_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).slice(2, 5),
-                  name: extraName,
-                  phone: extraPhone,
-                  rsvp: 'pending',
-                  fromCity: '',
-                  toCity: '',
-                  arrivalDate: '2027-01-13',
-                  departureDate: '2027-01-17',
-                  travelSubmitted: false,
-                  packedItems: [],
-                  customPackingItems: [],
-                  starters: [],
-                  spirits: []
-                };
-                appState.guests.push(newGuest);
-                saveAppState({
-                  actor: 'Host Admin',
-                  category: 'RSVP',
-                  action: 'Added Guest',
-                  msg: `Added ${extraName} from Contacts.`
-                }, { guest: newGuest });
-                addedExtra++;
-              }
-            }
-
-            if (addedExtra > 0) {
-              renderAllUI();
-              showToast(`📱 Loaded ${firstName || '1st contact'} & added ${addedExtra} more contact(s)!`);
-            } else {
-              showToast(`📱 Loaded ${firstName || 'contact'}! Tap Add to save.`);
-            }
-            return;
-          }
-        } catch (err) {
-          console.warn('Contact Picker unavailable/blocked, falling back to .vcf:', err);
-        }
-      }
-
-      const vcfInput = document.getElementById('vcf-file-input');
-      if (vcfInput) {
-        vcfInput.click();
-      } else {
-        showToast('📱 Type the guest name & mobile number directly in the fields above.', 'info');
-      }
-    }
-
-    function toggleQuickPasteContact(source) {
-      const box = document.getElementById(`${source}-quick-paste-box`);
-      if (!box) return;
-      box.classList.toggle('hidden');
-      if (!box.classList.contains('hidden')) {
-        setTimeout(() => document.getElementById(`${source}-quick-paste-input`)?.focus(), 50);
-      }
-    }
-
-    function applyQuickPasteContact(source) {
-      const pasteEl = document.getElementById(`${source}-quick-paste-input`);
-      const rawText = (pasteEl?.value || '').trim();
-      if (!rawText) {
-        showToast('Paste or type a name and phone number first.', 'error');
-        return;
-      }
-
-      const phoneMatch = rawText.match(/(\+?\d[\d\s\-()]{6,}\d)/);
-      const phone = phoneMatch ? normalizePhone(phoneMatch[1]) : '';
-      const namePart = phoneMatch
-        ? rawText.replace(phoneMatch[1], '').replace(/[|•,\-:]+/g, ' ').trim()
-        : rawText;
-
-      const nameEl = document.getElementById(`${source}-new-name`);
-      const phoneEl = document.getElementById(`${source}-new-phone`);
-      if (nameEl && namePart) nameEl.value = namePart;
-      if (phoneEl && phone) phoneEl.value = phone;
-
-      if (pasteEl) pasteEl.value = '';
-      document.getElementById(`${source}-quick-paste-box`)?.classList.add('hidden');
-      showToast(`✨ Filled ${namePart || 'contact'}! Tap Add to save.`);
-    }
-
-    function handleVcfUpload(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const contacts = parseVcfContacts(String(reader.result || ''));
-        if (!contacts.length) {
-          showToast('⚠️ Could not read name/phone from that file. Please enter them manually.', 'error');
-          return;
-        }
-
-        let savedSource = 'rsvp';
-        try {
-          savedSource = sessionStorage.getItem('sankranti_2027_contact_source') || '';
-        } catch (e) {}
-        const targetSource = savedSource || (!document.getElementById('tab-rsvp')?.classList.contains('hidden') ? 'rsvp' : 'admin');
-
-        const first = contacts[0];
-        const nameEl = document.getElementById(`${targetSource}-new-name`);
-        const phoneEl = document.getElementById(`${targetSource}-new-phone`);
-        if (nameEl && first.name) nameEl.value = first.name;
-        if (phoneEl && first.phone) phoneEl.value = first.phone;
-
-        let addedCount = 0;
-        for (let i = 1; i < contacts.length; i++) {
-          const item = contacts[i];
-          if (!item.name) continue;
-          const newGuest = {
-            id: 'guest_' + Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2, 5),
-            name: item.name,
-            phone: item.phone,
-            rsvp: 'pending',
-            fromCity: '',
-            toCity: '',
-            arrivalDate: '2027-01-13',
-            departureDate: '2027-01-17',
-            travelSubmitted: false,
-            packedItems: [],
-            customPackingItems: [],
-            starters: [],
-            spirits: []
-          };
-          appState.guests.push(newGuest);
-          saveAppState({
-            actor: 'Host Admin',
-            category: 'RSVP',
-            action: 'Added Guest',
-            msg: `Added ${item.name} from vCard file.`
-          }, { guest: newGuest });
-          addedCount++;
-        }
-
-        if (addedCount > 0) {
-          renderAllUI();
-          showToast(`📇 Loaded ${first.name || '1st contact'} & added ${addedCount} more from vCard!`);
-        } else {
-          showToast(`📇 Loaded ${first.name || first.phone}! Tap Add to save.`);
-        }
-      };
-      reader.readAsText(file);
-      event.target.value = '';
+      openWhatsAppInvite(newGuest.id);
     }
 
     function openWhatsAppInvite(guestId) {
@@ -2005,6 +1827,10 @@
     }
 
     function copyInviteLink(guestId) {
+      if (!isAdminUnlocked) {
+        showToast('🔒 Only Host Admin can copy invite links.', 'error');
+        return;
+      }
       const guest = appState.guests.find(g => g.id === guestId);
       if (!guest) return;
       const ta = document.createElement('textarea');
@@ -2017,6 +1843,10 @@
     }
 
     function resetAndReinviteGuest(guestId) {
+      if (!isAdminUnlocked) {
+        showToast('🔒 Only Host Admin can change guest invite status.', 'error');
+        return;
+      }
       const guest = appState.guests.find(g => g.id === guestId);
       if (!guest) return;
       guest.rsvp = 'pending';
@@ -2027,6 +1857,10 @@
     }
 
     function removeGuest(guestId) {
+      if (!isAdminUnlocked) {
+        showToast('🔒 Only Host Admin can remove guests.', 'error');
+        return;
+      }
       const guest = appState.guests.find(g => g.id === guestId);
       appState.guests = appState.guests.filter(g => g.id !== guestId);
       if (currentRole === guestId) currentRole = 'public';
@@ -2778,33 +2612,44 @@
 
     function renderRsvpList() {
       const container = document.getElementById('rsvp-guest-cards');
+      const acceptedCountEl = document.getElementById('rsvp-accepted-count');
+      const adminAddBar = document.getElementById('rsvp-admin-add-bar');
+      if (adminAddBar) {
+        adminAddBar.classList.toggle('hidden', !isAdminUnlocked);
+      }
+
+      const acceptedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      if (acceptedCountEl) acceptedCountEl.textContent = String(acceptedGuests.length);
       if (!container) return;
-      if (!appState.guests.length) {
-        container.innerHTML = `<p class="text-xs text-stone-500 italic">No squad members added yet. Add someone above to generate their invite link!</p>`;
+
+      if (!acceptedGuests.length) {
+        container.innerHTML = `<p class="text-xs text-stone-500 italic">No guests have accepted the invite yet.</p>`;
         return;
       }
 
-      container.innerHTML = appState.guests.map(g => {
-        const badgeStyle = g.rsvp === 'accepted'
-          ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-          : g.rsvp === 'declined'
-            ? 'bg-red-100 text-red-900 border-red-300'
-            : 'bg-amber-100 text-amber-900 border-amber-300';
+      container.innerHTML = acceptedGuests.map(g => {
+        const badgeStyle = 'bg-emerald-100 text-emerald-900 border-emerald-300';
+        const adminActions = isAdminUnlocked
+          ? `
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="openWhatsAppInvite('${g.id}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">💬 Share WhatsApp Invite</button>
+              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-3 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold">🔗 Copy Link</button>
+              <button type="button" onclick="resetAndReinviteGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-red-950 text-xs font-extrabold">🔄 Reset</button>
+              <button type="button" onclick="removeGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">✕</button>
+            </div>
+          `
+          : `<span class="text-[11px] font-bold text-stone-500">🔒 Admin-only actions</span>`;
+
         return `
           <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-sm font-black text-red-950">${g.name}</span>
-                <span class="px-2.5 py-0.5 rounded-full border text-[10px] font-black uppercase ${badgeStyle}">${g.rsvp || 'pending'}</span>
+                <span class="px-2.5 py-0.5 rounded-full border text-[10px] font-black uppercase ${badgeStyle}">accepted</span>
               </div>
               <p class="text-xs text-stone-600 mt-0.5">${g.phone ? '📱 +' + g.phone : 'No phone number'} ${g.fromCity ? '• ' + g.fromCity + ' → ' + (g.toCity || 'Hub') : ''}</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" onclick="openWhatsAppInvite('${g.id}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">💬 WhatsApp</button>
-              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-3 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold">🔗 Copy Link</button>
-              <button type="button" onclick="resetAndReinviteGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-red-950 text-xs font-extrabold">🔄 Reset</button>
-              <button type="button" onclick="removeGuest('${g.id}')" class="px-3 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">✕</button>
-            </div>
+            ${adminActions}
           </div>
         `;
       }).join('');
@@ -3052,11 +2897,8 @@
       downloadHdPhoto,
       deleteHdPhoto,
       openLightbox,
-      pickContactFromMobile,
-      toggleQuickPasteContact,
-      applyQuickPasteContact,
+      openShareWhatsAppInviteModalOrAction,
       addGuestFromForm,
-      handleVcfUpload,
       openWhatsAppInvite,
       copyInviteLink,
       resetAndReinviteGuest,

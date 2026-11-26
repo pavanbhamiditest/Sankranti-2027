@@ -146,11 +146,197 @@
             <p class="text-xs sm:text-sm text-amber-900/80 mt-0.5">Circuit: <strong>Jangareddygudem</strong> (Bhogi) → <strong>Kothapeta</strong> (Sankranthi) → <strong>Narsapuram</strong> (Kanuma)</p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button onclick="switchMainTab('rsvp')" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
+            <button id="home-rsvp-btn" onclick="switchMainTab('rsvp')" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
               + RSVP / Update Preferences
             </button>
             <button onclick="switchMainTab('expenses')" class="px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs sm:text-sm font-extrabold transition">
               💸 View / Manage Expenses
+            </button>
+          </div>
+        </div>
+
+        <!-- Accepted Guest's Personal Trip Details & Preferences Form on Home Page -->
+        <div id="home-guest-details-section" class="hidden bg-white rounded-3xl p-5 sm:p-8 border-2 border-emerald-500 shadow-xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amber-100">
+            <div>
+              <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">✅ Invite Accepted • #DhummuLeputunnam</span>
+              <h3 id="home-pref-heading" class="text-xl sm:text-2xl font-extrabold text-red-950 mt-2">My Trip Itinerary & Preferences</h3>
+              <p class="text-xs text-stone-600 mt-0.5">Fill out your departure/arrival cities, travel dates, starters, spirits, essentials, and smokes below.</p>
+            </div>
+            <button type="button" onclick="saveGuestPreferences('home')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm shadow-lg transition">
+              💾 Save My Details
+            </button>
+          </div>
+
+          <!-- 1. Travel & Route Details (From City, To City, Arrival Date, Departure Date) -->
+          <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
+            <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
+              <span>🚆</span><span>1. Travel Route & Dates</span>
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">From City (Departure)</label>
+                <input id="home-pref-from-city" type="text" placeholder="e.g., Hyderabad, Vijayawada..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">To City (Arrival Hub)</label>
+                <select id="home-pref-arrival-city" onchange="toggleCustomCityInput(this.value, 'home-pref-custom-city')" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950">
+                  <option value="Jangareddygudem">Jangareddygudem</option>
+                  <option value="Kothapeta">Kothapeta</option>
+                  <option value="Narsapuram">Narsapuram</option>
+                  <option value="Tanuku">Tanuku</option>
+                  <option value="Kirlampudi">Kirlampudi</option>
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Others">Others</option>
+                </select>
+                <input id="home-pref-custom-city" type="text" placeholder="Enter destination city" class="hidden mt-2 w-full px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Arrival Date</label>
+                <input id="home-pref-travel-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Departure / Return Date</label>
+                <input id="home-pref-return-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Starters & Feast Preference -->
+          <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
+                <span>🍗</span><span>2. Starters & Feast Preference</span>
+              </h4>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold text-amber-950">Diet Mode:</span>
+                <button type="button" onclick="setDietPreference('Non-Veg', false, 'home')" id="home-diet-nonveg-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-red-700 text-white shadow">🍖 Non-Veg</button>
+                <button type="button" onclick="setDietPreference('Veg', false, 'home')" id="home-diet-veg-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-emerald-900 border border-emerald-300">🥗 Pure Veg</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end bg-white p-3.5 rounded-2xl border border-amber-200">
+              <div class="sm:col-span-6">
+                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Starter Dish</label>
+                <select id="home-starter-item-select" onchange="toggleCustomStarterInput(this.value, 'home-starter-custom-input')" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
+                <input id="home-starter-custom-input" type="text" placeholder="Type custom starter name..." class="hidden mt-2 w-full px-3 py-2 rounded-xl bg-white border border-orange-400 text-sm font-bold text-red-950" />
+              </div>
+              <div class="sm:col-span-3">
+                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Quantity (Plates)</label>
+                <select id="home-starter-qty-select" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
+                  <option value="1">1 Plate</option>
+                  <option value="2">2 Plates</option>
+                  <option value="3">3 Plates</option>
+                  <option value="4">4 Plates</option>
+                  <option value="5">5 Plates</option>
+                  <option value="6">6 Plates</option>
+                </select>
+              </div>
+              <div class="sm:col-span-3">
+                <button type="button" onclick="addStarterItemToGuest('home')" class="w-full py-2 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
+                  + Add Starter
+                </button>
+              </div>
+            </div>
+            <div id="home-guest-starters-list" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- 3. Alcohol & Spirits Preference -->
+          <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
+            <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
+              <span>🍻</span><span>3. Alcohol & Spirits Preference</span>
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end bg-white p-3.5 rounded-2xl border border-amber-200">
+              <div class="sm:col-span-3">
+                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Category</label>
+                <select id="home-alc-category-select" onchange="populateAlcoholBrands('home')" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
+                  <option value="Beer">🍺 Beer</option>
+                  <option value="Whiskey">🥃 Whiskey</option>
+                  <option value="Vodka">🍸 Vodka</option>
+                  <option value="Rum">🏴‍☠️ Rum</option>
+                  <option value="Wine">🍷 Wine</option>
+                  <option value="Non-Alcoholic">🥤 Non-Alcoholic / Mocktails</option>
+                </select>
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Brand</label>
+                <select id="home-alc-brand-select" onchange="toggleCustomAlcoholInput(this.value, 'home-alc-custom-brand-input')" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
+                <input id="home-alc-custom-brand-input" type="text" placeholder="Type custom brand name..." class="hidden mt-2 w-full px-3 py-2 rounded-xl bg-white border border-amber-500 text-sm font-bold text-red-950" />
+              </div>
+              <div class="sm:col-span-3">
+                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Quantity</label>
+                <select id="home-alc-qty-select" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
+              </div>
+              <div class="sm:col-span-2">
+                <button type="button" onclick="addAlcoholItemToGuest('home')" class="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
+                  + Add
+                </button>
+              </div>
+            </div>
+            <div id="home-guest-alcohol-list" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- 4. Essentials & Cigarettes -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-3">
+              <h4 class="text-sm font-extrabold text-red-950">🥤 4. Party Essentials & Mixers</h4>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <select id="home-essential-item-select" onchange="toggleCustomEssentialInput(this.value, 'home-essential-custom-input')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
+                  <option value="Water Bottles (1L / Case)">💧 Water Bottles (1L / Case)</option>
+                  <option value="Disposable Glasses (Pack)">🥤 Disposable Glasses (Pack)</option>
+                  <option value="Paper Plates (Pack)">🍽️ Paper Plates (Pack)</option>
+                  <option value="Tissues / Napkins (Pack)">🧻 Tissues / Napkins (Pack)</option>
+                  <option value="Soda Bottles (Club / Kinley)">🫧 Soda Bottles (Club / Kinley)</option>
+                  <option value="Chips & Munchies (Packs)">🥔 Chips & Munchies (Packs)</option>
+                  <option value="Ice Cubes (Bag)">🧊 Ice Cubes (Bag)</option>
+                  <option value="Lemon, Salt & Chaat Masala">🍋 Lemon, Salt & Chaat Masala</option>
+                  <option value="Other">➕ Other</option>
+                </select>
+                <select id="home-essential-qty-select" class="px-2.5 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
+                  <option value="1">1×</option>
+                  <option value="2">2×</option>
+                  <option value="3">3×</option>
+                  <option value="4">4×</option>
+                  <option value="5">5×</option>
+                </select>
+                <button type="button" onclick="addEssentialItemToGuest('home')" class="px-3.5 py-2 rounded-xl bg-teal-700 text-white text-xs font-extrabold">+ Add</button>
+              </div>
+              <input id="home-essential-custom-input" type="text" placeholder="Type custom essential..." class="hidden w-full px-3 py-2 rounded-xl bg-white border border-orange-400 text-xs font-bold text-red-950" />
+              <div id="home-guest-essentials-list" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-3">
+              <h4 class="text-sm font-extrabold text-red-950">🚬 5. Cigarettes & Smokes</h4>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <select id="home-cig-brand-select" onchange="toggleCustomCigaretteInput(this.value, 'home-cig-custom-input')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
+                  <option value="Classic Milds">Classic Milds</option>
+                  <option value="Classic Regular">Classic Regular</option>
+                  <option value="Classic Ice Burst">Classic Ice Burst</option>
+                  <option value="Gold Flake Kings">Gold Flake Kings</option>
+                  <option value="Gold Flake Lights">Gold Flake Lights</option>
+                  <option value="Marlboro Advance">Marlboro Advance</option>
+                  <option value="Marlboro Red">Marlboro Red</option>
+                  <option value="Marlboro Clove Mix">Marlboro Clove Mix</option>
+                  <option value="Benson & Hedges">Benson & Hedges</option>
+                  <option value="Dunhill">Dunhill</option>
+                  <option value="Other">➕ Other</option>
+                </select>
+                <select id="home-cig-qty-select" class="px-2.5 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
+                  <option value="1">1 Pack</option>
+                  <option value="2">2 Packs</option>
+                  <option value="3">3 Packs</option>
+                  <option value="4">4 Packs</option>
+                  <option value="5">5 Packs</option>
+                </select>
+                <button type="button" onclick="addCigaretteItemToGuest('home')" class="px-3.5 py-2 rounded-xl bg-stone-800 text-amber-50 text-xs font-extrabold">+ Add</button>
+              </div>
+              <input id="home-cig-custom-input" type="text" placeholder="Type custom brand..." class="hidden w-full px-3 py-2 rounded-xl bg-white border border-orange-400 text-xs font-bold text-red-950" />
+              <div id="home-guest-cigarettes-list" class="flex flex-wrap gap-1.5"></div>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="button" onclick="saveGuestPreferences('home')" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm sm:text-base shadow-xl transition">
+              💾 Save & Update My Trip Details
             </button>
           </div>
         </div>
@@ -356,13 +542,13 @@
             <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
               <span>🚆</span><span>1. Travel & Arrival Itinerary</span>
             </h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Travel / Arrival Date</label>
-                <input id="pref-travel-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">From City (Origin)</label>
+                <input id="pref-from-city" type="text" placeholder="e.g., Hyderabad" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
               </div>
               <div>
-                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Arrival City / Stop</label>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">To City / Arrival Hub</label>
                 <select id="pref-arrival-city" onchange="toggleCustomCityInput(this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950">
                   <option value="Hyderabad">Hyderabad</option>
                   <option value="Tanuku">Tanuku</option>
@@ -375,7 +561,11 @@
                 <input id="pref-custom-city" type="text" placeholder="Enter destination city name" class="hidden mt-2 w-full px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
               </div>
               <div>
-                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Return Date</label>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Arrival Date</label>
+                <input id="pref-travel-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Departure / Return Date</label>
                 <input id="pref-return-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
               </div>
             </div>
@@ -962,26 +1152,32 @@
   </main>
 
   <!-- ===================================================================== -->
-  <!-- UNIVERSAL DASHLET DETAIL POP-UP MODAL                                 -->
+  <!-- INVITATION ACCEPT / DECLINE GATE MODAL (SHOWN ON ?invite= LINK)       -->
   <!-- ===================================================================== -->
-  <div id="dashlet-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-3xl max-h-[88vh] rounded-3xl shadow-2xl border-2 border-amber-300 flex flex-col overflow-hidden animate-pop">
-      <div class="px-6 py-4 bg-gradient-to-r from-orange-700 to-red-900 text-white flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <span id="modal-icon" class="text-2xl">📊</span>
-          <h3 id="modal-title" class="text-lg sm:text-xl font-extrabold">Details</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="copyModalSummary()" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-bold transition">
-            📋 Copy Summary
-          </button>
-          <button onclick="closeDashletModal()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center font-bold">
-            ✕
-          </button>
-        </div>
+  <div id="invite-gate-modal" class="fixed inset-0 z-[70] hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border-4 border-amber-400 animate-pop">
+      <div class="bg-gradient-to-br from-amber-500 via-orange-600 to-red-900 p-7 text-center text-white">
+        <div class="text-5xl mb-2">☀️🪁🔥</div>
+        <span class="px-3 py-1 rounded-full bg-yellow-300 text-red-950 text-[11px] font-black uppercase tracking-wider">
+          Personal Squad Invitation
+        </span>
+        <h2 id="invite-gate-title" class="font-display text-2xl sm:text-3xl font-black text-amber-50 mt-3">
+          Hey Guest!
+        </h2>
+        <p class="text-sm font-extrabold text-yellow-300 mt-1">#DhummuLeputunnam</p>
       </div>
-      <div id="modal-body" class="p-6 overflow-y-auto space-y-4 text-sm">
-        <!-- Populated dynamically -->
+      <div id="invite-gate-body" class="p-6 text-center space-y-4">
+        <p class="text-sm text-stone-700 font-medium leading-relaxed">
+          You are invited to <strong>Sankranti 2027</strong> (Jangareddygudem • Kothapeta • Narsapuram). Please accept or decline your invitation below.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <button type="button" id="invite-gate-accept-btn" class="py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm shadow-lg transition">
+            ✅ Accept Invitation
+          </button>
+          <button type="button" id="invite-gate-decline-btn" class="py-3.5 px-5 rounded-2xl bg-red-100 hover:bg-red-200 text-red-900 font-extrabold text-sm transition">
+            ❌ Decline
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1093,25 +1289,484 @@
         itemCustomSplits: {},
         pickedChecklist: {},
         guests: [
-          { id: 'srinu', name: 'Srinu', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'praveen', name: 'Praveen', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'chandu', name: 'Chandu', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Kothapeta', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'pavan', name: 'Pavan', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Narsapuram', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'lella', name: 'Lella', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Tanuku', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'palla', name: 'Palla', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Kirlampudi', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'palli', name: 'Palli', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'jayanth', name: 'Jayanth', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] }
+          { id: 'srinu', name: 'Srinu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'praveen', name: 'Praveen', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'chandu', name: 'Chandu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kothapeta', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'pavan', name: 'Pavan', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Narsapuram', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'lella', name: 'Lella', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Tanuku', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'palla', name: 'Palla', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kirlampudi', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'palli', name: 'Palli', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'jayanth', name: 'Jayanth', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] }
         ],
-        expenses: [],
-        activityLog: [
-          {
-            id: 'log-init-1',
-            timestamp: new Date().toLocaleString('en-IN'),
-            actor: 'Host Admin',
-            category: 'ADMIN',
-            action: 'Initialized',
-            msg: 'Sankranti 2027 Trip Organizer initialized for the squad.'
-          }
+// ... existing code ... -->
+    // =========================================================================
+    // 4. RSVP, INVITES & GUEST PREFERENCES
+    // =========================================================================
+    function openInviteGateForGuest(guest) {
+      const modal = document.getElementById('invite-gate-modal');
+      const title = document.getElementById('invite-gate-title');
+      const body = document.getElementById('invite-gate-body');
+      title.textContent = `Hey ${guest.name}!`;
+
+      if (guest.rsvp === 'exited' || guest.rsvp === 'declined') {
+        body.innerHTML = `
+          <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-950 space-y-2">
+            <div class="text-2xl">🔒</div>
+            <div class="font-extrabold text-base">Access Locked</div>
+            <p class="text-xs text-red-800">You have declined or exited Sankranti 2027. Only Host Admin can re-invite you.</p>
+          </div>
+        `;
+      } else {
+        body.innerHTML = `
+          <p class="text-sm text-stone-700 font-medium leading-relaxed">
+            You are invited to <strong>Sankranti 2027</strong> (Jangareddygudem • Kothapeta • Narsapuram). Please accept or decline your invitation below.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button type="button" onclick="acceptGuestInvite('${guest.id}')" class="py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm shadow-lg transition">
+              ✅ Accept Invitation
+            </button>
+            <button type="button" onclick="declineGuestInvite('${guest.id}')" class="py-3.5 px-5 rounded-2xl bg-red-100 hover:bg-red-200 text-red-900 font-extrabold text-sm transition">
+              ❌ Decline
+            </button>
+          </div>
+        `;
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function declineGuestInvite(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      guest.rsvp = 'declined';
+      currentRole = guest.id;
+      saveAppState({
+        actor: guest.name,
+        category: 'RSVP',
+        action: 'Declined Invite',
+        msg: `${guest.name} declined the Sankranti 2027 invitation.`
+      });
+      openInviteGateForGuest(guest);
+    }
+
+    function confirmGuestExit(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      guest.rsvp = 'exited';
+      saveAppState({
+        actor: guest.name,
+        category: 'RSVP',
+        action: 'Exited Trip',
+        msg: `${guest.name} exited the Sankranti 2027 trip and revoked their access.`
+      });
+      openInviteGateForGuest(guest);
+    }
+
+    function renderRsvpSection() {
+      const select = document.getElementById('rsvp-guest-select');
+      if (select) {
+        select.innerHTML = appState.guests.map(g =>
+          `<option value="${g.id}" ${g.id === selectedRsvpGuestId ? 'selected' : ''}>${g.name} (${g.rsvp.toUpperCase()})</option>`
+        ).join('');
+      }
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || appState.guests[0];
+      if (!guest) return;
+
+      const box = document.getElementById('rsvp-invite-box');
+      const prefContainer = document.getElementById('preferences-form-container');
+      if (box) {
+        box.innerHTML = `
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase ${guest.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : guest.rsvp === 'declined' || guest.rsvp === 'exited' ? 'bg-red-100 text-red-900' : 'bg-amber-200 text-amber-950'}">
+                Status: ${guest.rsvp}
+              </span>
+              <h3 class="text-xl font-extrabold text-red-950 mt-2">${guest.name}</h3>
+              <p class="text-xs text-stone-600 mt-0.5 break-all">${getGuestInviteLink(guest.id)}</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <a href="${getWhatsAppInviteUrl(guest)}" target="_blank" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">
+                📲 Send WhatsApp Invite
+              </a>
+              <button type="button" onclick="copyInviteLink('${guest.id}')" class="px-4 py-2.5 rounded-xl bg-white border border-amber-300 text-amber-950 text-xs font-extrabold">
+                🔗 Copy Invite Link
+              </button>
+              ${guest.rsvp !== 'accepted' ? `
+                <button type="button" onclick="acceptGuestInvite('${guest.id}')" class="px-4 py-2.5 rounded-xl bg-orange-600 text-white text-xs font-extrabold shadow">
+                  ✅ Mark Accepted
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      if (prefContainer) {
+        if (guest.rsvp === 'accepted') {
+          prefContainer.classList.remove('hidden');
+          populatePreferenceFormForGuest(guest, 'rsvp');
+        } else {
+          prefContainer.classList.add('hidden');
+        }
+      }
+    }
+
+    function getGuestInviteLink(guestId) {
+      const url = new URL(window.location.href);
+      url.search = `?invite=${encodeURIComponent(guestId)}`;
+      return url.toString();
+    }
+
+    function getWhatsAppInviteUrl(guest) {
+      const link = getGuestInviteLink(guest.id);
+      const text = [
+        `☀️🪁 *Sankranti 2027 Squad Invite* 🔥`,
+        `Hey *${guest.name}*! You're invited to our Sankranti 2027 celebration (#DhummuLeputunnam).`,
+        `Tap your personal link below to Accept your invite and add your travel dates, starter choices, and spirits preferences:`,
+        link
+      ].join('\n\n');
+      const phone = (guest.phone || '').replace(/\D/g, '');
+      return phone
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+        : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    }
+
+    function copyInviteLink(guestId) {
+      const link = getGuestInviteLink(guestId);
+      const ta = document.createElement('textarea');
+      ta.value = link;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('Personal invite URL copied!');
+    }
+
+    function selectGuestForRsvp(guestId) {
+      selectedRsvpGuestId = guestId;
+      renderRsvpSection();
+    }
+
+    function acceptGuestInvite(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      guest.rsvp = 'accepted';
+      currentRole = guest.id;
+      selectedRsvpGuestId = guest.id;
+      document.getElementById('invite-gate-modal')?.classList.add('hidden');
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'RSVP',
+        action: 'Accepted Invite',
+        msg: `${guest.name} accepted the Sankranti 2027 invite!`
+      });
+      switchMainTab('home');
+      const homeSection = document.getElementById('home-guest-details-section');
+      if (homeSection) homeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast(`Welcome ${guest.name}! Please fill out your travel & preferences below.`);
+    }
+
+    function closeWelcomeModal() {
+      document.getElementById('welcome-rsvp-modal').classList.add('hidden');
+      switchMainTab('home');
+    }
+
+    function populatePreferenceFormForGuest(guest, prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const heading = document.getElementById(p + 'pref-form-heading') || document.getElementById('home-pref-heading');
+      if (heading) heading.textContent = `${guest.name}'s Travel Itinerary & Preferences`;
+
+      const fromEl = document.getElementById(p + 'pref-from-city');
+      if (fromEl) fromEl.value = guest.fromCity || '';
+
+      const tDateEl = document.getElementById(p + 'pref-travel-date');
+      if (tDateEl) tDateEl.value = guest.travelDate || '2027-01-13';
+
+      const rDateEl = document.getElementById(p + 'pref-return-date');
+      if (rDateEl) rDateEl.value = guest.returnDate || '2027-01-17';
+
+      const citySelect = document.getElementById(p + 'pref-arrival-city');
+      const customCity = document.getElementById(p + 'pref-custom-city');
+      const standardCities = ['Hyderabad', 'Tanuku', 'Narsapuram', 'Kothapeta', 'Jangareddygudem', 'Kirlampudi'];
+      if (citySelect && customCity) {
+        if (standardCities.includes(guest.arrivalCity)) {
+          citySelect.value = guest.arrivalCity;
+          customCity.classList.add('hidden');
+        } else {
+          citySelect.value = 'Others';
+          customCity.classList.remove('hidden');
+          customCity.value = guest.arrivalCity || '';
+        }
+      }
+
+      setDietPreference(guest.diet || 'Non-Veg', true, prefix);
+      populateAlcoholBrands(prefix);
+      populateAlcoholQuantities(prefix);
+      renderGuestPreferenceChips(guest, prefix);
+    }
+
+    function toggleCustomCityInput(val, customId = 'pref-custom-city') {
+      const el = document.getElementById(customId);
+      if (!el) return;
+      if (val === 'Others') el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function setDietPreference(diet, skipSave = false, prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (guest) guest.diet = diet;
+
+      const nvBtn = document.getElementById(p + 'diet-nonveg-btn');
+      const vBtn = document.getElementById(p + 'diet-veg-btn');
+      if (nvBtn && vBtn) {
+        if (diet === 'Non-Veg') {
+          nvBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-red-700 text-white shadow';
+          vBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-emerald-900 border border-emerald-300';
+        } else {
+          vBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-700 text-white shadow';
+          nvBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-red-900 border border-red-300';
+        }
+      }
+
+      const select = document.getElementById(p + 'starter-item-select');
+      if (select) {
+        const dishes = STARTER_MENU[diet] || STARTER_MENU['Non-Veg'];
+        select.innerHTML = dishes.map(d => `<option value="${d}">${d}</option>`).join('');
+        toggleCustomStarterInput(select.value, p + 'starter-custom-input');
+      }
+      if (!skipSave && guest) saveAppState();
+    }
+
+    function toggleCustomStarterInput(val, customId = 'starter-custom-input') {
+      const el = document.getElementById(customId);
+      if (!el) return;
+      if (val === 'Other') el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function addStarterItemToGuest(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest) return;
+      let item = document.getElementById(p + 'starter-item-select').value;
+      if (item === 'Other') {
+        item = document.getElementById(p + 'starter-custom-input').value.trim();
+        if (!item) return showToast('Enter a custom starter name.', 'error');
+      }
+      const qty = parseInt(document.getElementById(p + 'starter-qty-select').value, 10) || 1;
+      const existing = guest.starters.find(s => s.item.toLowerCase() === item.toLowerCase());
+      if (existing) existing.qty += qty;
+      else guest.starters.push({ item, qty, diet: guest.diet });
+
+      document.getElementById(p + 'starter-custom-input').value = '';
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'PREFS',
+        action: 'Added Starter',
+        msg: `${guest.name} added ${qty}x ${item}.`
+      });
+      renderGuestPreferenceChips(guest, prefix);
+    }
+
+    function removeGuestItem(type, index, prefix = 'rsvp') {
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest || !Array.isArray(guest[type])) return;
+      const removed = guest[type].splice(index, 1)[0];
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'PREFS',
+        action: 'Removed Item',
+        msg: `${guest.name} removed ${removed?.item || removed?.brand || 'item'} from ${type}.`
+      });
+      renderGuestPreferenceChips(guest, prefix);
+    }
+
+    function populateAlcoholBrands(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const catEl = document.getElementById(p + 'alc-category-select');
+      const sel = document.getElementById(p + 'alc-brand-select');
+      if (!catEl || !sel) return;
+      const brands = ALCOHOL_BRANDS[catEl.value] || ['Other'];
+      sel.innerHTML = brands.map(b => `<option value="${b}">${b}</option>`).join('');
+      toggleCustomAlcoholInput(sel.value, p + 'alc-custom-brand-input');
+    }
+
+    function toggleCustomAlcoholInput(val, customId = 'alc-custom-brand-input') {
+      const el = document.getElementById(customId);
+      if (!el) return;
+      if (val === 'Other') el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function populateAlcoholQuantities(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const sel = document.getElementById(p + 'alc-qty-select');
+      if (!sel || sel.options.length > 0) return;
+      let html = '';
+      for (let i = 1; i <= 24; i++) {
+        html += `<option value="${i}">${i} ${i === 1 ? 'Unit / Bottle' : 'Units / Bottles'}</option>`;
+      }
+      sel.innerHTML = html;
+    }
+
+    function addAlcoholItemToGuest(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest) return;
+      const category = document.getElementById(p + 'alc-category-select').value;
+      let brand = document.getElementById(p + 'alc-brand-select').value;
+      if (brand === 'Other') {
+        brand = document.getElementById(p + 'alc-custom-brand-input').value.trim();
+        if (!brand) return showToast('Enter a custom brand name.', 'error');
+      }
+      const qty = parseInt(document.getElementById(p + 'alc-qty-select').value, 10) || 1;
+      const existing = guest.alcohol.find(a => a.brand.toLowerCase() === brand.toLowerCase() && a.category === category);
+      if (existing) existing.qty += qty;
+      else guest.alcohol.push({ category, brand, qty });
+
+      document.getElementById(p + 'alc-custom-brand-input').value = '';
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'PREFS',
+        action: 'Added Spirits',
+        msg: `${guest.name} added ${qty}x ${brand} (${category}).`
+      });
+      renderGuestPreferenceChips(guest, prefix);
+    }
+
+    function toggleCustomEssentialInput(val, customId = 'essential-custom-input') {
+      const el = document.getElementById(customId);
+      if (!el) return;
+      if (val === 'Other') el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function addEssentialItemToGuest(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest) return;
+      let item = document.getElementById(p + 'essential-item-select').value;
+      if (item === 'Other') {
+        item = document.getElementById(p + 'essential-custom-input').value.trim();
+        if (!item) return showToast('Enter a custom essential item.', 'error');
+      }
+      const qty = parseInt(document.getElementById(p + 'essential-qty-select').value, 10) || 1;
+      const existing = guest.essentials.find(e => e.item.toLowerCase() === item.toLowerCase());
+      if (existing) existing.qty += qty;
+      else guest.essentials.push({ item, qty });
+
+      document.getElementById(p + 'essential-custom-input').value = '';
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'PREFS',
+        action: 'Added Essential',
+        msg: `${guest.name} added ${qty}x ${item}.`
+      });
+      renderGuestPreferenceChips(guest, prefix);
+    }
+
+    function toggleCustomCigaretteInput(val, customId = 'cig-custom-input') {
+      const el = document.getElementById(customId);
+      if (!el) return;
+      if (val === 'Other') el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function addCigaretteItemToGuest(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest) return;
+      let brand = document.getElementById(p + 'cig-brand-select').value;
+      if (brand === 'Other') {
+        brand = document.getElementById(p + 'cig-custom-input').value.trim();
+        if (!brand) return showToast('Enter a custom cigarette brand.', 'error');
+      }
+      const qty = parseInt(document.getElementById(p + 'cig-qty-select').value, 10) || 1;
+      const existing = guest.cigarettes.find(c => c.brand.toLowerCase() === brand.toLowerCase());
+      if (existing) existing.qty += qty;
+      else guest.cigarettes.push({ brand, qty });
+
+      document.getElementById(p + 'cig-custom-input').value = '';
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'PREFS',
+        action: 'Added Smokes',
+        msg: `${guest.name} added ${qty} pack(s) of ${brand}.`
+      });
+      renderGuestPreferenceChips(guest, prefix);
+    }
+
+    function renderGuestPreferenceChips(guest, prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const sList = document.getElementById(p + 'guest-starters-list');
+      if (sList) {
+        sList.innerHTML = guest.starters.length
+          ? guest.starters.map((s, idx) => `
+              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-orange-100 text-red-950 text-xs font-extrabold border border-orange-300">
+                <span>${s.qty}× ${s.item}</span>
+                <button type="button" onclick="removeGuestItem('starters', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
+              </span>
+            `).join('')
+          : '<span class="text-xs text-stone-500 italic">No starters added yet.</span>';
+      }
+
+      const aList = document.getElementById(p + 'guest-alcohol-list');
+      if (aList) {
+        aList.innerHTML = guest.alcohol.length
+          ? guest.alcohol.map((a, idx) => `
+              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-950 text-xs font-extrabold border border-amber-300">
+                <span>${a.qty}× ${a.brand} (${a.category})</span>
+                <button type="button" onclick="removeGuestItem('alcohol', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
+              </span>
+            `).join('')
+          : '<span class="text-xs text-stone-500 italic">No spirits added yet.</span>';
+      }
+
+      const eList = document.getElementById(p + 'guest-essentials-list');
+      if (eList) {
+        eList.innerHTML = guest.essentials.length
+          ? guest.essentials.map((e, idx) => `
+              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-100 text-teal-950 text-xs font-extrabold border border-teal-300">
+                <span>${e.qty}× ${e.item}</span>
+                <button type="button" onclick="removeGuestItem('essentials', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
+              </span>
+            `).join('')
+          : '<span class="text-xs text-stone-500 italic">No essentials added yet.</span>';
+      }
+
+      const cList = document.getElementById(p + 'guest-cigarettes-list');
+      if (cList) {
+        cList.innerHTML = guest.cigarettes.length
+          ? guest.cigarettes.map((c, idx) => `
+              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-200 text-stone-900 text-xs font-extrabold border border-stone-300">
+                <span>${c.qty}× ${c.brand}</span>
+                <button type="button" onclick="removeGuestItem('cigarettes', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
+              </span>
+            `).join('')
+          : '<span class="text-xs text-stone-500 italic">No cigarettes added yet.</span>';
+      }
+    }
+
+    function saveGuestPreferences(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest) return;
+      guest.fromCity = (document.getElementById(p + 'pref-from-city')?.value || '').trim();
+      guest.travelDate = document.getElementById(p + 'pref-travel-date').value;
+      guest.returnDate = document.getElementById(p + 'pref-return-date').value;
+      const cityVal = document.getElementById(p + 'pref-arrival-city').value;
+      guest.arrivalCity = cityVal === 'Others'
+        ? (document.getElementById(p + 'pref-custom-city').value.trim() || 'Others')
+        : cityVal;
+
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'PREFS',
+        action: 'Saved Preferences',
+        msg: `${guest.name} saved route (${guest.fromCity || 'Origin'} → ${guest.arrivalCity}, ${guest.travelDate} to ${guest.returnDate}) & party preferences.`
+      });
+      showToast(`Trip details & preferences saved for ${guest.name}!`);
+    }
         ]
       };
     }
@@ -2273,27 +2928,28 @@
 
       // Home Squad Status Strip
       const pills = document.getElementById('home-squad-pills');
-      if (pills) {
-        pills.innerHTML = appState.guests.map(g => {
-          const badge = g.rsvp === 'accepted'
-            ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
-            : g.rsvp === 'exited'
-              ? 'bg-red-100 border-red-300 text-red-900'
-              : 'bg-amber-50 border-amber-200 text-amber-950';
-          const icon = g.rsvp === 'accepted' ? '✅' : g.rsvp === 'exited' ? '🚪' : '⏳';
-          return `
-            <button type="button" onclick="handleSquadPillClick('${g.id}')" class="p-2.5 rounded-2xl border ${badge} text-left transition hover:shadow">
-              <div class="text-xs font-extrabold truncate">${icon} ${g.name}</div>
-              <div class="text-[10px] uppercase font-bold opacity-75 mt-0.5">${g.rsvp}</div>
-            </button>
-          `;
-        }).join('');
-      }
-
-      // Render Exit Banner for active guest
+      // Render Exit Banner & Personal Preferences Form on Home Page for active accepted guest
       const homeTab = document.getElementById('tab-home');
       let exitBanner = document.getElementById('guest-exit-banner');
+      const homeDetailsSec = document.getElementById('home-guest-details-section');
+      const homeRsvpBtn = document.getElementById('home-rsvp-btn');
       const activeGuest = getActiveGuest();
+
+      if (homeRsvpBtn) {
+        if (isAdminUnlocked) homeRsvpBtn.classList.remove('hidden');
+        else homeRsvpBtn.classList.add('hidden');
+      }
+
+      if (activeGuest && activeGuest.rsvp === 'accepted') {
+        selectedRsvpGuestId = activeGuest.id;
+        if (homeDetailsSec) {
+          homeDetailsSec.classList.remove('hidden');
+          populatePreferenceFormForGuest(activeGuest, 'home');
+        }
+      } else if (homeDetailsSec) {
+        homeDetailsSec.classList.add('hidden');
+      }
+
       if (activeGuest && activeGuest.rsvp === 'accepted' && !isAdminUnlocked) {
         if (!exitBanner) {
           exitBanner = document.createElement('div');
@@ -2709,7 +3365,7 @@
           ? confirmed.map(g => `
               <div class="p-3 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between">
                 <span class="font-extrabold text-red-950">${g.name}</span>
-                <span class="text-xs font-bold text-sky-950">${g.arrivalCity || 'TBD'} (${g.travelDate || 'TBD'} → ${g.returnDate || 'TBD'})</span>
+                <span class="text-xs font-bold text-sky-950">${g.fromCity ? g.fromCity + ' → ' : ''}${g.arrivalCity || 'TBD'} (${g.travelDate || 'TBD'} → ${g.returnDate || 'TBD'})</span>
               </div>
             `).join('')
           : '<p class="text-stone-500 italic">No confirmed travelers yet.</p>';
@@ -2809,7 +3465,10 @@
           currentRole = invitedGuest.id;
           selectedRsvpGuestId = invitedGuest.id;
           renderAllUI();
-          switchMainTab('rsvp');
+          switchMainTab('home');
+          if (invitedGuest.rsvp !== 'accepted') {
+            openInviteGateForGuest(invitedGuest);
+          }
           return;
         }
       }

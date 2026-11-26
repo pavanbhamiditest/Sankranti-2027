@@ -1669,8 +1669,20 @@
       // Enforce Admin-only access on Manage Invites, Activity Logs & Host Control Panel
       if (adminOnlyTabs.includes(targetTab) && !isAdminUnlocked) {
         targetTab = 'home';
-        showToast('🔒 Host Admin PIN required to open that section.', 'info');
       }
+
+      // Ensure admin-only tabs remain hidden for non-admin guests
+      ['nav-tab-rsvp', 'nav-tab-logs', 'nav-tab-admin', 'admin-home-dashlets', 'home-manage-invites-btn'].forEach(elId => {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (isAdminUnlocked) {
+          el.classList.remove('hidden');
+          el.style.removeProperty('display');
+        } else {
+          el.classList.add('hidden');
+          el.style.setProperty('display', 'none', 'important');
+        }
+      });
 
       try {
         sessionStorage.setItem('sankranti_2027_active_tab', targetTab);

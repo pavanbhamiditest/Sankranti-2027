@@ -78,7 +78,7 @@
             💸 Expenses & Split
           </button>
           <button type="button" data-tab="gallery" onclick="switchMainTab('gallery')" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
-            📸 HD Photo Gallery
+            📸 Gallery
           </button>
           <button id="nav-tab-rsvp" type="button" data-tab="rsvp" onclick="switchMainTab('rsvp')" class="hidden nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
             💌 Manage Invites
@@ -154,7 +154,7 @@
             </button>
             <button type="button" onclick="switchMainTab('gallery')" class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition group">
               <div class="text-2xl mb-1 group-hover:scale-110 transition-transform inline-block">📸</div>
-              <div class="text-xs sm:text-sm font-black text-white">HD Photo Vault</div>
+              <div class="text-xs sm:text-sm font-black text-white">Gallery</div>
               <div class="text-[11px] text-amber-200/80">Upload & download memories</div>
             </button>
           </div>
@@ -660,16 +660,16 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 4: HD PHOTO GALLERY ==================== -->
+      <!-- ==================== TAB 4: GALLERY ==================== -->
       <section id="tab-gallery" class="hidden tab-panel space-y-6 animate-panel">
         <div class="rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-amber-100 pb-4">
             <div>
-              <h2 class="text-xl sm:text-2xl font-black text-red-950">📸 Uncompressed HD Photo Vault</h2>
-              <p class="text-xs sm:text-sm text-stone-600">Stored locally in full original resolution via IndexedDB—no WhatsApp compression!</p>
+              <h2 class="text-xl sm:text-2xl font-black text-red-950">📸 Squad Photo Gallery</h2>
+              <p class="text-xs sm:text-sm text-stone-600">Shared live with the entire squad—upload and download memories effortlessly!</p>
             </div>
             <label class="px-5 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs sm:text-sm font-extrabold shadow-lg cursor-pointer transition text-center">
-              ⬆️ Upload HD Photos
+              ⬆️ Upload Photos
               <input id="hd-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="handleHdPhotoUpload(event)" />
             </label>
           </div>
@@ -1009,14 +1009,42 @@
           const guestsCol = collection(db, 'artifacts', appId, 'public', 'data', 'sankranti_guests');
           const expensesCol = collection(db, 'artifacts', appId, 'public', 'data', 'sankranti_expenses');
           const feastOrdersCol = collection(db, 'artifacts', appId, 'public', 'data', 'sankranti_feast_orders');
+          const photosCol = collection(db, 'artifacts', appId, 'public', 'data', 'sankranti_photos');
           const metaDoc = doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_meta', 'config');
 
           window.__cloudSync.forcePull = async () => {
-            const snap = await getDocs(guestsCol);
-            const list = [];
-            snap.forEach(d => list.push(d.data()));
-            if (typeof window.__onRemoteGuestsUpdate === 'function') {
-              window.__onRemoteGuestsUpdate(list);
+            try {
+              const [gSnap, eSnap, fSnap, pSnap] = await Promise.all([
+                getDocs(guestsCol),
+                getDocs(expensesCol),
+                getDocs(feastOrdersCol),
+                getDocs(photosCol)
+              ]);
+              const rGuests = [];
+              gSnap.forEach(d => rGuests.push(d.data()));
+              if (rGuests.length && typeof window.__onRemoteGuestsUpdate === 'function') {
+                window.__onRemoteGuestsUpdate(rGuests);
+              }
+              const rExpenses = [];
+              eSnap.forEach(d => rExpenses.push(d.data()));
+              if (typeof window.__onRemoteExpensesUpdate === 'function') {
+                window.__onRemoteExpensesUpdate(rExpenses);
+              }
+              const rFeast = [];
+              fSnap.forEach(d => rFeast.push(d.data()));
+              if (typeof window.__onRemoteFeastOrdersUpdate === 'function') {
+                window.__onRemoteFeastOrdersUpdate(rFeast);
+              }
+              const rPhotos = [];
+              pSnap.forEach(d => rPhotos.push(d.data()));
+              rPhotos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+              if (typeof window.__onRemotePhotosUpdate === 'function') {
+                window.__onRemotePhotosUpdate(rPhotos);
+              }
+              setSyncBadge('🟢 Live Sync', true);
+            } catch (err) {
+              window.__cloudSync.lastError = err?.message || String(err);
+              setSyncBadge('⚠️ Sync Error', false);
             }
           };
 
@@ -1028,7 +1056,7 @@
                 updatedAt: Date.now()
               }, { merge: true });
             } catch (err) {
-              console.error('Feast order sync write error:', err);
+              console.error('Feast order sync error:', err);
             }
           };
 
@@ -1041,6 +1069,28 @@
             }
           };
 
+          window.__cloudSync.pushPhoto = async (photoDoc) => {
+            if (!window.__cloudSync.user) return;
+            try {
+              await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_photos', photoDoc.id), {
+                ...photoDoc,
+                updatedAt: Date.now()
+              }, { merge: true });
+            } catch (err) {
+              console.error('Photo sync write error:', err);
+              throw err;
+            }
+          };
+
+          window.__cloudSync.deletePhoto = async (photoId) => {
+            if (!window.__cloudSync.user) return;
+            try {
+              await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_photos', photoId));
+            } catch (err) {
+              console.error('Photo delete sync error:', err);
+            }
+          };
+
           window.__cloudSync.pushGuest = async (guest) => {
             if (!window.__cloudSync.user) return;
             try {
@@ -1049,8 +1099,7 @@
                 updatedAt: Date.now()
               }, { merge: true });
             } catch (err) {
-              window.__cloudSync.lastError = err.message || String(err);
-              setSyncBadge('⚠️ Rule Blocked', false);
+              console.error('Guest sync error:', err);
             }
           };
 
@@ -1071,7 +1120,7 @@
                 updatedAt: Date.now()
               }, { merge: true });
             } catch (err) {
-              console.error('Expense sync write error:', err);
+              console.error('Expense sync error:', err);
             }
           };
 
@@ -1087,17 +1136,13 @@
           window.__cloudSync.pushMeta = async (meta) => {
             if (!window.__cloudSync.user) return;
             try {
-              await setDoc(metaDoc, {
-                adminPin: meta.adminPin || '0089',
-                logsJson: JSON.stringify((meta.logs || []).slice(0, 100)),
-                updatedAt: Date.now()
-              }, { merge: true });
+              await setDoc(metaDoc, { ...meta, updatedAt: Date.now() }, { merge: true });
             } catch (err) {
-              console.error('Meta sync write error:', err);
+              console.error('Meta sync error:', err);
             }
           };
 
-          // Flush any pending operations queued before Firebase auth finished
+          // Flush any queued offline operations
           const queued = [...window.__cloudSync.pendingOps];
           window.__cloudSync.pendingOps = [];
           for (const op of queued) {
@@ -1107,14 +1152,33 @@
             else if (op.type === 'deleteExpense') await window.__cloudSync.deleteExpense(op.id);
             else if (op.type === 'feastOrder') await window.__cloudSync.pushFeastOrder(op.data);
             else if (op.type === 'deleteFeastOrder') await window.__cloudSync.deleteFeastOrder(op.id);
+            else if (op.type === 'photo') await window.__cloudSync.pushPhoto(op.data);
+            else if (op.type === 'deletePhoto') await window.__cloudSync.deletePhoto(op.id);
             else if (op.type === 'meta') await window.__cloudSync.pushMeta(op.data);
           }
+
+          // Real-time listener for ALL shared squad photos across all mobiles
+          onSnapshot(
+            photosCol,
+            (snapshot) => {
+              const remotePhotos = [];
+              snapshot.forEach((docSnap) => {
+                remotePhotos.push(docSnap.data());
+              });
+              remotePhotos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+              if (typeof window.__onRemotePhotosUpdate === 'function') {
+                window.__onRemotePhotosUpdate(remotePhotos);
+              }
+            },
+            (err) => {
+              console.error('Photos listener error:', err);
+            }
+          );
 
           // Real-time listener for ALL guests across all mobiles
           onSnapshot(
             guestsCol,
             (snapshot) => {
-              setSyncBadge('🟢 Live Sync', true);
               const remoteGuests = [];
               snapshot.forEach((docSnap) => {
                 remoteGuests.push(docSnap.data());
@@ -1122,11 +1186,11 @@
               if (typeof window.__onRemoteGuestsUpdate === 'function') {
                 window.__onRemoteGuestsUpdate(remoteGuests);
               }
+              setSyncBadge('🟢 Live Sync', true);
             },
             (err) => {
-              console.error('Guests listener error:', err);
-              window.__cloudSync.lastError = err.message || String(err);
-              setSyncBadge('⚠️ Sync Error', false);
+              window.__cloudSync.lastError = err?.message || String(err);
+              setSyncBadge('⚠️ Rule Blocked', false);
             }
           );
 
@@ -1148,69 +1212,58 @@
             }
           );
 
-          // Real-time listener for ALL Feast & Bar orders across all mobiles
+          // Real-time listener for ALL Feast & Bar items across all mobiles
           onSnapshot(
             feastOrdersCol,
             (snapshot) => {
-              const remoteOrders = [];
+              const remoteFeast = [];
               snapshot.forEach((docSnap) => {
-                remoteOrders.push(docSnap.data());
+                remoteFeast.push(docSnap.data());
               });
-              remoteOrders.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+              remoteFeast.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
               if (typeof window.__onRemoteFeastOrdersUpdate === 'function') {
-                window.__onRemoteFeastOrdersUpdate(remoteOrders);
+                window.__onRemoteFeastOrdersUpdate(remoteFeast);
               }
             },
             (err) => {
               console.error('Feast orders listener error:', err);
             }
           );
+
+          // Real-time listener for Meta config (Admin PIN)
+          onSnapshot(metaDoc, (docSnap) => {
+            if (docSnap.exists() && typeof window.__onRemoteMetaUpdate === 'function') {
+              window.__onRemoteMetaUpdate(docSnap.data());
+            }
+          });
         }
       } catch (err) {
-        console.error('Firebase init failed:', err);
-        window.__cloudSync.lastError = err.message || String(err);
+        window.__cloudSync.lastError = err?.message || String(err);
         setSyncBadge('⚠️ Auth Error', false);
       }
     } else {
       setSyncBadge('🟠 Local Only', false);
     }
-  </script>
 
-  <script>
-    // ==================== STORAGE & CONSTANTS ====================
-    const STORAGE_KEY = 'sankranti_2027_live_state_v9';
-    const DB_NAME = 'Sankranti2027HdGalleryDB';
-    const DB_STORE = 'hd_photos';
+    // ==================== STATE, CONSTANTS & STORAGE ====================
+    const STORAGE_KEY = 'sankranti_2027_trip_state_v3';
+    const DB_NAME = 'Sankranti2027HdPhotoVault';
+    const DB_STORE = 'photos';
+    let memoryFallbackPhotos = [];
 
     const DEFAULT_PACKING_ITEMS = [
-      { id: 'charger', label: '🔌 Mobile Charger & Power Bank (1% battery panic is real)' },
-      { id: 'camera', label: '📷 Camera / GoPro & Extra SD Card' },
-      { id: 'brush', label: '🪥 Toothbrush & Toothpaste (please don’t borrow!)' },
-      { id: 'shampoo', label: '🧴 Shampoo, Conditioner & Face Wash' },
-      { id: 'innerwear', label: '🩲 Extra Innerwears (don’t ask why, just pack 2 extra 😜)' },
-      { id: 'ethnic', label: '👘 Festive Ethnic Wear & Party Outfits' },
-      { id: 'shades', label: '🕶️ Sunglasses, Cap & Sunscreen' },
-      { id: 'meds', label: '💊 Headache & Hangover Meds (you’ll thank yourself!)' }
-    ];
-
-    const QUICK_STARTER_CHOICES = [
-      'Chicken 65', 'Apollo Fish', 'Chilli Chicken', 'Mutton Ghee Roast', 'Kodi Vepudu', 'Loose Prawns', 'Paneer Tikka', 'Crispy Corn', 'Tandoori Platter'
+      { id: 'pack_ethnic', label: '👘 Traditional Kurta / Ethnic Wear (Bhogi & Sankranthi)' },
+      { id: 'pack_shades', label: '🕶️ Sunglasses & Sunscreen' },
+      { id: 'pack_charger', label: '🔌 Phone Charger & Power Bank' },
+      { id: 'pack_meds', label: '💊 Hangover & Digestion Relief Kit' },
+      { id: 'pack_hoodie', label: '🧥 Light Jacket / Hoodie (Early Morning Bonfire)' },
+      { id: 'pack_flipflops', label: '🩴 Comfy Flip-Flops & Sneakers' }
     ];
 
     const QUICK_SPIRIT_CHOICES = [
-      'Kingfisher Strong', 'Budweiser Magnum', 'Jameson Irish', 'Black Dog', 'Old Monk Rum', 'Absolut Vodka', 'Breezers & Sodas'
+      'Budweiser', 'Bud Magnum', 'Heineken', 'KF Ultra', 'Jameson', 'Black Label', 'Old Monk', 'Absolut Vodka'
     ];
 
-    const EXPENSE_ITEM_CATALOG = {
-      'Fuel': ['Petrol Fill-up', 'Diesel Fill-up', 'Highway Toll & FASTag', 'Car / Cab Rental', 'Custom / Other'],
-      'Starters & Food': ['Chicken 65 & Non-Veg Starters', 'Apollo Fish / Prawns', 'Paneer & Veg Starters', 'Biryani & Main Feast', 'Breakfast & Chai', 'Custom / Other'],
-      'Spirits & Alcohol': ['Beer Cases (KF / Budweiser)', 'Whisky Bottles', 'Rum / Vodka / Gin', 'Breezers & Mixers', 'Custom / Other'],
-      'Essentials': ['Water Bottles (Cases)', 'Paper Plates & Bowls', 'Tissues & Wet Wipes', 'Disposable Glasses', 'Soda & Tonic Water', 'Ice Cubes', 'Chips & Munchies', 'Custom / Other'],
-      'Stay & Other': ['Villa / Homestay Booking', 'Bonfire Wood & Setup', 'Driver Allowance', 'Custom / Other'],
-      'Other': ['Miscellaneous Squad Expense', 'Custom / Other']
-    };
-
-    // ==================== STATE INITIALIZATION (ZERO TEST DATA) ====================
     function getDefaultState() {
       return {
         adminPin: '0089',
@@ -1238,54 +1291,19 @@
       }
     }
 
-    let appState = loadAppState();
-    let currentRole = 'public';
-    let isAdminUnlocked = false;
-    let welcomeCountdownInterval = null;
-    let isEditingTravelDetails = false;
-    let expandedExpenseId = null;
-
-    window.__onRemoteGuestsUpdate = function(remoteGuests) {
-      if (!Array.isArray(remoteGuests)) return;
-      appState.guests = remoteGuests;
-      checkIncomingInviteLink();
-      renderAllUI();
-    };
-
-    window.__onRemoteExpensesUpdate = function(remoteExpenses) {
-      if (!Array.isArray(remoteExpenses)) return;
-      appState.expenses = remoteExpenses;
-      renderAllUI();
-    };
-
-    window.__onRemoteFeastOrdersUpdate = function(remoteOrders) {
-      if (!Array.isArray(remoteOrders)) return;
-      appState.feastOrders = remoteOrders;
-      renderAllUI();
-    };
-
-    window.__onRemoteMetaUpdate = function(meta) {
-      if (!meta) return;
-      if (meta.adminPin) appState.adminPin = meta.adminPin;
-      if (meta.logsJson) {
-        try {
-          const parsedLogs = JSON.parse(meta.logsJson);
-          if (Array.isArray(parsedLogs)) appState.logs = parsedLogs;
-        } catch (e) {}
-      }
-      renderAllUI();
-    };
-
-    function saveAppState(logEntry = null, syncTarget = null) {
+    function saveAppState(logEntry = null, syncOpts = {}) {
       if (logEntry) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         appState.logs.unshift({
-          id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-          time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
-          actor: logEntry.actor || 'System',
+          id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+          time: timeStr,
+          actor: logEntry.actor || 'Squad',
           category: logEntry.category || 'Update',
           action: logEntry.action || 'Action',
           msg: logEntry.msg || ''
         });
+        if (appState.logs.length > 150) appState.logs.length = 150;
       }
 
       try {
@@ -1293,46 +1311,28 @@
       } catch (e) {}
 
       if (window.__cloudSync) {
-        if (syncTarget?.guest) {
-          window.__cloudSync.pushGuest(syncTarget.guest);
-        } else if (syncTarget?.deleteGuestId) {
-          window.__cloudSync.deleteGuest(syncTarget.deleteGuestId);
-        } else if (syncTarget?.expense) {
-          window.__cloudSync.pushExpense(syncTarget.expense);
-        } else if (syncTarget?.deleteExpenseId) {
-          window.__cloudSync.deleteExpense(syncTarget.deleteExpenseId);
-        } else if (syncTarget?.feastOrder) {
-          window.__cloudSync.pushFeastOrder(syncTarget.feastOrder);
-        } else if (syncTarget?.deleteFeastOrderId) {
-          window.__cloudSync.deleteFeastOrder(syncTarget.deleteFeastOrderId);
-        } else if (syncTarget?.fullSync) {
+        if (syncOpts.guest) window.__cloudSync.pushGuest(syncOpts.guest);
+        if (syncOpts.deleteGuestId) window.__cloudSync.deleteGuest(syncOpts.deleteGuestId);
+        if (syncOpts.expense) window.__cloudSync.pushExpense(syncOpts.expense);
+        if (syncOpts.deleteExpenseId) window.__cloudSync.deleteExpense(syncOpts.deleteExpenseId);
+        if (syncOpts.feastOrder) window.__cloudSync.pushFeastOrder(syncOpts.feastOrder);
+        if (syncOpts.deleteFeastOrderId) window.__cloudSync.deleteFeastOrder(syncOpts.deleteFeastOrderId);
+        if (syncOpts.fullSync) {
           appState.guests.forEach(g => window.__cloudSync.pushGuest(g));
-          appState.expenses.forEach(e => window.__cloudSync.pushExpense(e));
-          (appState.feastOrders || []).forEach(o => window.__cloudSync.pushFeastOrder(o));
+          appState.expenses.forEach(ex => window.__cloudSync.pushExpense(ex));
+          (appState.feastOrders || []).forEach(fo => window.__cloudSync.pushFeastOrder(fo));
+          window.__cloudSync.pushMeta({ adminPin: appState.adminPin });
         }
-        window.__cloudSync.pushMeta({ adminPin: appState.adminPin, logs: appState.logs });
       }
     }
 
-    async function diagnoseCloudSync() {
-      if (!window.__cloudSync) return;
-      if (window.__cloudSync.lastError) {
-        showToast('Sync Error: ' + window.__cloudSync.lastError, 'error');
-        return;
-      }
-      if (window.__cloudSync.ready) {
-        try {
-          await window.__cloudSync.forcePull();
-          showToast(`🟢 Connected to Firebase (sankranti-2027)! Guests synced: ${appState.guests.length}`);
-        } catch (err) {
-          showToast('⚠️ Sync read failed: ' + (err.message || err), 'error');
-        }
-      } else {
-        showToast('🟠 Still connecting to Firebase...', 'info');
-      }
+    function normalizePhone(raw) {
+      const digits = String(raw || '').replace(/\D/g, '');
+      if (!digits) return '';
+      if (digits.length === 10) return '91' + digits;
+      return digits;
     }
 
-    // ==================== UTILITIES & MODALS ====================
     function showToast(message, type = 'success') {
       const container = document.getElementById('toast-container');
       if (!container) return;
@@ -1340,41 +1340,42 @@
       const bg = type === 'error'
         ? 'bg-red-900 border-red-400 text-white'
         : type === 'info'
-          ? 'bg-amber-900 border-amber-300 text-amber-50'
+          ? 'bg-stone-900 border-amber-400 text-amber-100'
           : 'bg-emerald-900 border-emerald-400 text-white';
-      el.className = `${bg} border px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-extrabold text-center transition-all duration-300`;
+      el.className = `px-4 py-3 rounded-2xl border shadow-xl text-xs sm:text-sm font-extrabold text-center pointer-events-auto animate-panel ${bg}`;
       el.textContent = message;
       container.appendChild(el);
       setTimeout(() => {
         el.style.opacity = '0';
-        setTimeout(() => el.remove(), 300);
+        el.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => el.remove(), 260);
       }, 3200);
     }
 
     function closeModal(modalId) {
-      const el = document.getElementById(modalId);
-      if (el) el.classList.add('hidden');
+      document.getElementById(modalId)?.classList.add('hidden');
     }
 
-    function normalizePhone(raw) {
-      if (!raw) return '';
-      const digits = String(raw).replace(/\D/g, '');
-      if (digits.length === 10) return '91' + digits;
-      return digits;
+    function diagnoseCloudSync() {
+      const cs = window.__cloudSync;
+      if (!cs) return;
+      if (cs.ready && !cs.lastError) {
+        cs.forcePull();
+        showToast(`🟢 Live Sync Active • ${appState.guests.length} guest(s), ${sharedCloudPhotos.length} shared photo(s) synced!`);
+      } else {
+        showToast(`⚠️ Sync Status: ${cs.lastError || 'Connecting to Firebase...'}`, 'error');
+      }
     }
-
-    // ==================== INDEXEDDB HD PHOTO VAULT ====================
-    let memoryFallbackPhotos = [];
 
     function openPhotoDb() {
       return new Promise((resolve, reject) => {
-        if (!window.indexedDB) {
+        if (!('indexedDB' in window)) {
           reject(new Error('IndexedDB unavailable'));
           return;
         }
         const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-          const db = e.target.result;
+        req.onupgradeneeded = () => {
+          const db = req.result;
           if (!db.objectStoreNames.contains(DB_STORE)) {
             db.createObjectStore(DB_STORE, { keyPath: 'id' });
           }
@@ -1384,6 +1385,51 @@
       });
     }
 
+    let appState = loadAppState();
+    let currentRole = 'public';
+    let isAdminUnlocked = false;
+    let welcomeCountdownInterval = null;
+    let isEditingTravelDetails = false;
+    let expandedExpenseId = null;
+    let sharedCloudPhotos = [];
+
+    window.__onRemotePhotosUpdate = function(remotePhotos) {
+      if (!Array.isArray(remotePhotos)) return;
+      sharedCloudPhotos = remotePhotos;
+      if (!document.getElementById('tab-gallery')?.classList.contains('hidden')) {
+        renderGallerySection();
+      }
+    };
+
+    window.__onRemoteGuestsUpdate = function(remoteGuests) {
+      if (!Array.isArray(remoteGuests)) return;
+      appState.guests = remoteGuests;
+      saveAppState();
+      checkIncomingInviteLink();
+      renderAllUI();
+    };
+
+    window.__onRemoteExpensesUpdate = function(remoteExpenses) {
+      if (!Array.isArray(remoteExpenses)) return;
+      appState.expenses = remoteExpenses;
+      saveAppState();
+      renderAllUI();
+    };
+
+    window.__onRemoteFeastOrdersUpdate = function(remoteFeast) {
+      if (!Array.isArray(remoteFeast)) return;
+      appState.feastOrders = remoteFeast;
+      saveAppState();
+      renderAllUI();
+    };
+
+    window.__onRemoteMetaUpdate = function(meta) {
+      if (meta && meta.adminPin) {
+        appState.adminPin = String(meta.adminPin);
+        saveAppState();
+      }
+    };
+
     function recordToPhotoBlob(record) {
       if (record.blob instanceof Blob) return record.blob;
       if (record.buffer) {
@@ -1392,23 +1438,87 @@
       return null;
     }
 
+    function encodeImageFileForCloudShare(file, maxDim = 1600, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+              if (width >= height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let q = quality;
+            let dataUrl = canvas.toDataURL('image/jpeg', q);
+            // Ensure payload stays safely under Firestore 1MB document ceiling (~850KB)
+            while (dataUrl.length > 850000 && q > 0.35) {
+              q -= 0.12;
+              dataUrl = canvas.toDataURL('image/jpeg', q);
+            }
+            resolve(dataUrl);
+          };
+          img.onerror = () => reject(new Error('Image decode error'));
+          img.src = reader.result;
+        };
+        reader.onerror = () => reject(new Error('File read error'));
+        reader.readAsDataURL(file);
+      });
+    }
+
     async function getAllHdPhotos() {
+      let localRecords = [];
       try {
         const db = await openPhotoDb();
-        const records = await new Promise((resolve, reject) => {
+        localRecords = await new Promise((resolve, reject) => {
           const tx = db.transaction(DB_STORE, 'readonly');
           const store = tx.objectStore(DB_STORE);
           const req = store.getAll();
           req.onsuccess = () => resolve(req.result || []);
           req.onerror = () => reject(req.error);
         });
-        const combined = [...records, ...memoryFallbackPhotos];
-        return combined.map(r => ({ ...r, resolvedBlob: recordToPhotoBlob(r) })).filter(r => r.resolvedBlob);
-      } catch (e) {
-        return memoryFallbackPhotos
-          .map(r => ({ ...r, resolvedBlob: recordToPhotoBlob(r) }))
-          .filter(r => r.resolvedBlob);
-      }
+      } catch (e) {}
+
+      const localMap = new Map();
+      [...localRecords, ...memoryFallbackPhotos].forEach(r => {
+        const blob = recordToPhotoBlob(r);
+        if (blob) localMap.set(r.id, { ...r, resolvedBlob: blob });
+      });
+
+      const merged = [];
+      const seenIds = new Set();
+
+      // Include all shared cloud photos so every guest sees everyone's uploads
+      sharedCloudPhotos.forEach(cp => {
+        seenIds.add(cp.id);
+        const localMatch = localMap.get(cp.id);
+        merged.push({
+          ...cp,
+          resolvedBlob: localMatch?.resolvedBlob || null,
+          sharedDataUrl: cp.dataUrl || null
+        });
+      });
+
+      // Also include any local-only photos not yet in cloud
+      localMap.forEach((lr, id) => {
+        if (!seenIds.has(id)) {
+          merged.push(lr);
+        }
+      });
+
+      merged.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return merged;
     }
 
     async function handleHdPhotoUpload(event) {
@@ -1416,11 +1526,13 @@
       if (!files.length) return;
       const uploader = getActiveGuestObj()?.name || (isAdminUnlocked ? 'Host Admin' : 'Squad Member');
       let savedCount = 0;
+      let sharedCount = 0;
 
       for (const file of files) {
         const id = 'photo_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
         const safeName = file.name || `Sankranti2027_${Date.now()}.jpg`;
         const mimeType = file.type || 'image/jpeg';
+        const createdAt = Date.now();
 
         try {
           const buffer = await file.arrayBuffer();
@@ -1430,7 +1542,7 @@
             mimeType,
             buffer,
             uploadedBy: uploader,
-            createdAt: Date.now()
+            createdAt
           };
 
           try {
@@ -1442,10 +1554,29 @@
               tx.onerror = () => reject(tx.error);
             });
           } catch (dbErr) {
-            // Fallback to in-memory vault if IndexedDB is blocked (e.g., Incognito / sandboxed iframe)
             memoryFallbackPhotos.unshift(record);
           }
           savedCount++;
+
+          // Share with all guests via Firestore live sync
+          try {
+            const dataUrl = await encodeImageFileForCloudShare(file);
+            const cloudDoc = {
+              id,
+              name: safeName,
+              uploadedBy: uploader,
+              createdAt,
+              dataUrl
+            };
+            if (window.__cloudSync && typeof window.__cloudSync.pushPhoto === 'function') {
+              await window.__cloudSync.pushPhoto(cloudDoc);
+              sharedCount++;
+            } else {
+              sharedCloudPhotos.unshift(cloudDoc);
+            }
+          } catch (cloudErr) {
+            console.error('Cloud photo share failed:', cloudErr);
+          }
         } catch (readErr) {
           console.error('Photo read failed:', readErr);
         }
@@ -1455,10 +1586,12 @@
         saveAppState({
           actor: uploader,
           category: 'Gallery',
-          action: 'Uploaded HD Photos',
-          msg: `${uploader} uploaded ${savedCount} uncompressed HD photo(s).`
+          action: 'Uploaded Shared Photos',
+          msg: `${uploader} uploaded ${savedCount} photo(s) to the squad gallery.`
         });
-        showToast(`📸 Uploaded ${savedCount} HD photo(s)!`);
+        showToast(sharedCount > 0
+          ? `📸 Uploaded & shared ${sharedCount} photo(s) with everyone!`
+          : `📸 Saved ${savedCount} photo(s) to gallery!`);
         await renderGallerySection();
       } else {
         showToast('❌ Could not read selected photo. Try picking from Photo Library.', 'error');
@@ -1469,17 +1602,26 @@
     async function downloadHdPhoto(photoId) {
       const photos = await getAllHdPhotos();
       const target = photos.find(p => p.id === photoId);
-      if (!target || !target.resolvedBlob) return;
-      const url = URL.createObjectURL(target.resolvedBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = target.name || 'Sankranti2027_HD.jpg';
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (!target) return;
+
+      if (target.resolvedBlob) {
+        const url = URL.createObjectURL(target.resolvedBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = target.name || 'Sankranti2027_HD.jpg';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else if (target.sharedDataUrl) {
+        const a = document.createElement('a');
+        a.href = target.sharedDataUrl;
+        a.download = target.name || 'Sankranti2027_Shared.jpg';
+        a.click();
+      }
     }
 
     async function deleteHdPhoto(photoId) {
       memoryFallbackPhotos = memoryFallbackPhotos.filter(p => p.id !== photoId);
+      sharedCloudPhotos = sharedCloudPhotos.filter(p => p.id !== photoId);
       try {
         const db = await openPhotoDb();
         await new Promise((resolve, reject) => {
@@ -1489,7 +1631,10 @@
           tx.onerror = () => reject(tx.error);
         });
       } catch (e) {}
-      showToast('🗑️ Photo deleted from vault.', 'info');
+      if (window.__cloudSync && typeof window.__cloudSync.deletePhoto === 'function') {
+        await window.__cloudSync.deletePhoto(photoId);
+      }
+      showToast('🗑️ Photo removed for everyone.', 'info');
       await renderGallerySection();
     }
 
@@ -1517,12 +1662,24 @@
     }
 
     function switchMainTab(tabName) {
+      const validTabs = ['home', 'wishlist', 'expenses', 'gallery', 'rsvp', 'logs', 'admin'];
+      const targetTab = validTabs.includes(tabName) ? tabName : 'home';
+
+      try {
+        sessionStorage.setItem('sankranti_2027_active_tab', targetTab);
+      } catch (e) {}
+      if (window.location.hash !== `#${targetTab}`) {
+        try {
+          history.replaceState(null, '', `#${targetTab}`);
+        } catch (e) {}
+      }
+
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-      const target = document.getElementById(`tab-${tabName}`);
+      const target = document.getElementById(`tab-${targetTab}`);
       if (target) target.classList.remove('hidden');
 
       document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-        const isActive = btn.getAttribute('data-tab') === tabName;
+        const isActive = btn.getAttribute('data-tab') === targetTab;
         if (btn.id === 'nav-tab-admin') {
           btn.className = isActive
             ? 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-emerald-400 text-red-950 shadow'
@@ -1534,7 +1691,7 @@
         }
       });
 
-      if (tabName === 'gallery') renderGallerySection();
+      if (targetTab === 'gallery') renderGallerySection();
     }
 
     function scrollToHomeSection(elementId) {
@@ -2571,17 +2728,18 @@
       if (!grid) return;
       const photos = await getAllHdPhotos();
       if (photos.length === 0) {
-        grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center text-xs text-stone-600">No HD photos uploaded yet. Tap <strong>⬆️ Upload HD Photos</strong> above to add full-resolution memories!</div>`;
+        grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center text-xs text-stone-600">No photos shared yet. Tap <strong>⬆️ Upload HD Photos</strong> above—every photo you upload is automatically visible to everyone in the squad!</div>`;
         return;
       }
       grid.innerHTML = photos.map(p => {
-        const url = URL.createObjectURL(p.resolvedBlob);
-        const caption = `${p.name} • By ${p.uploadedBy}`;
+        const url = p.resolvedBlob ? URL.createObjectURL(p.resolvedBlob) : p.sharedDataUrl;
+        if (!url) return '';
+        const caption = `${p.name} • Shared by ${p.uploadedBy}`;
         return `
           <div class="rounded-2xl overflow-hidden bg-stone-100 border border-amber-200 shadow-xs flex flex-col">
             <img src="${url}" alt="${p.name}" onclick="openLightbox('${url}', '${caption.replace(/'/g, "\\'")}')" class="w-full h-40 object-cover cursor-pointer hover:opacity-95 transition" />
             <div class="p-2.5 bg-white flex items-center justify-between gap-1 text-[11px]">
-              <span class="font-bold text-red-950 truncate">${p.uploadedBy}</span>
+              <span class="font-bold text-red-950 truncate">📸 ${p.uploadedBy}</span>
               <div class="flex gap-1">
                 <button type="button" onclick="downloadHdPhoto('${p.id}')" class="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold">⬇️</button>
                 <button type="button" onclick="deleteHdPhoto('${p.id}')" class="px-2 py-1 rounded-lg bg-red-100 text-red-800 font-extrabold">🗑️</button>
@@ -2718,6 +2876,69 @@
       setInterval(updateSankrantiCountdown, 60000);
       checkIncomingInviteLink();
       renderAllUI();
+
+      // Restore the exact tab the user was on before page refresh
+      const hashTab = (window.location.hash || '').replace('#', '').trim();
+      let savedTab = '';
+      try {
+        savedTab = sessionStorage.getItem('sankranti_2027_active_tab') || '';
+      } catch (e) {}
+      const initialTab = hashTab || savedTab || 'home';
+      const adminOnlyTabs = ['rsvp', 'logs', 'admin'];
+      if (adminOnlyTabs.includes(initialTab) && !isAdminUnlocked) {
+        switchMainTab('home');
+      } else {
+        switchMainTab(initialTab);
+      }
+    });
+
+    // Expose functions globally for inline HTML event handlers inside <script type="module">
+    Object.assign(window, {
+      switchMainTab,
+      diagnoseCloudSync,
+      openAdminPinModal,
+      verifyAdminPin,
+      logoutAdmin,
+      changeAdminPin,
+      resetAllTripData,
+      scrollToHomeSection,
+      handleRoleSwitch,
+      editTravelDetails,
+      saveGuestPreferences,
+      togglePackingItem,
+      addCustomPackingItem,
+      toggleCravingChip,
+      toggleFeastOtherInput,
+      toggleSoftDrinkOtherInput,
+      toggleChipsOtherInput,
+      toggleFeastCustomQtyInput,
+      addFeastBarOrder,
+      deleteFeastOrder,
+      addGuestFromForm,
+      pickContactFromMobile,
+      handleVcfUpload,
+      openWhatsAppInvite,
+      copyInviteLink,
+      resetAndReinviteGuest,
+      removeGuest,
+      declineAfterAccept,
+      closeWelcomeModal,
+      toggleCustomSplitCheckboxes,
+      toggleExpenseEditDrawer,
+      toggleGuestOnExpense,
+      saveExpenseInlineEdit,
+      saveExpenseForm,
+      deleteExpense,
+      handleHdPhotoUpload,
+      downloadHdPhoto,
+      deleteHdPhoto,
+      openLightbox,
+      copyLogsReport,
+      exportLogsCsv,
+      openSyncModal,
+      copySyncJson,
+      importSyncJson,
+      closeModal
     });
   </script>
 </body>

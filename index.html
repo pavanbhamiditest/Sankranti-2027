@@ -1918,7 +1918,288 @@
     // =========================================================================
     // 4. GUEST TRAVEL & PACKING CHECKLIST HELPERS
     // =========================================================================
-    function populatePreferenceFormForGuest(guest, prefix = 'rsvp') {
+    // (Handled above in populatePreferenceFormForGuest, renderGuestPackingChecklist, saveGuestPreferences)
+
+    // =========================================================================
+    // 5. UNIFIED CASCADING EXPENSE ENGINE & SPLITWISE SETTLEMENTS
+    // =========================================================================
+    const EXPENSE_CATEGORY_OPTIONS = {
+      Fuel: {
+        label: '2. Fuel Option',
+        descLabel: 'Route / Vehicle Note (Optional)',
+        descPlaceholder: 'e.g., Hyd → Jangareddygudem (Car 1)',
+        options: ['Petrol Fill-up', 'Diesel Fill-up', 'Highway Toll & FASTag', 'Car / Cab Rental', 'Other Fuel Expense']
+      },
+      Starters: {
+        label: '2. Starter / Food Item',
+        descLabel: 'Restaurant / Order Note (Optional)',
+        descPlaceholder: 'e.g., Bhogi Night Dinner / Dhaba Order',
+        options: ['Chicken 65', 'Chilli Chicken', 'Chicken Lollipop', 'Tandoori Chicken', 'Apollo Fish', 'Loose Prawns', 'Mutton / Natukodi Fry', 'Paneer Tikka', 'Crispy Corn', 'Biryani / Main Course', 'Other Starter / Food']
+      },
+      Spirits: {
+        label: '2. Spirit / Drink Brand',
+        descLabel: 'Quantity / Bottle Note (Optional)',
+        descPlaceholder: 'e.g., 2 Full Bottles / 1 Case Beer',
+        options: ['Kingfisher Strong', 'Kingfisher Ultra', 'Budweiser Magnum', 'Jameson Irish', 'Jack Daniel’s', 'Black Dog / 100 Pipers', 'Absolut / Smirnoff', 'Old Monk / Bacardi', 'Other Spirit / Drink']
+      },
+      Essentials: {
+        label: '2. Essential Item',
+        descLabel: 'Pack / Quantity Note (Optional)',
+        descPlaceholder: 'e.g., 2 Cases Water + Disposable Plates',
+        options: ['Water Bottles (1L / Case)', 'Paper Plates (Pack)', 'Tissues & Napkins (Pack)', 'Disposable Glasses (Pack)', 'Soda Bottles (Club / Kinley)', 'Ice Cubes (Bag)', 'Chips & Munchies', 'Other Essential']
+      },
+      Stay: {
+        label: '2. Stay / Villa Option',
+        descLabel: 'Location / Nights Note (Optional)',
+        descPlaceholder: 'e.g., Kothapeta Farmhouse / Hotel Rooms',
+        options: ['Farmhouse / Villa Stay', 'Hotel Rooms', 'Advance Deposit', 'Other Stay Expense']
+      },
+      Other: {
+        label: '2. Expense Type',
+        descLabel: 'Expense Description',
+        descPlaceholder: 'e.g., Bonfire Wood / DJ / Crackers',
+        options: ['Bonfire & Woods', 'Sound / Speakers', 'Local Transport / Auto', 'Miscellaneous / Custom']
+      }
+    };
+
+    function handleExpenseCategoryChange(preserveSelection = false) {
+      const cat = document.getElementById('exp-category')?.value || 'Fuel';
+      const config = EXPENSE_CATEGORY_OPTIONS[cat] || EXPENSE_CATEGORY_OPTIONS.Other;
+      const optLabel = document.getElementById('exp-option-label');
+      const optSelect = document.getElementById('exp-option-select');
+      const descLabel = document.getElementById('exp-custom-desc-label');
+      const descInput = document.getElementById('exp-desc');
+      const fuelBox = document.getElementById('exp-fuel-calc-box');
+
+      if (optLabel) optLabel.textContent = config.label;
+      if (descLabel) descLabel.textContent = config.descLabel;
+      if (descInput) descInput.placeholder = config.descPlaceholder;
+      if (fuelBox) {
+        if (cat === 'Fuel') fuelBox.classList.remove('hidden');
+        else fuelBox.classList.add('hidden');
+      }
+
+      if (optSelect) {
+        const prev = optSelect.value;
+        optSelect.innerHTML = config.options.map(o => `<option value="${o}">${o}</option>`).join('');
+        if (preserveSelection && config.options.includes(prev)) {
+          optSelect.value = prev;
+        }
+      }
+    }
+
+    function handleExpenseOptionChange() {
+      // Reserved for future custom item hooks
+    }
+
+    function recalcFuelFromDistance() {
+      const km = parseFloat(document.getElementById('fuel-distance-km')?.value) || 0;
+      const mileage = parseFloat(document.getElementById('fuel-mileage')?.value) || 0;
+      const rate = parseFloat(document.getElementById('fuel-rate-per-liter')?.value) || 0;
+      if (km > 0 && mileage > 0 && rate > 0) {
+        const total = Math.round((km / mileage) * rate);
+        const amtInput = document.getElementById('exp-amount');
+        if (amtInput) amtInput.value = total;
+      }
+    }
+
+    function handleExpenseSplitModeChange() {
+      const mode = document.getElementById('exp-split-mode')?.value || 'equal';
+      const box = document.getElementById('exp-custom-split-box');
+      if (!box) return;
+      if (mode === 'custom') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function toggleAllExpenseGuests(checked) {
+      document.querySelectorAll('.exp-split-cb').forEach(cb => { cb.checked = checked; });
+    }
+
+    function saveExpenseForm() {
+      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      if (!confirmedGuests.length) {
+        return showToast('At least one guest must accept their invite before adding expenses.', 'error');
+      }
+      const cat = document.getElementById('exp-category')?.value || 'Fuel';
+      const option = document.getElementById('exp-option-select')?.value || '';
+      const note = (document.getElementById('exp-desc')?.value || '').trim();
+      const paidBy = document.getElementById('exp-paid-by')?.value;
+      const splitMode = document.getElementById('exp-split-mode')?.value || 'equal';
+      const amount = parseFloat(document.getElementById('exp-amount')?.value);
+      const date = document.getElementById('exp-date')?.value || '2027-01-14';
+
+      if (!paidBy) return showToast('Select who paid the expense.', 'error');
+      if (!amount || amount <= 0) return showToast('Enter a valid amount in ₹.', 'error');
+
+      let splitBetween = [];
+      if (splitMode === 'equal') {
+        splitBetween = confirmedGuests.map(g => g.id);
+      } else {
+        splitBetween = Array.from(document.querySelectorAll('.exp-split-cb:checked')).map(cb => cb.value);
+      }
+      if (!splitBetween.length) return showToast('Select at least one guest to split with.', 'error');
+
+      const desc = `[${cat}] ${option}${note ? ' — ' + note : ''}`;
+      const payerName = appState.guests.find(g => g.id === paidBy)?.name || 'Member';
+
+      if (editingExpenseId) {
+        const idx = appState.expenses.findIndex(e => e.id === editingExpenseId);
+        if (idx !== -1) {
+          appState.expenses[idx] = { ...appState.expenses[idx], category: cat, option, note, desc, paidBy, splitMode, splitBetween, amount, date };
+        }
+        editingExpenseId = null;
+        document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
+        document.getElementById('exp-submit-btn').textContent = '💾 Save Expense';
+        document.getElementById('exp-cancel-edit-btn')?.classList.add('hidden');
+        saveAppState({
+          actor: getActiveActorName(),
+          category: 'EXPENSE',
+          action: 'Edited Expense',
+          msg: `Updated expense "${desc}" (₹${amount.toLocaleString('en-IN')}, paid by ${payerName}).`
+        });
+        showToast('Expense updated!');
+      } else {
+        appState.expenses.unshift({
+          id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+          category: cat,
+          option,
+          note,
+          desc,
+          paidBy,
+          splitMode,
+          splitBetween,
+          amount,
+          date
+        });
+        saveAppState({
+          actor: getActiveActorName(),
+          category: 'EXPENSE',
+          action: 'Added Expense',
+          msg: `Added "${desc}" for ₹${amount.toLocaleString('en-IN')} (paid by ${payerName}, split ${splitBetween.length} ways).`
+        });
+        showToast('Expense saved & split!');
+      }
+
+      document.getElementById('exp-desc').value = '';
+      document.getElementById('exp-amount').value = '';
+    }
+
+    function startEditExpense(expId) {
+      const exp = appState.expenses.find(e => e.id === expId);
+      if (!exp) return;
+      editingExpenseId = exp.id;
+      document.getElementById('exp-form-title').textContent = 'Edit Expense';
+      document.getElementById('exp-submit-btn').textContent = '💾 Update Expense';
+      document.getElementById('exp-cancel-edit-btn')?.classList.remove('hidden');
+
+      if (exp.category) {
+        document.getElementById('exp-category').value = exp.category;
+        handleExpenseCategoryChange(false);
+        if (exp.option) document.getElementById('exp-option-select').value = exp.option;
+      }
+      document.getElementById('exp-desc').value = exp.note || '';
+      document.getElementById('exp-paid-by').value = exp.paidBy;
+      document.getElementById('exp-split-mode').value = exp.splitMode || 'custom';
+      handleExpenseSplitModeChange();
+      document.querySelectorAll('.exp-split-cb').forEach(cb => {
+        cb.checked = (exp.splitBetween || []).includes(cb.value);
+      });
+      document.getElementById('exp-amount').value = exp.amount;
+      document.getElementById('exp-date').value = exp.date || '2027-01-14';
+      document.getElementById('tab-expenses')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEditExpense() {
+      editingExpenseId = null;
+      document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
+      document.getElementById('exp-submit-btn').textContent = '💾 Save Expense';
+      document.getElementById('exp-cancel-edit-btn')?.classList.add('hidden');
+      document.getElementById('exp-desc').value = '';
+      document.getElementById('exp-amount').value = '';
+    }
+
+    function deleteExpense(expId) {
+      const exp = appState.expenses.find(e => e.id === expId);
+      if (!exp) return;
+      appState.expenses = appState.expenses.filter(e => e.id !== expId);
+      saveAppState({
+        actor: getActiveActorName(),
+        category: 'EXPENSE',
+        action: 'Deleted Expense',
+        msg: `Deleted expense "${exp.desc}" (₹${Number(exp.amount).toLocaleString('en-IN')}).`
+      });
+      showToast('Expense removed.');
+    }
+
+    function computeSettlements() {
+      const balances = {};
+      appState.guests.forEach(g => { balances[g.id] = 0; });
+
+      appState.expenses.forEach(exp => {
+        const amt = Number(exp.amount) || 0;
+        const participants = (exp.splitBetween || []).filter(id => id in balances);
+        if (amt <= 0 || !participants.length) return;
+        if (exp.paidBy in balances) balances[exp.paidBy] += amt;
+        const share = amt / participants.length;
+        participants.forEach(id => { balances[id] -= share; });
+      });
+
+      const debtors = [];
+      const creditors = [];
+      Object.entries(balances).forEach(([id, bal]) => {
+        const rounded = Math.round(bal * 100) / 100;
+        if (rounded < -0.5) debtors.push({ id, amount: -rounded });
+        else if (rounded > 0.5) creditors.push({ id, amount: rounded });
+      });
+
+      debtors.sort((a, b) => b.amount - a.amount);
+      creditors.sort((a, b) => b.amount - a.amount);
+
+      const txns = [];
+      let i = 0, j = 0;
+      while (i < debtors.length && j < creditors.length) {
+        const pay = Math.min(debtors[i].amount, creditors[j].amount);
+        const fromName = appState.guests.find(g => g.id === debtors[i].id)?.name || debtors[i].id;
+        const toName = appState.guests.find(g => g.id === creditors[j].id)?.name || creditors[j].id;
+        if (Math.round(pay) > 0) {
+          txns.push({ from: fromName, to: toName, amount: Math.round(pay) });
+        }
+        debtors[i].amount -= pay;
+        creditors[j].amount -= pay;
+        if (debtors[i].amount < 0.5) i++;
+        if (creditors[j].amount < 0.5) j++;
+      }
+      return txns;
+    }
+
+    function shareSettlementsWhatsApp() {
+      const txns = computeSettlements();
+      const total = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const lines = [
+        `💸 *Sankranti 2027 Expense Split* (#DhummuLeputunnam)`,
+        `Total Trip Spend: *₹${total.toLocaleString('en-IN')}*`,
+        ``
+      ];
+      if (!txns.length) {
+        lines.push(`✅ All balances are settled!`);
+      } else {
+        txns.forEach(t => lines.push(`• *${t.from}* pays *${t.to}*: *₹${t.amount.toLocaleString('en-IN')}*`));
+      }
+      window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+    }
+
+    function renderExpensesSection() {
+      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
+      const paidByEl = document.getElementById('exp-paid-by');
+      if (paidByEl) {
+        const prev = paidByEl.value;
+        if (!confirmedGuests.length) {
+          paidByEl.innerHTML = `<option value="">-- No Confirmed Guests Yet --</option>`;
+        } else {
+          paidByEl.innerHTML = confirmedGuests.map(g =>
+            `<option value="${g.id}" ${g.id === prev ? 'selected' : ''}>${g.name}</option>`
+          ).join('');
+        }
       }
 
       handleExpenseCategoryChange(true);
@@ -1940,71 +2221,85 @@
 
       // Settlements List
       const settlementsEl = document.getElementById('settlements-list');
-      const txns = computeSettlements();
       if (settlementsEl) {
-        settlementsEl.innerHTML = txns.length
-          ? txns.map(t => `
-              <div class="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50 border border-amber-200">
-                <div class="text-xs sm:text-sm font-bold text-red-950">
-                  <span class="text-red-700 font-extrabold">${t.from}</span> pays <span class="text-emerald-800 font-extrabold">${t.to}</span>
-                </div>
-                <span class="px-3 py-1 rounded-xl bg-emerald-700 text-white text-xs sm:text-sm font-black">₹${t.amount.toLocaleString('en-IN')}</span>
+        const txns = computeSettlements();
+        if (!txns.length) {
+          settlementsEl.innerHTML = `<div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs sm:text-sm font-bold text-emerald-900">✅ No pending settlements yet! Add an expense on the left to see automatic splits.</div>`;
+        } else {
+          settlementsEl.innerHTML = txns.map(t => `
+            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200">
+              <div class="text-xs sm:text-sm font-extrabold text-red-950">
+                <span class="text-red-700">${t.from}</span> <span class="text-stone-500 font-semibold">pays</span> <span class="text-emerald-800">${t.to}</span>
               </div>
-            `).join('')
-          : `<p class="text-xs text-stone-500 italic">No pending balances. Add an expense to calculate splits.</p>`;
+              <span class="px-3 py-1 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-black text-red-950 shadow-sm">
+                ₹${t.amount.toLocaleString('en-IN')}
+              </span>
+            </div>
+          `).join('');
+        }
       }
 
-      // Expense History Ledger
+      // Expenses Ledger List
       const ledgerEl = document.getElementById('expenses-ledger-list');
       if (ledgerEl) {
-        ledgerEl.innerHTML = appState.expenses.length
-          ? appState.expenses.map(exp => {
-              const payer = appState.guests.find(g => g.id === exp.paidBy)?.name || 'Unknown';
-              const splitNames = (exp.splitBetween || [])
-                .map(id => appState.guests.find(g => g.id === id)?.name)
-                .filter(Boolean)
-                .join(', ');
-              return `
-                <div class="p-4 rounded-2xl bg-parchment/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div class="font-extrabold text-sm text-red-950">${exp.desc}</div>
-                    <div class="text-xs text-stone-600 mt-0.5">Paid by <strong>${payer}</strong> • ${exp.date}</div>
-                    <div class="text-[11px] text-amber-900 mt-0.5">Split (${exp.splitBetween.length}): ${splitNames || 'None'}</div>
+        if (!appState.expenses.length) {
+          ledgerEl.innerHTML = `<div class="p-6 text-center rounded-2xl bg-parchment/70 border border-amber-200 text-xs sm:text-sm font-bold text-stone-500">No expenses logged yet.</div>`;
+        } else {
+          ledgerEl.innerHTML = appState.expenses.map(exp => {
+            const payer = appState.guests.find(g => g.id === exp.paidBy)?.name || exp.paidBy;
+            const splitNames = (exp.splitBetween || [])
+              .map(id => appState.guests.find(g => g.id === id)?.name || id)
+              .join(', ');
+            return `
+              <div class="p-4 rounded-2xl bg-parchment/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm font-extrabold text-red-950">${exp.desc}</span>
+                    <span class="px-2 py-0.5 rounded-full bg-amber-200 text-red-950 text-[10px] font-black">${exp.date || '2027-01-14'}</span>
                   </div>
-                  <div class="flex items-center gap-2 self-end sm:self-center">
-                    <span class="text-base font-black text-red-950 mr-2">₹${Number(exp.amount).toLocaleString('en-IN')}</span>
-                    <button type="button" onclick="startEditExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-200 hover:bg-amber-300 text-amber-950 text-xs font-extrabold">✏️</button>
-                    <button type="button" onclick="deleteExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">🗑️</button>
-                  </div>
+                  <p class="text-xs text-stone-600 font-semibold">
+                    Paid by <strong class="text-emerald-800">${payer}</strong> • Split (${(exp.splitBetween || []).length}): <span class="text-stone-700">${splitNames || 'None'}</span>
+                  </p>
                 </div>
-              `;
-            }).join('')
-          : `<p class="text-xs text-stone-500 italic">No expenses recorded yet.</p>`;
+                <div class="flex items-center gap-2 self-end sm:self-center">
+                  <span class="text-base font-black text-red-950 mr-1">₹${Number(exp.amount).toLocaleString('en-IN')}</span>
+                  <button type="button" onclick="startEditExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-extrabold text-amber-950 hover:bg-amber-100">✏️</button>
+                  <button type="button" onclick="deleteExpense('${exp.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 text-xs font-extrabold text-red-800 hover:bg-red-200">🗑️</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
       }
     }
 
+    // =========================================================================
+    // 6. GALLERY, AUDIT LOGS, ADMIN PANEL, DASHLET MODALS & JSON SYNC
+    // =========================================================================
     async function renderGallerySection() {
       const grid = document.getElementById('hd-gallery-grid');
       if (!grid) return;
       const photos = await getAllHdPhotos();
-      const actor = getActiveActorName();
       if (!photos.length) {
-        grid.innerHTML = `<p class="col-span-full text-sm text-stone-500 italic">No HD photos uploaded yet. Tap "Upload HD Photos" above to add memories!</p>`;
+        grid.innerHTML = `<div class="col-span-full p-8 text-center rounded-3xl bg-parchment/70 border border-amber-200 text-sm font-bold text-stone-500">No HD photos uploaded yet. Tap "Upload HD Photos" above to add your first Sankranti memory!</div>`;
         return;
       }
+      const actor = getActiveActorName();
       grid.innerHTML = photos.map(p => {
         const canDelete = isAdminUnlocked || p.uploadedBy === actor;
         return `
-          <div class="bg-parchment rounded-2xl overflow-hidden border border-amber-200 shadow flex flex-col">
-            <img src="${p.dataUrl}" alt="${p.caption}" onclick="openLightbox('${p.id}')" class="w-full h-48 object-cover cursor-pointer hover:opacity-95 transition" />
+          <div class="bg-parchment rounded-2xl overflow-hidden border border-amber-200 shadow-sm flex flex-col">
+            <div onclick="openLightbox('${p.id}')" class="cursor-pointer aspect-video bg-stone-900 overflow-hidden relative group">
+              <img src="${p.dataUrl}" alt="${p.caption}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+            </div>
             <div class="p-3.5 flex-grow flex flex-col justify-between gap-2">
               <div>
-                <div class="font-extrabold text-sm text-red-950 truncate">${p.caption}</div>
-                <div class="text-[11px] text-stone-600">by ${p.uploadedBy} • ${p.sizeKB} KB</div>
+                <h4 class="text-xs sm:text-sm font-extrabold text-red-950 truncate">${p.caption}</h4>
+                <p class="text-[11px] text-stone-500 font-semibold">by ${p.uploadedBy} • ${p.sizeKB} KB</p>
               </div>
               <div class="flex items-center gap-1.5 pt-1">
-                <button type="button" onclick="downloadHdPhoto('${p.id}')" class="flex-grow py-1.5 px-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold">⬇️ HD Download</button>
-                ${canDelete ? `<button type="button" onclick="deleteHdPhoto('${p.id}')" class="py-1.5 px-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-900 text-xs font-extrabold">🗑️</button>` : ''}
+                <button type="button" onclick="downloadHdPhoto('${p.id}')" class="flex-1 py-1.5 px-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-extrabold">⬇️ HD Download</button>
+                ${canDelete ? `<button type="button" onclick="deleteHdPhoto('${p.id}')" class="py-1.5 px-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 text-[11px] font-extrabold">🗑️</button>` : ''}
               </div>
             </div>
           </div>
@@ -2014,155 +2309,141 @@
 
     function renderLogsSection() {
       const actorFilter = document.getElementById('log-filter-actor');
+      const catFilter = document.getElementById('log-filter-category')?.value || 'ALL';
+      const query = (document.getElementById('log-search-input')?.value || '').trim().toLowerCase();
+
+      const actors = Array.from(new Set(appState.activityLog.map(l => l.actor).filter(Boolean)));
       if (actorFilter) {
         const prev = actorFilter.value;
-        const actors = [...new Set(appState.activityLog.map(l => l.actor))];
         actorFilter.innerHTML = `<option value="ALL">👥 All Individuals</option>` +
           actors.map(a => `<option value="${a}" ${a === prev ? 'selected' : ''}>${a}</option>`).join('');
       }
-
       const selectedActor = actorFilter?.value || 'ALL';
-      const selectedCat = document.getElementById('log-filter-category')?.value || 'ALL';
-      const search = (document.getElementById('log-search-input')?.value || '').toLowerCase();
+
+      const amendBtn = document.getElementById('logs-admin-amend-btn');
+      if (amendBtn) {
+        if (isAdminUnlocked) amendBtn.classList.remove('hidden');
+        else amendBtn.classList.add('hidden');
+      }
+
+      const summaryStrip = document.getElementById('log-actor-summary-strip');
+      if (summaryStrip) {
+        const counts = {};
+        appState.activityLog.forEach(l => { counts[l.actor] = (counts[l.actor] || 0) + 1; });
+        summaryStrip.innerHTML = Object.entries(counts).map(([name, cnt]) =>
+          `<span class="px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-xs font-extrabold text-red-950">${name}: ${cnt}</span>`
+        ).join('');
+      }
 
       const filtered = appState.activityLog.filter(l => {
         if (selectedActor !== 'ALL' && l.actor !== selectedActor) return false;
-        if (selectedCat !== 'ALL' && l.category !== selectedCat) return false;
-        if (search && !`${l.actor} ${l.msg} ${l.action}`.toLowerCase().includes(search)) return false;
+        if (catFilter !== 'ALL' && l.category !== catFilter) return false;
+        if (query && !(`${l.actor} ${l.action} ${l.msg}`.toLowerCase().includes(query))) return false;
         return true;
       });
 
       const feed = document.getElementById('audit-logs-feed');
       if (!feed) return;
-      feed.innerHTML = filtered.length
-        ? filtered.map(l => `
-            <div class="p-3.5 rounded-2xl bg-parchment/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="px-2 py-0.5 rounded-lg bg-amber-200 text-red-950 text-[10px] font-black">${l.category}</span>
-                  <span class="text-xs font-extrabold text-red-950">${l.actor}</span>
-                  <span class="text-[11px] text-stone-500">${l.timestamp}</span>
-                </div>
-                <p class="text-xs sm:text-sm text-stone-800 font-medium mt-1">${l.msg}</p>
-              </div>
-              ${isAdminUnlocked ? `
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <button type="button" onclick="openAdminEditLog('${l.id}')" class="px-2.5 py-1 rounded-xl bg-amber-200 text-amber-950 text-xs font-extrabold">✏️ Amend</button>
-                  <button type="button" onclick="deleteAdminLog('${l.id}')" class="px-2.5 py-1 rounded-xl bg-red-100 text-red-900 text-xs font-extrabold">🗑️</button>
-                </div>
-              ` : ''}
+      if (!filtered.length) {
+        feed.innerHTML = `<div class="p-6 text-center rounded-2xl bg-parchment/70 border border-amber-200 text-xs font-bold text-stone-500">No matching activity logs found.</div>`;
+        return;
+      }
+      feed.innerHTML = filtered.map(l => `
+        <div class="p-3.5 rounded-2xl bg-parchment/60 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 rounded-md bg-red-900 text-amber-100 text-[10px] font-black">${l.category}</span>
+              <span class="text-xs font-extrabold text-red-950">${l.actor}</span>
+              <span class="text-xs font-bold text-orange-700">• ${l.action}</span>
             </div>
-          `).join('')
-        : `<p class="text-xs text-stone-500 italic">No matching audit log entries.</p>`;
+            <p class="text-xs text-stone-700 mt-1 font-medium">${l.msg}</p>
+          </div>
+          <span class="text-[11px] font-mono text-stone-500 shrink-0">${l.timestamp}</span>
+        </div>
+      `).join('');
     }
 
     function openAdminAddLogForm() {
-      editingLogId = null;
-      document.getElementById('logs-editor-title').textContent = '🛡️ Add Manual Audit Log (Admin)';
-      document.getElementById('log-edit-actor').value = 'Host Admin';
-      document.getElementById('log-edit-msg').value = '';
-      document.getElementById('logs-admin-editor-box').classList.remove('hidden');
-    }
-
-    function openAdminEditLog(logId) {
-      const entry = appState.activityLog.find(l => l.id === logId);
-      if (!entry) return;
-      editingLogId = entry.id;
-      document.getElementById('logs-editor-title').textContent = '🛡️ Amend Existing Log Entry (Admin)';
-      document.getElementById('log-edit-actor').value = entry.actor;
-      document.getElementById('log-edit-category').value = entry.category;
-      document.getElementById('log-edit-msg').value = entry.msg;
-      document.getElementById('logs-admin-editor-box').classList.remove('hidden');
+      if (!isAdminUnlocked) return;
+      document.getElementById('logs-admin-editor-box')?.classList.remove('hidden');
     }
 
     function closeAdminLogForm() {
-      editingLogId = null;
-      document.getElementById('logs-admin-editor-box').classList.add('hidden');
+      document.getElementById('logs-admin-editor-box')?.classList.add('hidden');
     }
 
     function saveAdminLogEntry() {
       if (!isAdminUnlocked) return;
-      const actor = document.getElementById('log-edit-actor').value.trim() || 'Host Admin';
-      const category = document.getElementById('log-edit-category').value;
-      const msg = document.getElementById('log-edit-msg').value.trim();
-      if (!msg) return showToast('Enter a log message.', 'error');
-
-      if (editingLogId) {
-        const entry = appState.activityLog.find(l => l.id === editingLogId);
-        if (entry) {
-          entry.actor = actor;
-          entry.category = category;
-          entry.msg = msg + ' (Amended by Admin)';
-        }
-        closeAdminLogForm();
-        saveAppState();
-        showToast('Audit log entry amended.');
-      } else {
-        closeAdminLogForm();
-        saveAppState({ actor, category, action: 'Admin Note', msg });
-        showToast('Audit log entry added.');
-      }
-    }
-
-    function deleteAdminLog(logId) {
-      if (!isAdminUnlocked) return;
-      appState.activityLog = appState.activityLog.filter(l => l.id !== logId);
-      saveAppState();
-      showToast('Log entry deleted.');
+      const actor = (document.getElementById('log-edit-actor')?.value || '').trim() || 'Host Admin';
+      const category = document.getElementById('log-edit-category')?.value || 'ADMIN';
+      const msg = (document.getElementById('log-edit-msg')?.value || '').trim();
+      if (!msg) return showToast('Enter a log message first.', 'error');
+      document.getElementById('log-edit-msg').value = '';
+      closeAdminLogForm();
+      saveAppState({ actor, category, action: 'Admin Note', msg });
+      showToast('Log entry recorded!');
     }
 
     function copyAuditLogs() {
-      const text = appState.activityLog.map(l => `[${l.timestamp}] (${l.category}) ${l.actor}: ${l.msg}`).join('\n');
+      const text = appState.activityLog.map(l => `[${l.timestamp}] (${l.category}) ${l.actor} - ${l.action}: ${l.msg}`).join('\n');
       const ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand('copy');
       ta.remove();
-      showToast('Audit log copied to clipboard!');
+      showToast('Audit log report copied!');
     }
 
     function downloadAuditLogsCsv() {
-      const rows = [['Timestamp', 'Actor', 'Category', 'Message'], ...appState.activityLog.map(l => [l.timestamp, l.actor, l.category, l.msg])];
+      const rows = [['Timestamp', 'Category', 'Actor', 'Action', 'Details']];
+      appState.activityLog.forEach(l => rows.push([l.timestamp, l.category, l.actor, l.action, l.msg]));
       const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      a.href = url;
       a.download = 'sankranti-2027-audit-logs.csv';
       a.click();
+      URL.revokeObjectURL(url);
     }
 
     function renderAdminSection() {
       const listEl = document.getElementById('admin-guest-management-list');
       if (listEl) {
         listEl.innerHTML = appState.guests.map(g => `
-          <div class="p-3.5 rounded-2xl bg-parchment border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div class="p-3.5 rounded-2xl bg-parchment/80 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <div class="font-extrabold text-sm text-red-950">${g.name} <span class="text-xs font-bold text-amber-800">(${g.rsvp.toUpperCase()})</span></div>
-              <div class="text-xs text-stone-600">${g.phone ? '+' + g.phone : 'No phone number saved'}</div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-extrabold text-red-950">${g.name}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${g.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-200 text-red-950'}">${g.rsvp}</span>
+              </div>
+              <p class="text-[11px] text-stone-600">${g.phone ? '📞 ' + g.phone : 'No phone saved'} • Route: ${g.fromCity || '—'} → ${g.arrivalCity || '—'}</p>
             </div>
-            <div class="flex flex-wrap gap-1.5">
-              <button type="button" onclick="pickContactFromMobile('rsvp', '${g.id}')" class="px-3 py-1.5 rounded-xl bg-sky-700 text-white text-xs font-extrabold">📱 Phonebook</button>
-              <a href="${getWhatsAppInviteUrl(g)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">📲 WhatsApp</a>
-              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-950 text-xs font-extrabold">🔗 Link</button>
-              ${g.rsvp === 'exited' ? `<button type="button" onclick="adminReinviteGuest('${g.id}')" class="px-3 py-1.5 rounded-xl bg-amber-200 text-amber-950 text-xs font-extrabold">♻️ Re-Invite</button>` : ''}
-              <button type="button" onclick="adminRemoveGuest('${g.id}')" class="px-3 py-1.5 rounded-xl bg-red-100 text-red-900 text-xs font-extrabold">🗑️</button>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <a href="${getWhatsAppInviteUrl(g)}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-extrabold">📲 WhatsApp</a>
+              <button type="button" onclick="copyInviteLink('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-[11px] font-extrabold text-amber-950">🔗 Link</button>
+              <button type="button" onclick="adminToggleGuestRsvp('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-200 text-[11px] font-extrabold text-red-950">Toggle RSVP</button>
+              <button type="button" onclick="adminRemoveGuest('${g.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 text-[11px] font-extrabold text-red-800">🗑️</button>
             </div>
           </div>
         `).join('');
       }
 
-      const miniLog = document.getElementById('admin-activity-log');
-      if (miniLog) {
-        miniLog.innerHTML = appState.activityLog.slice(0, 20).map(l =>
-          `<div>[${l.timestamp}] <span class="text-amber-300">${l.actor}</span>: ${l.msg}</div>`
+      const logPreview = document.getElementById('admin-activity-log');
+      if (logPreview) {
+        logPreview.innerHTML = appState.activityLog.slice(0, 20).map(l =>
+          `<div class="border-b border-stone-800 pb-1"><span class="text-amber-400">[${l.actor}]</span> ${l.msg}</div>`
         ).join('');
       }
     }
 
     function adminAddGuest() {
-      const name = document.getElementById('admin-new-guest-name').value.trim();
-      const phone = normalizeIndianPhone(document.getElementById('admin-new-guest-phone').value.trim());
+      if (!isAdminUnlocked) return;
+      const nameInput = document.getElementById('admin-new-guest-name');
+      const phoneInput = document.getElementById('admin-new-guest-phone');
+      const name = (nameInput?.value || '').trim();
+      const phone = normalizeIndianPhone(phoneInput?.value || '');
       if (!name) return showToast('Enter guest name.', 'error');
       const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).slice(2, 5);
       appState.guests.push({
@@ -2170,53 +2451,56 @@
         name,
         phone,
         rsvp: 'pending',
+        fromCity: '',
         travelDate: '',
         arrivalCity: 'Jangareddygudem',
         returnDate: '',
-        diet: 'Non-Veg',
+        packingList: buildDefaultPackingList(),
         starters: [],
         alcohol: [],
         essentials: [],
         cigarettes: []
       });
-      document.getElementById('admin-new-guest-name').value = '';
-      document.getElementById('admin-new-guest-phone').value = '';
+      nameInput.value = '';
+      phoneInput.value = '';
       saveAppState({
         actor: 'Host Admin',
         category: 'ADMIN',
         action: 'Added Guest',
-        msg: `Host Admin added ${name} to the invite list.`
+        msg: `Added ${name} to the Sankranti 2027 squad list.`
       });
-      showToast(`${name} added!`);
+      showToast(`Added ${name}!`);
     }
 
-    function adminReinviteGuest(guestId) {
+    function adminToggleGuestRsvp(guestId) {
+      if (!isAdminUnlocked) return;
       const g = appState.guests.find(x => x.id === guestId);
       if (!g) return;
-      g.rsvp = 'pending';
+      g.rsvp = g.rsvp === 'accepted' ? 'pending' : 'accepted';
       saveAppState({
         actor: 'Host Admin',
         category: 'ADMIN',
-        action: 'Re-Invited Guest',
-        msg: `Host Admin restored invite access for ${g.name}.`
+        action: 'Updated RSVP',
+        msg: `Host Admin set ${g.name}'s RSVP status to ${g.rsvp}.`
       });
-      showToast(`${g.name} re-invited!`);
     }
 
     function adminRemoveGuest(guestId) {
+      if (!isAdminUnlocked) return;
       const g = appState.guests.find(x => x.id === guestId);
       if (!g) return;
       appState.guests = appState.guests.filter(x => x.id !== guestId);
+      if (currentRole === guestId) currentRole = 'overview';
       saveAppState({
         actor: 'Host Admin',
         category: 'ADMIN',
         action: 'Removed Guest',
-        msg: `Host Admin removed ${g.name} from the squad.`
+        msg: `Removed ${g.name} from the squad list.`
       });
-      showToast(`${g.name} removed.`);
     }
 
     async function wipeAllDataClean() {
+      if (!isAdminUnlocked) return;
       appState = getDefaultState();
       try {
         const db = await openPhotoDb();
@@ -2230,74 +2514,87 @@
       saveAppState({
         actor: 'Host Admin',
         category: 'ADMIN',
-        action: 'Wiped Data',
-        msg: 'All data wiped clean for a fresh start.'
+        action: 'Wiped All Data',
+        msg: 'Host Admin reset all trip data to a clean slate.'
       });
       showToast('All data wiped clean!');
     }
 
     // =========================================================================
-    // 7. DASHLET DETAIL POP-UP & SYNC MODALS
+    // 7. KPI DASHLET MODALS & SYNC / BACKUP MODAL
     // =========================================================================
-    function openDashletModal(type) {
-      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
+    async function openDashletModal(type) {
       const modal = document.getElementById('dashlet-modal');
-      const icon = document.getElementById('modal-icon');
-      const title = document.getElementById('modal-title');
-      const body = document.getElementById('modal-body');
+      const iconEl = document.getElementById('modal-icon');
+      const titleEl = document.getElementById('modal-title');
+      const bodyEl = document.getElementById('modal-body');
+      if (!modal || !bodyEl) return;
+
+      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
 
       if (type === 'guests') {
-        icon.textContent = '👥';
-        title.textContent = `Confirmed Squad (${confirmed.length} / ${appState.guests.length})`;
-        body.innerHTML = appState.guests.map(g => `
-          <div class="p-3 rounded-2xl bg-parchment border border-amber-200 flex items-center justify-between">
+        iconEl.textContent = '👥';
+        titleEl.textContent = `Squad RSVP Status (${confirmed.length}/${appState.guests.length} Confirmed)`;
+        bodyEl.innerHTML = appState.guests.map(g => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-parchment border border-amber-200">
             <span class="font-extrabold text-red-950">${g.name}</span>
-            <span class="text-xs font-black uppercase px-2.5 py-1 rounded-full ${g.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : g.rsvp === 'exited' ? 'bg-red-100 text-red-900' : 'bg-amber-100 text-amber-900'}">${g.rsvp}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${g.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-200 text-red-950'}">${g.rsvp}</span>
           </div>
         `).join('');
       } else if (type === 'travel') {
-        icon.textContent = '🚆';
-        title.textContent = 'Travel & Arrival Schedule';
-        body.innerHTML = confirmed.length
-          ? confirmed.map(g => `
-              <div class="p-3 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-between">
-                <span class="font-extrabold text-red-950">${g.name}</span>
-                <span class="text-xs font-bold text-sky-950">${g.fromCity ? g.fromCity + ' → ' : ''}${g.arrivalCity || 'TBD'} (${g.travelDate || 'TBD'} → ${g.returnDate || 'TBD'})</span>
-              </div>
-            `).join('')
-          : '<p class="text-stone-500 italic">No confirmed travelers yet.</p>';
-      } else if (type === 'food') {
-        icon.textContent = '🍗';
-        title.textContent = 'Starters & Feast Breakdown';
-        const items = getAggregatedRequestedItems().filter(i => i.category === 'Starter');
-        body.innerHTML = items.length
-          ? items.map(i => `<div class="p-3 rounded-2xl bg-orange-50 border border-orange-200 flex justify-between font-bold"><span>${i.label}</span><span>${i.totalQty} Plates</span></div>`).join('')
-          : '<p class="text-stone-500 italic">No starters requested yet.</p>';
-      } else if (type === 'alcohol') {
-        icon.textContent = '🍻';
-        title.textContent = 'Spirits, Essentials & Smokes Stock';
-        const items = getAggregatedRequestedItems().filter(i => i.category !== 'Starter');
-        body.innerHTML = items.length
-          ? items.map(i => `<div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex justify-between font-bold"><span>${i.label} (${i.category})</span><span>${i.totalQty} Units</span></div>`).join('')
-          : '<p class="text-stone-500 italic">No spirits or essentials requested yet.</p>';
+        iconEl.textContent = '🚆';
+        titleEl.textContent = 'Travel & Arrival Schedule';
+        bodyEl.innerHTML = confirmed.length ? confirmed.map(g => `
+          <div class="p-3 rounded-xl bg-parchment border border-amber-200">
+            <div class="font-extrabold text-red-950">${g.name}</div>
+            <div class="text-xs text-stone-600 mt-0.5">${g.fromCity || 'Origin TBD'} → <strong>${g.arrivalCity || 'Hub TBD'}</strong> (${g.travelDate || 'TBD'} to ${g.returnDate || 'TBD'})</div>
+          </div>
+        `).join('') : `<p class="text-xs text-stone-500">No confirmed travel plans yet.</p>`;
+      } else if (type === 'food' || type === 'alcohol') {
+        const targetCat = type === 'food' ? 'Starters' : 'Spirits';
+        iconEl.textContent = type === 'food' ? '🍗' : '🍻';
+        titleEl.textContent = type === 'food' ? 'Starters & Food Expense Breakdown' : 'Spirits & Bar Stock Breakdown';
+        const items = appState.expenses.filter(e => e.category === targetCat);
+        bodyEl.innerHTML = items.length ? items.map(e => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-parchment border border-amber-200">
+            <span class="font-bold text-red-950">${e.desc}</span>
+            <span class="font-black text-emerald-900">₹${Number(e.amount).toLocaleString('en-IN')}</span>
+          </div>
+        `).join('') : `<p class="text-xs text-stone-500">No ${targetCat.toLowerCase()} logged yet in Expenses & Split.</p>`;
       } else if (type === 'expenses') {
-        switchMainTab('expenses');
-        return;
+        iconEl.textContent = '💰';
+        titleEl.textContent = 'Simplified Settlements';
+        const txns = computeSettlements();
+        bodyEl.innerHTML = txns.length ? txns.map(t => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200">
+            <span class="font-bold text-red-950">${t.from} → ${t.to}</span>
+            <span class="font-black text-red-950">₹${t.amount.toLocaleString('en-IN')}</span>
+          </div>
+        `).join('') : `<p class="text-xs text-stone-500">All settled up! No pending payments.</p>`;
       } else if (type === 'photos') {
-        switchMainTab('gallery');
-        return;
+        iconEl.textContent = '📷';
+        titleEl.textContent = 'HD Photo Vault Summary';
+        const photos = await getAllHdPhotos();
+        bodyEl.innerHTML = photos.length ? photos.map(p => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-parchment border border-amber-200">
+            <span class="font-bold text-red-950 truncate">${p.caption} (by ${p.uploadedBy})</span>
+            <button type="button" onclick="downloadHdPhoto('${p.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-700 text-white text-xs font-extrabold">⬇️ HD</button>
+          </div>
+        `).join('') : `<p class="text-xs text-stone-500">No photos uploaded yet.</p>`;
       }
+
       modal.classList.remove('hidden');
     }
 
     function closeDashletModal() {
-      document.getElementById('dashlet-modal').classList.add('hidden');
+      document.getElementById('dashlet-modal')?.classList.add('hidden');
     }
 
     function copyModalSummary() {
-      const text = document.getElementById('modal-body').innerText;
+      const title = document.getElementById('modal-title')?.textContent || 'Summary';
+      const body = document.getElementById('modal-body')?.innerText || '';
       const ta = document.createElement('textarea');
-      ta.value = text;
+      ta.value = `${title}\n${body}`;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand('copy');
@@ -2306,11 +2603,11 @@
     }
 
     function openSyncModal() {
-      document.getElementById('sync-modal').classList.remove('hidden');
+      document.getElementById('sync-modal')?.classList.remove('hidden');
     }
 
     function closeSyncModal() {
-      document.getElementById('sync-modal').classList.add('hidden');
+      document.getElementById('sync-modal')?.classList.add('hidden');
     }
 
     function copySyncJson() {
@@ -2320,84 +2617,137 @@
       ta.select();
       document.execCommand('copy');
       ta.remove();
-      showToast('Trip JSON copied to clipboard!');
+      showToast('Trip Data JSON copied!');
     }
 
     function downloadSyncJson() {
       const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      a.href = url;
       a.download = 'sankranti-2027-backup.json';
       a.click();
+      URL.revokeObjectURL(url);
     }
 
     function importSyncJson() {
       try {
-        const raw = document.getElementById('sync-import-textarea').value.trim();
+        const raw = document.getElementById('sync-import-textarea')?.value || '';
         const parsed = JSON.parse(raw);
-        if (!parsed || !Array.isArray(parsed.guests)) throw new Error('Invalid format');
+        if (!parsed || !Array.isArray(parsed.guests)) {
+          return showToast('Invalid JSON format.', 'error');
+        }
         appState = { ...getDefaultState(), ...parsed };
         saveAppState({
           actor: getActiveActorName(),
           category: 'ADMIN',
-          action: 'Imported Sync JSON',
-          msg: 'Imported and synced trip state JSON.'
+          action: 'Synced JSON',
+          msg: 'Imported and synced trip state from JSON.'
         });
         closeSyncModal();
         showToast('Trip data synced successfully!');
       } catch (e) {
-        showToast('Invalid JSON pasted.', 'error');
+        showToast('Failed to parse JSON.', 'error');
       }
     }
 
     // =========================================================================
-    // 8. INITIALIZATION ON PAGE LOAD
+    // 8. MASTER UI RENDERER & STARTUP INITIALIZATION
     // =========================================================================
-    function initSankrantiApp() {
+    async function renderAllUI() {
+      // Role Switcher Dropdown
+      const roleSelect = document.getElementById('role-switcher');
+      if (roleSelect) {
+        roleSelect.innerHTML = `<option value="overview" ${currentRole === 'overview' ? 'selected' : ''}>🏠 Group Overview (Public)</option>` +
+          appState.guests.map(g => `<option value="${g.id}" ${currentRole === g.id ? 'selected' : ''}>👤 ${g.name} (${g.rsvp})</option>`).join('');
+      }
+
+      // Admin Lock Button & Tab
+      const lockIcon = document.getElementById('admin-lock-icon');
+      const lockLabel = document.getElementById('admin-lock-label');
+      const navAdmin = document.getElementById('nav-admin');
+      if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🔓' : '🔒';
+      if (lockLabel) lockLabel.textContent = isAdminUnlocked ? 'Admin Mode Active' : 'Guest Mode (Unlock Admin)';
+      if (navAdmin) {
+        if (isAdminUnlocked) navAdmin.classList.remove('hidden');
+        else navAdmin.classList.add('hidden');
+      }
+
+      // Home Guest Confirmation Form (visible when viewing as an accepted guest)
+      const homeGuestSec = document.getElementById('home-guest-details-section');
+      const activeGuest = getActiveGuest();
+      if (homeGuestSec) {
+        if (activeGuest && activeGuest.rsvp === 'accepted') {
+          selectedRsvpGuestId = activeGuest.id;
+          homeGuestSec.classList.remove('hidden');
+          populatePreferenceFormForGuest(activeGuest, 'home');
+        } else {
+          homeGuestSec.classList.add('hidden');
+        }
+      }
+
+      // KPI Dashlets
+      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
+      const cities = new Set(confirmed.map(g => g.arrivalCity).filter(Boolean));
+      const starterCount = appState.expenses.filter(e => e.category === 'Starters').length;
+      const spiritCount = appState.expenses.filter(e => e.category === 'Spirits').length;
+      const totalExpense = appState.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const photos = await getAllHdPhotos();
+
+      document.getElementById('kpi-confirmed-count').textContent = confirmed.length;
+      document.getElementById('kpi-total-invited').textContent = `/ ${appState.guests.length} Invited`;
+      document.getElementById('kpi-guests-sub').textContent = confirmed.length ? confirmed.map(g => g.name).join(', ') : 'Awaiting RSVPs...';
+
+      document.getElementById('kpi-cities-count').textContent = cities.size;
+      document.getElementById('kpi-travel-sub').textContent = cities.size ? Array.from(cities).join(', ') : 'Jangareddygudem, Kothapeta, Narsapuram...';
+
+      document.getElementById('kpi-starters-qty').textContent = starterCount;
+      document.getElementById('kpi-alcohol-qty').textContent = spiritCount;
+      document.getElementById('kpi-expense-total').textContent = `₹${totalExpense.toLocaleString('en-IN')}`;
+      document.getElementById('kpi-photos-count').textContent = photos.length;
+
+      document.getElementById('kpi-logs-count').textContent = `${appState.activityLog.length} Entries`;
+      const latestLog = appState.activityLog[0];
+      if (latestLog) {
+        document.getElementById('kpi-latest-log').textContent = `[${latestLog.actor}] ${latestLog.msg}`;
+      }
+
+      // Home Squad Pills
+      const pillsEl = document.getElementById('home-squad-pills');
+      if (pillsEl) {
+        pillsEl.innerHTML = appState.guests.map(g => {
+          const accepted = g.rsvp === 'accepted';
+          return `
+            <button type="button" onclick="handleRoleSwitch('${g.id}')" class="p-3 rounded-2xl border text-left transition ${accepted ? 'bg-emerald-50 border-emerald-400 text-emerald-950' : 'bg-parchment border-amber-200 text-red-950 hover:border-orange-400'}">
+              <div class="text-xs sm:text-sm font-extrabold truncate">${g.name}</div>
+              <div class="text-[10px] font-black uppercase mt-0.5 ${accepted ? 'text-emerald-700' : 'text-amber-700'}">${accepted ? '✅ Confirmed' : '⏳ ' + g.rsvp}</div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      renderRsvpSection();
+      renderExpensesSection();
+      if (isAdminUnlocked) renderAdminSection();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
-      const inviteId = (params.get('invite') || '').trim();
-      if (inviteId) {
+      const inviteParam = params.get('invite');
+      if (inviteParam) {
         const invitedGuest = appState.guests.find(
-          g => g.id.toLowerCase() === inviteId.toLowerCase() || g.name.toLowerCase() === inviteId.toLowerCase()
-        ) || { id: inviteId.toLowerCase(), name: inviteId, rsvp: 'pending' };
-
-        if (!appState.guests.some(g => g.id === invitedGuest.id)) {
-          appState.guests.push({
-            id: invitedGuest.id,
-            name: invitedGuest.name,
-            phone: '',
-            rsvp: 'pending',
-            fromCity: '',
-            travelDate: '',
-            arrivalCity: 'Jangareddygudem',
-            returnDate: '',
-            diet: 'Non-Veg',
-            starters: [],
-            alcohol: [],
-            essentials: [],
-            cigarettes: []
-          });
-        }
-
-        currentRole = invitedGuest.id;
-        selectedRsvpGuestId = invitedGuest.id;
-        renderAllUI();
-        switchMainTab('home');
-        if (invitedGuest.rsvp !== 'accepted') {
-          openInviteGateForGuest(invitedGuest);
-          return;
+          g => g.id.toLowerCase() === inviteParam.toLowerCase() || g.name.toLowerCase() === inviteParam.toLowerCase()
+        );
+        if (invitedGuest) {
+          currentRole = invitedGuest.id;
+          selectedRsvpGuestId = invitedGuest.id;
+          if (invitedGuest.rsvp !== 'accepted') {
+            openInviteGateForGuest(invitedGuest);
+          }
         }
       }
-      document.getElementById('app-shell')?.classList.remove('hidden');
       renderAllUI();
-      switchMainTab('home');
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initSankrantiApp);
-    } else {
-      initSankrantiApp();
-    }
+    });
   </script>
 </body>
 </html>

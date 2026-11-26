@@ -952,7 +952,7 @@
                   <h4 class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Live Activity Log</h4>
                   <div class="flex items-center gap-3">
                     <button onclick="switchMainTab('logs')" class="text-[11px] text-amber-300 hover:underline">Full View →</button>
-                    <button onclick="resetDemoData()" class="text-[11px] text-red-300 hover:underline">Reset Demo Data</button>
+                    <button onclick="wipeAllDataClean()" class="text-[11px] text-red-300 hover:underline font-extrabold">🧹 Wipe All Data (Empty)</button>
                   </div>
                 </div>
                 <div id="admin-activity-log" class="space-y-1.5 max-h-64 overflow-y-auto text-xs font-mono text-stone-300">
@@ -3559,13 +3559,56 @@
       showToast('Admin PIN updated successfully!');
     }
 
-    function resetDemoData() {
-      if (!requireAdmin('reset all demo data')) return;
+    function getCleanEmptyState() {
+      const preservedPin = (appState && appState.adminPin) ? appState.adminPin : '0089';
+      return {
+        adminPin: preservedPin,
+        itemPrices: {},
+        itemSplitModes: {},
+        itemCustomSplits: {},
+        pickedChecklist: {},
+        guests: [
+          { id: 'srinu', name: 'Srinu', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'praveen', name: 'Praveen', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'chandu', name: 'Chandu', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Kothapeta', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'pavan', name: 'Pavan', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Narsapuram', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'lella', name: 'Lella', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Tanuku', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'palla', name: 'Palla', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Kirlampudi', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'palli', name: 'Palli', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'jayanth', name: 'Jayanth', phone: '', rsvp: 'pending', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] }
+        ],
+        expenses: [],
+        activityLog: []
+      };
+    }
+
+    async function wipeAllDataClean() {
+      if (!requireAdmin('wipe all app data')) return;
       localStorage.removeItem(STORAGE_KEY);
-      appState = getDefaultState();
-      saveAppState('Admin reset all demo data to defaults.');
+      try {
+        const db = await openPhotoDB();
+        await new Promise((resolve) => {
+          const tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).clear();
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+      } catch (e) {}
+      hdPhotosCache = [];
+      editingExpenseId = null;
+      appState = getCleanEmptyState();
+      saveAppState({
+        actor: 'Host Admin',
+        category: 'ADMIN',
+        action: 'Wiped All Data',
+        msg: 'Admin wiped all demo entries, expenses, preferences, and photos for a fresh start.'
+      });
       renderAdminSection();
-      showToast('All demo data reset!');
+      showToast('All data wiped! App is now on a 100% clean slate.');
+    }
+
+    function resetDemoData() {
+      wipeAllDataClean();
     }
 
     // Sync Modal Functions

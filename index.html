@@ -48,8 +48,8 @@
           <div>
             <div class="flex items-center gap-2">
               <h1 class="text-lg sm:text-xl font-black tracking-tight text-white">Sankranti 2027</h1>
-              <span class="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider">
-                Live Squad
+              <span id="cloud-sync-badge" class="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider">
+                Connecting...
               </span>
             </div>
             <p class="text-[11px] sm:text-xs text-amber-200/90 font-medium">#DhummuLeputunnam • Bhogi • Sankranthi • Kanuma</p>
@@ -677,7 +677,68 @@
     <div class="max-w-md w-full rounded-3xl bg-white p-7 shadow-2xl border-2 border-amber-400 text-center space-y-4 relative animate-panel">
       <button type="button" onclick="closeWelcomeModal()" aria-label="Close welcome popup" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-amber-100 hover:bg-amber-200 text-red-950 font-black text-sm flex items-center justify-center transition">
         ✕
-    <div id="photo-lightbox-modal" class="hidden fixed inset-0 z-[98] bg-black/90 flex items-center justify-center p-4" onclick="closeModal('photo-lightbox-modal')">
+      </button>
+      <div class="text-5xl">🎉🔥🪁</div>
+      <h3 class="text-2xl font-black text-red-950">
+        Welcome to the Squad, <span id="welcome-guest-name" class="text-orange-600">Hero</span>!
+      </h3>
+      <p class="text-xs sm:text-sm text-stone-700 font-medium leading-relaxed">
+        Your spot for <strong>Sankranti 2027</strong> is officially locked! Fill in your travel route and check off your packing list next.
+      </p>
+      <div class="text-xs font-extrabold text-amber-800 bg-amber-100 px-3 py-1.5 rounded-full inline-block">
+        Auto-closing in <span id="welcome-auto-timer">15s</span>
+      </div>
+      <div>
+        <button type="button" onclick="closeWelcomeModal()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-red-900 to-orange-700 text-white text-sm font-black shadow-lg">
+          🚀 Let's Go!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ADMIN PIN MODAL ==================== -->
+  <div id="admin-pin-modal" class="hidden fixed inset-0 z-[96] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeModal('admin-pin-modal')">
+    <div class="max-w-sm w-full rounded-3xl bg-white p-6 shadow-2xl border-2 border-amber-400 space-y-4 text-center" onclick="event.stopPropagation()">
+      <div class="text-3xl">🛡️</div>
+      <h3 class="text-lg font-black text-red-950">Host Admin Access</h3>
+      <p class="text-xs text-stone-600">Enter your Host PIN to unlock invites, KPIs, logs, and controls.</p>
+      <input id="admin-pin-input" type="password" maxlength="6" onkeydown="if(event.key==='Enter') verifyAdminPin()" placeholder="Enter PIN" class="w-full px-4 py-3 rounded-2xl bg-amber-50 border border-amber-300 text-center text-lg font-black tracking-widest outline-none focus:border-orange-500" />
+      <div class="flex gap-2">
+        <button type="button" onclick="closeModal('admin-pin-modal')" class="flex-1 py-2.5 rounded-2xl bg-stone-100 text-stone-700 text-xs font-extrabold">Cancel</button>
+        <button type="button" onclick="verifyAdminPin()" class="flex-1 py-2.5 rounded-2xl bg-emerald-700 text-white text-xs font-extrabold shadow">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JSON SYNC / SHARE MODAL ==================== -->
+  <div id="sync-modal" class="hidden fixed inset-0 z-[97] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeModal('sync-modal')">
+    <div class="max-w-lg w-full rounded-3xl bg-white p-6 shadow-2xl border-2 border-indigo-300 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-black text-indigo-950">🔄 Sync / Backup Trip JSON</h3>
+        <button type="button" onclick="closeModal('sync-modal')" class="w-8 h-8 rounded-full bg-stone-100 font-black text-xs">✕</button>
+      </div>
+      <p class="text-xs text-stone-600">Copy this snapshot to back up or paste another device's JSON to merge instantly.</p>
+      <textarea id="sync-json-textarea" rows="7" class="w-full p-3 rounded-2xl bg-stone-50 border border-stone-300 font-mono text-[11px] outline-none"></textarea>
+      <div class="flex flex-wrap gap-2 justify-end">
+        <button type="button" onclick="copySyncJson()" class="px-4 py-2 rounded-xl bg-amber-100 text-red-950 text-xs font-extrabold">📋 Copy JSON</button>
+        <button type="button" onclick="importSyncJson()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-extrabold">⬇️ Import & Merge</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DASHLET DETAIL MODAL ==================== -->
+  <div id="dashlet-modal" class="hidden fixed inset-0 z-[97] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeModal('dashlet-modal')">
+    <div class="max-w-md w-full rounded-3xl bg-white p-6 shadow-2xl border border-amber-300 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-amber-100 pb-2">
+        <h3 id="dashlet-modal-title" class="text-base font-black text-red-950">Details</h3>
+        <button type="button" onclick="closeModal('dashlet-modal')" class="w-8 h-8 rounded-full bg-amber-100 font-black text-xs">✕</button>
+      </div>
+      <div id="dashlet-modal-body" class="space-y-2 text-xs text-stone-700 max-h-80 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FULLSCREEN PHOTO LIGHTBOX ==================== -->
+  <div id="photo-lightbox-modal" class="hidden fixed inset-0 z-[98] bg-black/90 flex items-center justify-center p-4" onclick="closeModal('photo-lightbox-modal')">
     <div class="max-w-4xl w-full flex flex-col items-center gap-3" onclick="event.stopPropagation()">
       <img id="lightbox-img" src="" alt="Full HD Memory" class="max-h-[80vh] w-auto rounded-2xl shadow-2xl border border-white/20" />
       <div class="flex items-center gap-3">
@@ -701,8 +762,20 @@
       ready: false,
       user: null,
       docRef: null,
-      push: async () => {}
+      pendingWrite: false,
+      push: async () => {
+        window.__cloudSync.pendingWrite = true;
+      }
     };
+
+    function setSyncBadge(text, isOnline) {
+      const badge = document.getElementById('cloud-sync-badge');
+      if (!badge) return;
+      badge.textContent = text;
+      badge.className = isOnline
+        ? 'px-2 py-0.5 rounded-full bg-emerald-400/25 border border-emerald-300/50 text-emerald-200 text-[10px] font-extrabold uppercase tracking-wider'
+        : 'px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider';
+    }
 
     if (firebaseConfig) {
       try {
@@ -721,10 +794,15 @@
           window.__cloudSync.user = auth.currentUser;
           window.__cloudSync.docRef = tripDocRef;
           window.__cloudSync.ready = true;
+          setSyncBadge('🟢 Live Sync', true);
 
           window.__cloudSync.push = async (stateObj) => {
-            if (!window.__cloudSync.user || !window.__cloudSync.docRef) return;
+            if (!window.__cloudSync.user || !window.__cloudSync.docRef) {
+              window.__cloudSync.pendingWrite = true;
+              return;
+            }
             try {
+              window.__cloudSync.pendingWrite = false;
               await setDoc(window.__cloudSync.docRef, {
                 adminPin: stateObj.adminPin || '0089',
                 guestsJson: JSON.stringify(stateObj.guests || []),
@@ -734,24 +812,35 @@
               }, { merge: true });
             } catch (err) {
               console.error('Cloud sync write error:', err);
+              setSyncBadge('⚠️ Sync Retry', false);
             }
           };
+
+          // Flush any RSVP/travel change made while Firebase was still connecting
+          if (window.__cloudSync.pendingWrite && typeof window.__getLatestAppState === 'function') {
+            await window.__cloudSync.push(window.__getLatestAppState());
+          }
 
           onSnapshot(
             tripDocRef,
             (snap) => {
+              setSyncBadge('🟢 Live Sync', true);
               if (typeof window.__onRemoteStateSnapshot === 'function') {
                 window.__onRemoteStateSnapshot(snap.exists() ? snap.data() : null);
               }
             },
             (err) => {
               console.error('Cloud sync listener error:', err);
+              setSyncBadge('⚠️ Sync Error', false);
             }
           );
         }
       } catch (err) {
-        console.error('Firebase init failed, running offline fallback:', err);
+        console.error('Firebase init failed:', err);
+        setSyncBadge('🟠 Local Only', false);
       }
+    } else {
+      setSyncBadge('🟠 Local Only', false);
     }
   </script>
 
@@ -822,6 +911,10 @@
     let isEditingTravelDetails = false;
     let hasReceivedInitialCloudSnapshot = false;
 
+    window.__getLatestAppState = function() {
+      return appState;
+    };
+
     window.__onRemoteStateSnapshot = function(data) {
       hasReceivedInitialCloudSnapshot = true;
       if (!data) {
@@ -839,24 +932,21 @@
         const remoteExpenses = data.expensesJson ? JSON.parse(data.expensesJson) : [];
         const remoteLogs = data.logsJson ? JSON.parse(data.logsJson) : [];
 
-        // Preserve any pending invite link opened on this device right before snapshot arrived
-        const params = new URLSearchParams(window.location.search);
-        const urlInviteId = params.get('invite');
-        if (urlInviteId) {
-          const localPendingGuest = appState.guests.find(g => g.id === urlInviteId);
-          const existsInRemote = remoteGuests.some(g => g.id === urlInviteId);
-          if (localPendingGuest && !existsInRemote) {
-            remoteGuests.push(localPendingGuest);
-            if (window.__cloudSync?.ready) {
-              window.__cloudSync.push({
-                adminPin: data.adminPin || appState.adminPin,
-                guests: remoteGuests,
-                expenses: remoteExpenses,
-                logs: remoteLogs
-              });
-            }
+        // Merge any local guest updates made on this device before the snapshot arrived
+        let needsCloudMergePush = false;
+        appState.guests.forEach(localG => {
+          const remoteIdx = remoteGuests.findIndex(rg => rg.id === localG.id);
+          if (remoteIdx === -1) {
+            remoteGuests.push(localG);
+            needsCloudMergePush = true;
+          } else if (localG.rsvp !== 'pending' && remoteGuests[remoteIdx].rsvp === 'pending') {
+            remoteGuests[remoteIdx] = localG;
+            needsCloudMergePush = true;
+          } else if (localG.travelSubmitted && !remoteGuests[remoteIdx].travelSubmitted) {
+            remoteGuests[remoteIdx] = localG;
+            needsCloudMergePush = true;
           }
-        }
+        });
 
         appState = {
           adminPin: data.adminPin || appState.adminPin || '0089',
@@ -864,6 +954,10 @@
           expenses: Array.isArray(remoteExpenses) ? remoteExpenses : [],
           logs: Array.isArray(remoteLogs) ? remoteLogs : []
         };
+
+        if (needsCloudMergePush && window.__cloudSync?.ready) {
+          window.__cloudSync.push(appState);
+        }
 
         // Re-check incoming invite link against fresh cloud data
         checkIncomingInviteLink();
@@ -884,7 +978,7 @@
           msg: logEntry.msg || ''
         });
       }
-      if (window.__cloudSync && window.__cloudSync.ready) {
+      if (window.__cloudSync) {
         window.__cloudSync.push(appState);
       }
     }

@@ -57,10 +57,21 @@
         </div>
 
         <!-- Top-Right Admin Switcher -->
-        <div class="flex items-center gap-2">
-          <button id="admin-toggle-btn" type="button" onclick="openAdminPinModal()" class="px-3.5 py-2 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-300/40 text-amber-100 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 shadow-sm transition">
-            <span id="admin-lock-icon">🔒</span>
-            <span id="admin-toggle-label">Guest Mode</span>
+        <div class="flex items-center gap-2.5">
+          <span id="mode-toggle-label" class="text-xs sm:text-sm font-extrabold text-amber-100">Guest Mode</span>
+          <button
+            id="admin-mode-toggle"
+            type="button"
+            role="switch"
+            aria-checked="false"
+            aria-label="Toggle Host Admin Mode"
+            onclick="handleAdminModeToggle()"
+            class="relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-amber-300/50 bg-red-950/80 p-1 transition-colors duration-200 focus:outline-none"
+          >
+            <span
+              id="admin-mode-toggle-knob"
+              class="inline-block h-5 w-5 transform rounded-full bg-amber-300 shadow transition-transform duration-200 translate-x-0"
+            ></span>
           </button>
         </div>
       </div>
@@ -718,7 +729,7 @@
               <p class="text-xs text-stone-600">Add guests, pull mobile contacts, send WhatsApp invites, sync trip data, or manage security.</p>
             </div>
             <button type="button" onclick="logoutAdmin()" class="px-4 py-2.5 rounded-2xl bg-red-900 hover:bg-red-800 text-white text-xs font-extrabold transition">
-              🔒 Lock Admin Mode
+              🔒 Switch to Guest Mode
             </button>
           </div>
 
@@ -1246,6 +1257,7 @@
 
     // ==================== STATE, CONSTANTS & STORAGE ====================
     const STORAGE_KEY = 'sankranti_2027_trip_state_v3';
+    const ADMIN_SESSION_KEY = 'sankranti_2027_admin_unlocked';
     const DB_NAME = 'Sankranti2027HdPhotoVault';
     const DB_STORE = 'photos';
     let memoryFallbackPhotos = [];
@@ -1382,7 +1394,28 @@
 
     let appState = loadAppState();
     let currentRole = 'public';
-    let isAdminUnlocked = false;
+    function readPersistedAdminState() {
+      try {
+        if (localStorage.getItem(ADMIN_SESSION_KEY) === 'true') return true;
+      } catch (e) {}
+      try {
+        if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true') return true;
+      } catch (e) {}
+      return false;
+    }
+
+    function writePersistedAdminState(unlocked) {
+      try {
+        if (unlocked) localStorage.setItem(ADMIN_SESSION_KEY, 'true');
+        else localStorage.removeItem(ADMIN_SESSION_KEY);
+      } catch (e) {}
+      try {
+        if (unlocked) sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+        else sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      } catch (e) {}
+    }
+
+    let isAdminUnlocked = readPersistedAdminState();
     let welcomeCountdownInterval = null;
     let isEditingTravelDetails = false;
     let expandedExpenseId = null;
@@ -1720,22 +1753,34 @@
       setTimeout(() => input?.focus(), 60);
     }
 
+    function handleAdminModeToggle() {
+      if (isAdminUnlocked) {
+        logoutAdmin();
+      } else {
+        openAdminPinModal();
+      }
+    }
+
     function verifyAdminPin() {
       const entered = document.getElementById('admin-pin-input')?.value?.trim() || '';
       if (entered === String(appState.adminPin || '0089')) {
         isAdminUnlocked = true;
+        writePersistedAdminState(true);
         closeModal('admin-pin-modal');
         showToast('🛡️ Host Admin Mode Unlocked!');
         renderAllUI();
+        switchMainTab('admin');
       } else {
         showToast('❌ Incorrect PIN.', 'error');
+        renderAllUI();
       }
     }
 
     function logoutAdmin() {
       isAdminUnlocked = false;
+      writePersistedAdminState(false);
       switchMainTab('home');
-      showToast('🔒 Host Admin Mode Locked.', 'info');
+      showToast('👤 Switched to Guest Mode.', 'info');
       renderAllUI();
     }
 
@@ -2831,10 +2876,23 @@
     }
 
     async function renderAllUI() {
-      const lockIcon = document.getElementById('admin-lock-icon');
-      const toggleLabel = document.getElementById('admin-toggle-label');
-      if (lockIcon) lockIcon.textContent = isAdminUnlocked ? '🛡️' : '🔒';
-      if (toggleLabel) toggleLabel.textContent = isAdminUnlocked ? 'Host Admin' : 'Guest Mode';
+      const toggleBtn = document.getElementById('admin-mode-toggle');
+      const toggleKnob = document.getElementById('admin-mode-toggle-knob');
+      const modeLabel = document.getElementById('mode-toggle-label');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-checked', String(isAdminUnlocked));
+        toggleBtn.className = isAdminUnlocked
+          ? 'relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-emerald-300 bg-emerald-600 p-1 transition-colors duration-200 focus:outline-none'
+          : 'relative inline-flex h-7 w-13 shrink-0 cursor-pointer items-center rounded-full border border-amber-300/50 bg-red-950/80 p-1 transition-colors duration-200 focus:outline-none';
+      }
+      if (toggleKnob) {
+        toggleKnob.className = isAdminUnlocked
+          ? 'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 translate-x-6'
+          : 'inline-block h-5 w-5 transform rounded-full bg-amber-300 shadow transition-transform duration-200 translate-x-0';
+      }
+      if (modeLabel) {
+        modeLabel.textContent = isAdminUnlocked ? '🛡️ Admin' : '🔒 Guest Mode';
+      }
 
       const adminOnlyIds = ['nav-tab-rsvp', 'nav-tab-logs', 'nav-tab-admin', 'admin-home-dashlets', 'home-manage-invites-btn'];
       adminOnlyIds.forEach(elId => {
@@ -2874,6 +2932,7 @@
       switchMainTab,
       diagnoseCloudSync,
       openAdminPinModal,
+      handleAdminModeToggle,
       scrollToHomeSection,
       handleRoleSwitch,
       declineAfterAccept,

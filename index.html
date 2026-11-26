@@ -565,19 +565,19 @@
       <!-- ==================== TAB 3: EXPENSES & SPLIT ==================== -->
       <section id="tab-expenses" class="hidden tab-panel space-y-6 animate-panel">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- Cascading Expense Form -->
+          <!-- Simplified Expense Form -->
           <div class="lg:col-span-7 rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-5">
             <div>
               <h2 class="text-xl font-black text-red-950">💸 Log Squad Expense</h2>
-              <p class="text-xs text-stone-600">Select category → pick item → choose who paid → split equally or custom.</p>
+              <p class="text-xs text-stone-600">Select category → choose who paid → split equally or custom → enter amount.</p>
             </div>
 
             <div class="space-y-4">
-              <!-- Step 1: Category -->
+              <!-- Step 1: Category & Optional Note -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label class="block text-xs font-extrabold uppercase text-red-950 mb-1.5">1. Category</label>
-                  <select id="exp-category" onchange="handleExpenseCategoryChange()" class="w-full px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-sm font-bold text-red-950">
+                  <select id="exp-category" class="w-full px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-sm font-bold text-red-950">
                     <option value="Fuel">⛽ Fuel</option>
                     <option value="Starters & Food">🍗 Starters & Food</option>
                     <option value="Spirits & Alcohol">🍻 Spirits & Alcohol</option>
@@ -587,33 +587,9 @@
                   </select>
                 </div>
 
-                <!-- Step 2: Relevant Item -->
                 <div>
-                  <label class="block text-xs font-extrabold uppercase text-red-950 mb-1.5">2. Relevant Option / Item</label>
-                  <select id="exp-item-select" onchange="toggleCustomExpenseItemInput()" class="w-full px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-sm font-bold text-red-950">
-                    <!-- Populated dynamically -->
-                  </select>
-                </div>
-              </div>
-
-              <!-- Optional Custom Item Name -->
-              <div id="exp-custom-item-wrap" class="hidden">
-                <input id="exp-custom-item-name" type="text" placeholder="Enter custom item description..." class="w-full px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
-              </div>
-
-              <!-- Optional Quick Fuel Calculator when Fuel is chosen -->
-              <div id="exp-fuel-helper" class="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 grid grid-cols-3 gap-2.5">
-                <div>
-                  <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Distance (km)</label>
-                  <input id="fuel-km" type="number" oninput="recalcFuelFromDistance()" placeholder="e.g., 350" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-200 text-xs font-bold" />
-                </div>
-                <div>
-                  <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Mileage (km/l)</label>
-                  <input id="fuel-mileage" type="number" value="15" oninput="recalcFuelFromDistance()" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-200 text-xs font-bold" />
-                </div>
-                <div>
-                  <label class="block text-[10px] font-extrabold uppercase text-stone-600 mb-1">Fuel Price (₹/L)</label>
-                  <input id="fuel-rate" type="number" value="109" oninput="recalcFuelFromDistance()" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-200 text-xs font-bold" />
+                  <label class="block text-xs font-extrabold uppercase text-red-950 mb-1.5">2. Description / Note <span class="text-stone-400 font-semibold">(Optional)</span></label>
+                  <input id="exp-custom-item-name" type="text" placeholder="e.g., Highway Toll, Villa Advance..." class="w-full px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
                 </div>
               </div>
 
@@ -2304,38 +2280,6 @@
     }
 
     // ==================== EXPENSES & SPLITWISE ENGINE ====================
-    function handleExpenseCategoryChange() {
-      const cat = document.getElementById('exp-category')?.value || 'Fuel';
-      const itemSelect = document.getElementById('exp-item-select');
-      const fuelHelper = document.getElementById('exp-fuel-helper');
-      if (fuelHelper) {
-        fuelHelper.classList.toggle('hidden', cat !== 'Fuel');
-      }
-      if (itemSelect) {
-        const options = EXPENSE_ITEM_CATALOG[cat] || ['Custom / Other'];
-        itemSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-      }
-      toggleCustomExpenseItemInput();
-    }
-
-    function toggleCustomExpenseItemInput() {
-      const val = document.getElementById('exp-item-select')?.value || '';
-      const wrap = document.getElementById('exp-custom-item-wrap');
-      if (wrap) {
-        wrap.classList.toggle('hidden', val !== 'Custom / Other');
-      }
-    }
-
-    function recalcFuelFromDistance() {
-      const km = parseFloat(document.getElementById('fuel-km')?.value || '0');
-      const mileage = parseFloat(document.getElementById('fuel-mileage')?.value || '15');
-      const rate = parseFloat(document.getElementById('fuel-rate')?.value || '109');
-      const amtInput = document.getElementById('exp-amount');
-      if (km > 0 && mileage > 0 && rate > 0 && amtInput) {
-        amtInput.value = Math.round((km / mileage) * rate);
-      }
-    }
-
     function toggleCustomSplitCheckboxes() {
       const mode = document.getElementById('exp-split-mode')?.value || 'equal';
       const box = document.getElementById('exp-custom-split-box');
@@ -2346,9 +2290,8 @@
 
     function saveExpenseForm() {
       const category = document.getElementById('exp-category')?.value || 'Other';
-      const selectedItem = document.getElementById('exp-item-select')?.value || 'Expense';
-      const customItem = (document.getElementById('exp-custom-item-name')?.value || '').trim();
-      const item = selectedItem === 'Custom / Other' ? (customItem || 'Custom Expense') : selectedItem;
+      const customNote = (document.getElementById('exp-custom-item-name')?.value || '').trim();
+      const item = customNote || category;
       const paidBy = document.getElementById('exp-paid-by')?.value || '';
       const splitMode = document.getElementById('exp-split-mode')?.value || 'equal';
       const amount = parseFloat(document.getElementById('exp-amount')?.value || '0');
@@ -2945,7 +2888,6 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      handleExpenseCategoryChange();
       updateSankrantiCountdown();
       setInterval(updateSankrantiCountdown, 60000);
       checkIncomingInviteLink();

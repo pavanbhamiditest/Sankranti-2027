@@ -293,8 +293,8 @@
         <div id="home-cravings-card" class="rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-amber-100">
             <div>
-              <h3 class="text-lg sm:text-xl font-black text-red-950">🍗🍻 Feast & Bar Menu & Bill Splitter</h3>
-              <p class="text-xs text-stone-600">Pick your starter & quantity, log individual items, assign who's sharing, and split each dish fairly!</p>
+              <h3 class="text-lg sm:text-xl font-black text-red-950">🍗🍻 Feast, Bar & Essentials Planner</h3>
+              <p class="text-xs text-stone-600">Pick starters, spirits, and party essentials with quantities—every entry automatically syncs to Expenses for splitting!</p>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xs font-extrabold text-stone-500">Ordering as:</span>
@@ -303,69 +303,201 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Starters Order Builder -->
-            <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3.5">
-              <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🔥 Add Starter Item</label>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-[11px] font-bold text-stone-600 mb-1">Starter Dish</label>
-                  <select id="starter-item-select" onchange="toggleStarterOtherInput()" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
-                    <option value="Chicken Pakodi">Chicken Pakodi</option>
-                    <option value="Prawns Pakodi">Prawns Pakodi</option>
-                    <option value="Prawns Fry">Prawns Fry</option>
-                    <option value="Chicken Liver">Chicken Liver</option>
-                    <option value="Mutton Liver">Mutton Liver</option>
-                    <option value="Mutton Fry">Mutton Fry</option>
-                    <option value="Boti">Boti</option>
-                    <option value="Fish Fry">Fish Fry</option>
-                    <option value="Chilli Chicken">Chilli Chicken</option>
-                    <option value="Chicken 65">Chicken 65</option>
-                    <option value="Others">Others</option>
-                  </select>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <!-- 1. Starters Order Builder -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3.5 flex flex-col justify-between">
+              <div class="space-y-3">
+                <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🔥 1. Add Starter Item</label>
+                <div class="space-y-2.5">
+                  <div>
+                    <label class="block text-[11px] font-bold text-stone-600 mb-1">Starter Dish</label>
+                    <select id="starter-item-select" onchange="toggleFeastOtherInput('starter')" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="Chicken Pakodi">Chicken Pakodi</option>
+                      <option value="Prawns Pakodi">Prawns Pakodi</option>
+                      <option value="Prawns Fry">Prawns Fry</option>
+                      <option value="Chicken Liver">Chicken Liver</option>
+                      <option value="Mutton Liver">Mutton Liver</option>
+                      <option value="Mutton Fry">Mutton Fry</option>
+                      <option value="Boti">Boti</option>
+                      <option value="Fish Fry">Fish Fry</option>
+                      <option value="Chilli Chicken">Chilli Chicken</option>
+                      <option value="Chicken 65">Chicken 65</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </div>
+
+                  <div id="starter-other-wrap" class="hidden">
+                    <input id="starter-other-input" type="text" placeholder="Type starter name..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold text-stone-600 mb-1">Quantity / Portion</label>
+                    <select id="starter-qty-select" onchange="toggleFeastCustomQtyInput('starter')" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="250 grams">250 grams</option>
+                      <option value="500 grams">500 grams</option>
+                      <option value="1000 grams">1000 grams</option>
+                      <option value="Half Plate">Half Plate</option>
+                      <option value="1 Full Plate">1 Full Plate</option>
+                      <option value="2 Full Plates">2 Full Plates</option>
+                      <option value="Custom">Custom Quantity...</option>
+                    </select>
+                  </div>
+
+                  <div id="starter-custom-qty-wrap" class="hidden">
+                    <input id="starter-custom-qty-input" type="text" placeholder="e.g., 750 grams, 3 Plates..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
                 </div>
-
-                <div>
-                  <label class="block text-[11px] font-bold text-stone-600 mb-1">Quantity / Portion</label>
-                  <select id="starter-qty-select" onchange="toggleStarterCustomQtyInput()" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
-                    <option value="250 grams">250 grams</option>
-                    <option value="500 grams">500 grams</option>
-                    <option value="1000 grams">1000 grams</option>
-                    <option value="Half Plate">Half Plate</option>
-                    <option value="1 Full Plate">1 Full Plate</option>
-                    <option value="2 Full Plates">2 Full Plates</option>
-                    <option value="Custom">Custom Quantity...</option>
-                  </select>
-                </div>
-              </div>
-
-              <div id="starter-other-wrap" class="hidden">
-                <input id="starter-other-input" type="text" placeholder="Type starter name (e.g., Tandoori Chicken, Apollo Fish)..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
-              </div>
-
-              <div id="starter-custom-qty-wrap" class="hidden">
-                <input id="starter-custom-qty-input" type="text" placeholder="Enter custom quantity (e.g., 750 grams, 3 Plates)..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
               </div>
 
               <button type="button" onclick="addFeastBarOrder('Starter')" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-orange-600 to-red-700 hover:from-orange-500 hover:to-red-600 text-white text-xs sm:text-sm font-black shadow transition">
-                + Add Starter Entry
+                + Add Starter
               </button>
             </div>
 
-            <!-- Spirits & Bar Wishlist -->
-            <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3.5">
-              <div class="flex items-center justify-between">
-                <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🥃 Preferred Spirits & Drinks</label>
-                <button type="button" onclick="saveGuestCravings()" class="px-3 py-1.5 rounded-xl bg-red-900 hover:bg-red-800 text-white text-[11px] font-extrabold shadow transition">
-                  💾 Save Drinks
-                </button>
+            <!-- 2. Spirits & Bar Builder -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3.5 flex flex-col justify-between">
+              <div class="space-y-3">
+                <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🥃 2. Add Spirits & Beer</label>
+                <div class="space-y-2.5">
+                  <div>
+                    <label class="block text-[11px] font-bold text-stone-600 mb-1">Brand / Drink</label>
+                    <select id="spirit-item-select" onchange="toggleFeastOtherInput('spirit')" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="Budweiser">Budweiser</option>
+                      <option value="Bud Magnum">Bud Magnum</option>
+                      <option value="Heineken">Heineken</option>
+                      <option value="KF">KF</option>
+                      <option value="KF Ultra">KF Ultra</option>
+                      <option value="KF Ultra Max">KF Ultra Max</option>
+                      <option value="Corona">Corona</option>
+                      <option value="Tuborg">Tuborg</option>
+                      <option value="Jameson">Jameson</option>
+                      <option value="Red Label">Red Label</option>
+                      <option value="Black Label">Black Label</option>
+                      <option value="Chivas">Chivas</option>
+                      <option value="Black Dog">Black Dog</option>
+                      <option value="Old Monk">Old Monk</option>
+                      <option value="Absolut Vodka">Absolut Vodka</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </div>
+
+                  <div id="spirit-other-wrap" class="hidden">
+                    <input id="spirit-other-input" type="text" placeholder="Type drink / brand name..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold text-stone-600 mb-1">Quantity / Pack</label>
+                    <select id="spirit-qty-select" onchange="toggleFeastCustomQtyInput('spirit')" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="1 Bottle">1 Bottle</option>
+                      <option value="2 Bottles">2 Bottles</option>
+                      <option value="3 Bottles">3 Bottles</option>
+                      <option value="6 Pack">6 Pack</option>
+                      <option value="12 Pack">12 Pack</option>
+                      <option value="1 Case (24)">1 Case (24)</option>
+                      <option value="2 Cases">2 Cases</option>
+                      <option value="750 ml">750 ml</option>
+                      <option value="1 Litre">1 Litre</option>
+                      <option value="Custom">Custom Quantity...</option>
+                    </select>
+                  </div>
+
+                  <div id="spirit-custom-qty-wrap" class="hidden">
+                    <input id="spirit-custom-qty-input" type="text" placeholder="e.g., 4 Bottles, 18 Cans..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
+                </div>
               </div>
-              <div id="quick-spirits-chips" class="flex flex-wrap gap-2"></div>
-              <input id="home-spirits-input" type="text" placeholder="Other brands/drinks (comma-separated)..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-200 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+
+              <button type="button" onclick="addFeastBarOrder('Spirit')" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-red-900 to-amber-800 hover:from-red-800 hover:to-amber-700 text-white text-xs sm:text-sm font-black shadow transition">
+                + Add Spirit / Beer
+              </button>
+            </div>
+
+            <!-- 3. Other Essentials Builder -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3.5 flex flex-col justify-between">
+              <div class="space-y-3">
+                <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🥤 3. Add Other Essentials</label>
+                <div class="space-y-2.5">
+                  <div>
+                    <label class="block text-[11px] font-bold text-stone-600 mb-1">Essential Item</label>
+                    <select id="essential-item-select" onchange="toggleFeastOtherInput('essential')" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="Water Bottles">Water Bottles</option>
+                      <option value="Napkins / Tissues">Napkins / Tissues</option>
+                      <option value="Paper Plates">Paper Plates</option>
+                      <option value="Disposable Glasses">Disposable Glasses</option>
+                      <option value="Soda & Tonic Water">Soda & Tonic Water</option>
+                      <option value="Ice Cubes">Ice Cubes</option>
+                      <option value="Soft Drinks / Mixers">Soft Drinks / Mixers</option>
+                      <option value="Chips & Munchies">Chips & Munchies</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </div>
+
+                  <div id="essential-other-wrap" class="hidden">
+                    <input id="essential-other-input" type="text" placeholder="Type essential item..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
+
+                  <div id="essential-softdrink-wrap" class="hidden space-y-2">
+                    <label class="block text-[11px] font-bold text-stone-600">Select Soft Drink</label>
+                    <select id="essential-softdrink-select" onchange="toggleSoftDrinkOtherInput()" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="Thums Up">Thums Up</option>
+                      <option value="Sprite">Sprite</option>
+                      <option value="Maaza">Maaza</option>
+                      <option value="Coke">Coke</option>
+                      <option value="Pepsi">Pepsi</option>
+                      <option value="Limca">Limca</option>
+                      <option value="Fanta">Fanta</option>
+                      <option value="7UP">7UP</option>
+                      <option value="Mountain Dew">Mountain Dew</option>
+                      <option value="Others">Others</option>
+                    </select>
+                    <input id="essential-softdrink-other-input" type="text" placeholder="Type soft drink name..." class="hidden w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
+
+                  <div id="essential-chips-wrap" class="hidden space-y-2">
+                    <label class="block text-[11px] font-bold text-stone-600">Select Chips / Munchies</label>
+                    <select id="essential-chips-select" onchange="toggleChipsOtherInput()" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="Lay's">Lay's</option>
+                      <option value="Bingo!">Bingo!</option>
+                      <option value="Kurkure">Kurkure</option>
+                      <option value="Moong Dal">Moong Dal</option>
+                      <option value="Uncle Chipps">Uncle Chipps</option>
+                      <option value="Doritos">Doritos</option>
+                      <option value="Pringles">Pringles</option>
+                      <option value="Too Yumm!">Too Yumm!</option>
+                      <option value="Haldiram's Namkeen">Haldiram's Namkeen</option>
+                      <option value="Nachos">Nachos</option>
+                      <option value="Others">Others</option>
+                    </select>
+                    <input id="essential-chips-other-input" type="text" placeholder="Type chips / snack name..." class="hidden w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold text-stone-600 mb-1">Quantity / Pack</label>
+                    <select id="essential-qty-select" onchange="toggleFeastCustomQtyInput('essential')" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500">
+                      <option value="1 Pack">1 Pack</option>
+                      <option value="2 Packs">2 Packs</option>
+                      <option value="5 Packs">5 Packs</option>
+                      <option value="1 Case (12/24)">1 Case (12/24)</option>
+                      <option value="2 Cases">2 Cases</option>
+                      <option value="50 Pcs">50 Pcs</option>
+                      <option value="100 Pcs">100 Pcs</option>
+                      <option value="Custom">Custom Quantity...</option>
+                    </select>
+                  </div>
+
+                  <div id="essential-custom-qty-wrap" class="hidden">
+                    <input id="essential-custom-qty-input" type="text" placeholder="e.g., 3 Cases, 200 Glasses..." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" onclick="addFeastBarOrder('Essential')" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-800 to-teal-700 hover:from-emerald-700 hover:to-teal-600 text-white text-xs sm:text-sm font-black shadow transition">
+                + Add Essential
+              </button>
             </div>
           </div>
 
-          <!-- Individual Feast Entries & Per-Item Expense Split -->
+          <!-- Individual Feast, Bar & Essentials Ledger -->
           <div class="pt-4 border-t border-amber-200 space-y-4">
             <!-- Squad Sneak Peek Banner -->
             <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 space-y-2">
@@ -381,7 +513,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h4 class="text-base sm:text-lg font-black text-red-950 flex items-center gap-2">
-                  <span>🧾 Feast Ledger</span>
+                  <span>🧾 Feast, Bar & Essentials Ledger</span>
                   <span id="feast-orders-count" class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-extrabold">0</span>
                 </h4>
                 <p class="text-xs text-stone-600">Shows chosen items & quantities. Add amounts and split members anytime on the <strong>💸 Expenses & Split</strong> page!</p>
@@ -1300,7 +1432,7 @@
               name: file.name,
               blob: file,
               uploadedBy: uploader,
-              uploadedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+              createdAt: Date.now()
             });
             tx.oncomplete = () => resolve();
             tx.onerror = () => reject(tx.error);
@@ -1313,40 +1445,39 @@
           msg: `${uploader} uploaded ${files.length} uncompressed HD photo(s).`
         });
         showToast(`📸 Uploaded ${files.length} HD photo(s)!`);
-        event.target.value = '';
-        renderAllUI();
+        await renderGallerySection();
       } catch (e) {
-        showToast('Could not save photo to local vault.', 'error');
+        showToast('❌ Could not save photo to IndexedDB.', 'error');
+      } finally {
+        event.target.value = '';
       }
     }
 
-    async function downloadHdPhoto(id) {
+    async function downloadHdPhoto(photoId) {
       const photos = await getAllHdPhotos();
-      const item = photos.find(p => p.id === id);
-      if (!item) return;
-      const url = URL.createObjectURL(item.blob);
+      const target = photos.find(p => p.id === photoId);
+      if (!target) return;
+      const url = URL.createObjectURL(target.blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = item.name || 'Sankranti2027_HD.jpg';
-      document.body.appendChild(a);
+      a.download = target.name || 'Sankranti2027_HD.jpg';
       a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      URL.revokeObjectURL(url);
     }
 
-    async function deleteHdPhoto(id) {
+    async function deleteHdPhoto(photoId) {
       try {
         const db = await openPhotoDb();
         await new Promise((resolve, reject) => {
           const tx = db.transaction(DB_STORE, 'readwrite');
-          tx.objectStore(DB_STORE).delete(id);
+          tx.objectStore(DB_STORE).delete(photoId);
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error);
         });
-        showToast('🗑️ Photo removed from vault.');
-        renderAllUI();
+        showToast('🗑️ Photo deleted from vault.', 'info');
+        await renderGallerySection();
       } catch (e) {
-        showToast('Failed to delete photo.', 'error');
+        showToast('❌ Failed to delete photo.', 'error');
       }
     }
 
@@ -1360,32 +1491,182 @@
     }
 
     // ==================== NAVIGATION & ROLE SWITCHING ====================
-    function switchMainTab(tabId) {
-      if ((tabId === 'rsvp' || tabId === 'logs' || tabId === 'admin') && !isAdminUnlocked) {
-        openAdminPinModal();
-        return;
-      }
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-      const activePanel = document.getElementById('tab-' + tabId);
-      if (activePanel) activePanel.classList.remove('hidden');
-
+    function switchMainTab(tabName) {
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== `tab-${tabName}`);
+      });
       document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-        const isMatch = btn.getAttribute('data-tab') === tabId;
+        const active = btn.dataset.tab === tabName;
         if (btn.id === 'nav-tab-admin') {
-          btn.className = isMatch
+          btn.className = active
             ? 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-emerald-400 text-emerald-950 shadow'
             : 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-emerald-200 bg-emerald-900/50 border border-emerald-500/40 hover:bg-emerald-800/60';
         } else {
-          btn.className = isMatch
+          btn.className = active
             ? 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-amber-400 text-red-950 shadow'
             : 'nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10';
         }
       });
     }
 
-    function handleRoleSwitch(val) {
-      currentRole = val || 'public';
+    function handleRoleSwitch(guestId) {
+      currentRole = guestId || 'public';
       isEditingTravelDetails = false;
+      renderAllUI();
+    }
+
+    // ==================== FEAST, BAR & ESSENTIALS INDIVIDUAL ENTRIES ====================
+    function toggleFeastOtherInput(prefix) {
+      const val = document.getElementById(`${prefix}-item-select`)?.value || '';
+      const wrap = document.getElementById(`${prefix}-other-wrap`);
+      if (wrap) {
+        if (val === 'Others') {
+          wrap.classList.remove('hidden');
+          document.getElementById(`${prefix}-other-input`)?.focus();
+        } else {
+          wrap.classList.add('hidden');
+        }
+      }
+      if (prefix === 'essential') {
+        const sdWrap = document.getElementById('essential-softdrink-wrap');
+        if (sdWrap) {
+          if (val === 'Soft Drinks / Mixers') {
+            sdWrap.classList.remove('hidden');
+            toggleSoftDrinkOtherInput();
+          } else {
+            sdWrap.classList.add('hidden');
+          }
+        }
+        const chipsWrap = document.getElementById('essential-chips-wrap');
+        if (chipsWrap) {
+          if (val === 'Chips & Munchies') {
+            chipsWrap.classList.remove('hidden');
+            toggleChipsOtherInput();
+          } else {
+            chipsWrap.classList.add('hidden');
+          }
+        }
+      }
+    }
+
+    function toggleSoftDrinkOtherInput() {
+      const sdVal = document.getElementById('essential-softdrink-select')?.value || '';
+      const sdOther = document.getElementById('essential-softdrink-other-input');
+      if (!sdOther) return;
+      if (sdVal === 'Others') {
+        sdOther.classList.remove('hidden');
+        sdOther.focus();
+      } else {
+        sdOther.classList.add('hidden');
+      }
+    }
+
+    function toggleChipsOtherInput() {
+      const chipsVal = document.getElementById('essential-chips-select')?.value || '';
+      const chipsOther = document.getElementById('essential-chips-other-input');
+      if (!chipsOther) return;
+      if (chipsVal === 'Others') {
+        chipsOther.classList.remove('hidden');
+        chipsOther.focus();
+      } else {
+        chipsOther.classList.add('hidden');
+      }
+    }
+
+    function toggleFeastCustomQtyInput(prefix) {
+      const val = document.getElementById(`${prefix}-qty-select`)?.value || '';
+      const wrap = document.getElementById(`${prefix}-custom-qty-wrap`);
+      if (!wrap) return;
+      if (val === 'Custom') {
+        wrap.classList.remove('hidden');
+        document.getElementById(`${prefix}-custom-qty-input`)?.focus();
+      } else {
+        wrap.classList.add('hidden');
+      }
+    }
+
+    function addFeastBarOrder(kind = 'Starter') {
+      const activeGuest = getActiveGuestObj();
+      if (!activeGuest && !isAdminUnlocked) {
+        showToast('Select or accept a guest profile first!', 'error');
+        return;
+      }
+
+      const prefix = kind === 'Spirit' ? 'spirit' : kind === 'Essential' ? 'essential' : 'starter';
+      const defaultItem = kind === 'Spirit' ? 'Budweiser' : kind === 'Essential' ? 'Water Bottles' : 'Chicken Pakodi';
+      const defaultQty = kind === 'Spirit' ? '1 Bottle' : kind === 'Essential' ? '1 Pack' : '250 grams';
+      const emoji = kind === 'Spirit' ? '🥃' : kind === 'Essential' ? '🥤' : '🍗';
+
+      const selectedItem = document.getElementById(`${prefix}-item-select`)?.value || defaultItem;
+      const customItem = (document.getElementById(`${prefix}-other-input`)?.value || '').trim();
+      let itemName = selectedItem === 'Others' ? customItem : selectedItem;
+
+      if (kind === 'Essential' && selectedItem === 'Soft Drinks / Mixers') {
+        const sdBrand = document.getElementById('essential-softdrink-select')?.value || 'Thums Up';
+        const sdCustom = (document.getElementById('essential-softdrink-other-input')?.value || '').trim();
+        itemName = sdBrand === 'Others' ? sdCustom : sdBrand;
+        if (!itemName) {
+          showToast('Please type the soft drink name under Others.', 'error');
+          return;
+        }
+      } else if (kind === 'Essential' && selectedItem === 'Chips & Munchies') {
+        const chipsBrand = document.getElementById('essential-chips-select')?.value || "Lay's";
+        const chipsCustom = (document.getElementById('essential-chips-other-input')?.value || '').trim();
+        itemName = chipsBrand === 'Others' ? chipsCustom : chipsBrand;
+        if (!itemName) {
+          showToast('Please type the chips / snack name under Others.', 'error');
+          return;
+        }
+      } else if (!itemName) {
+        showToast(`Please type the ${kind.toLowerCase()} name under Others.`, 'error');
+        return;
+      }
+
+      const selectedQty = document.getElementById(`${prefix}-qty-select`)?.value || defaultQty;
+      const customQty = (document.getElementById(`${prefix}-custom-qty-input`)?.value || '').trim();
+      const quantity = selectedQty === 'Custom' ? (customQty || '1 Unit') : selectedQty;
+
+      const requestedById = activeGuest?.id || appState.guests[0]?.id || '';
+      const requestedByName = activeGuest?.name || (isAdminUnlocked ? 'Host Admin' : 'Guest');
+      const initialSharedWith = requestedById ? [requestedById] : [];
+
+      const orderId = 'feast_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+      const newOrder = {
+        id: orderId,
+        kind,
+        itemName,
+        quantity,
+        requestedById,
+        requestedByName,
+        sharedWith: initialSharedWith,
+        amount: 0,
+        paidBy: requestedById,
+        updatedAt: Date.now()
+      };
+
+      if (!Array.isArray(appState.feastOrders)) appState.feastOrders = [];
+      appState.feastOrders.unshift(newOrder);
+
+      // Immediately capture this item in the Expenses ledger under its matching category
+      const linkedExp = syncFeastOrderToLinkedExpense(newOrder);
+
+      if (document.getElementById(`${prefix}-other-input`)) document.getElementById(`${prefix}-other-input`).value = '';
+      if (document.getElementById('essential-softdrink-other-input')) document.getElementById('essential-softdrink-other-input').value = '';
+      if (document.getElementById('essential-chips-other-input')) document.getElementById('essential-chips-other-input').value = '';
+      if (document.getElementById(`${prefix}-custom-qty-input`)) document.getElementById(`${prefix}-custom-qty-input`).value = '';
+
+      saveAppState({
+        actor: requestedByName,
+        category: 'Feast & Bar',
+        action: `Added ${kind} Entry`,
+        msg: `${requestedByName} added ${itemName} (${quantity}) to Feast & Bar and Expenses.`
+      }, { feastOrder: newOrder });
+
+      if (linkedExp && window.__cloudSync) {
+        window.__cloudSync.pushExpense(linkedExp);
+      }
+
+      showToast(`${emoji} Added ${itemName} (${quantity}) & synced to Expenses!`);
       renderAllUI();
     }
 
@@ -1856,92 +2137,7 @@
       renderHomeGuestForms();
     }
 
-    // ==================== FEAST & BAR INDIVIDUAL ENTRIES & ITEM SPLIT ====================
-    function toggleStarterOtherInput() {
-      const val = document.getElementById('starter-item-select')?.value || '';
-      const wrap = document.getElementById('starter-other-wrap');
-      if (!wrap) return;
-      if (val === 'Others') {
-        wrap.classList.remove('hidden');
-        document.getElementById('starter-other-input')?.focus();
-      } else {
-        wrap.classList.add('hidden');
-      }
-    }
-
-    function toggleStarterCustomQtyInput() {
-      const val = document.getElementById('starter-qty-select')?.value || '';
-      const wrap = document.getElementById('starter-custom-qty-wrap');
-      if (!wrap) return;
-      if (val === 'Custom') {
-        wrap.classList.remove('hidden');
-        document.getElementById('starter-custom-qty-input')?.focus();
-      } else {
-        wrap.classList.add('hidden');
-      }
-    }
-
-    function addFeastBarOrder(kind = 'Starter') {
-      const activeGuest = getActiveGuestObj();
-      if (!activeGuest && !isAdminUnlocked) {
-        showToast('Select or accept a guest profile first!', 'error');
-        return;
-      }
-
-      const selectedDish = document.getElementById('starter-item-select')?.value || 'Chicken Pakodi';
-      const customDish = (document.getElementById('starter-other-input')?.value || '').trim();
-      const itemName = selectedDish === 'Others' ? customDish : selectedDish;
-      if (!itemName) {
-        showToast('Please type the starter name under Others.', 'error');
-        return;
-      }
-
-      const selectedQty = document.getElementById('starter-qty-select')?.value || '250 grams';
-      const customQty = (document.getElementById('starter-custom-qty-input')?.value || '').trim();
-      const quantity = selectedQty === 'Custom' ? (customQty || '1 Portion') : selectedQty;
-
-      const requestedById = activeGuest?.id || appState.guests[0]?.id || '';
-      const requestedByName = activeGuest?.name || (isAdminUnlocked ? 'Host Admin' : 'Guest');
-      const initialSharedWith = requestedById ? [requestedById] : [];
-
-      const orderId = 'feast_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
-      const newOrder = {
-        id: orderId,
-        kind,
-        itemName,
-        quantity,
-        requestedById,
-        requestedByName,
-        sharedWith: initialSharedWith,
-        amount: 0,
-        paidBy: requestedById,
-        updatedAt: Date.now()
-      };
-
-      if (!Array.isArray(appState.feastOrders)) appState.feastOrders = [];
-      appState.feastOrders.unshift(newOrder);
-
-      // Immediately capture this item in the Expenses ledger so amount & split can be set there
-      const linkedExp = syncFeastOrderToLinkedExpense(newOrder);
-
-      if (document.getElementById('starter-other-input')) document.getElementById('starter-other-input').value = '';
-      if (document.getElementById('starter-custom-qty-input')) document.getElementById('starter-custom-qty-input').value = '';
-
-      saveAppState({
-        actor: requestedByName,
-        category: 'Feast & Bar',
-        action: 'Added Starter Entry',
-        msg: `${requestedByName} added ${itemName} (${quantity}) to Feast & Bar and Expenses.`
-      }, { feastOrder: newOrder });
-
-      if (linkedExp && window.__cloudSync) {
-        window.__cloudSync.pushExpense(linkedExp);
-      }
-
-      showToast(`🍗 Added ${itemName} (${quantity}) & synced to Expenses!`);
-      renderAllUI();
-    }
-
+    // ==================== EXPENSE INLINE EDIT & ITEM SPLIT ====================
     function toggleGuestOnExpense(expId, guestId) {
       const exp = appState.expenses.find(e => e.id === expId);
       if (!exp) return;
@@ -2002,11 +2198,16 @@
       const sharedList = (order.sharedWith && order.sharedWith.length > 0)
         ? [...order.sharedWith]
         : (payerId ? [payerId] : []);
+      const expCategory = order.kind === 'Spirit'
+        ? 'Spirits & Alcohol'
+        : order.kind === 'Essential'
+          ? 'Essentials'
+          : 'Starters & Food';
 
       const expObj = {
         id: linkedExpId,
         feastOrderId: order.id,
-        category: 'Starters & Food',
+        category: expCategory,
         item: `${order.itemName} (${order.quantity})`,
         paidBy: payerId,
         amount: Number(order.amount) || 0,
@@ -2038,11 +2239,11 @@
       saveAppState({
         actor: isAdminUnlocked ? 'Host Admin' : (getActiveGuestObj()?.name || 'Squad'),
         category: 'Feast & Bar',
-        action: 'Removed Starter Entry',
-        msg: `Removed ${order?.itemName || 'starter item'} from Feast & Bar.`
+        action: 'Removed Item Entry',
+        msg: `Removed ${order?.itemName || 'item'} from Feast & Bar.`
       }, { deleteFeastOrderId: orderId });
 
-      showToast('🗑️ Starter entry removed.', 'info');
+      showToast('🗑️ Item removed.', 'info');
       renderAllUI();
     }
 
@@ -2057,13 +2258,20 @@
       if (countEl) countEl.textContent = orders.length;
       if (sneakCount) sneakCount.textContent = `${orders.length} item${orders.length === 1 ? '' : 's'} planned`;
 
+      const getIcon = (kind) => kind === 'Spirit' ? '🥃' : kind === 'Essential' ? '🥤' : '🍗';
+      const getBadgeStyle = (kind) => kind === 'Spirit'
+        ? 'bg-red-100 text-red-900'
+        : kind === 'Essential'
+          ? 'bg-emerald-100 text-emerald-900'
+          : 'bg-orange-100 text-orange-900';
+
       if (sneakStrip) {
         if (orders.length === 0) {
-          sneakStrip.innerHTML = `<span class="text-xs text-stone-500 italic">Nothing ordered yet — be the first to add a starter!</span>`;
+          sneakStrip.innerHTML = `<span class="text-xs text-stone-500 italic">Nothing ordered yet — add starters, spirits, or essentials above!</span>`;
         } else {
           sneakStrip.innerHTML = orders.map(o => `
             <span class="px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-red-950 shadow-xs inline-flex items-center gap-1.5">
-              <span>🍗 <strong>${o.itemName}</strong> (${o.quantity})</span>
+              <span>${getIcon(o.kind)} <strong>${o.itemName}</strong> (${o.quantity})</span>
               <span class="text-orange-700 font-extrabold">• ${o.requestedByName || 'Squad'}</span>
             </span>
           `).join('');
@@ -2073,9 +2281,9 @@
       if (orders.length === 0) {
         container.innerHTML = `
           <div class="p-6 rounded-2xl bg-amber-50/70 border border-dashed border-amber-300 text-center space-y-1">
-            <div class="text-2xl">🍗</div>
-            <p class="text-xs sm:text-sm font-black text-red-950">No starters logged yet</p>
-            <p class="text-xs text-stone-600">Pick a starter dish & quantity above—it will automatically show up in Expenses for splitting!</p>
+            <div class="text-2xl">🍗🥃🥤</div>
+            <p class="text-xs sm:text-sm font-black text-red-950">No starters, spirits, or essentials logged yet</p>
+            <p class="text-xs text-stone-600">Pick any item & quantity above—it will automatically show up in Expenses for splitting!</p>
           </div>
         `;
         return;
@@ -2084,8 +2292,8 @@
       container.innerHTML = orders.map(order => `
         <div class="px-4 py-3 rounded-2xl bg-amber-50/50 border border-amber-200 flex items-center justify-between gap-3">
           <div class="flex flex-wrap items-center gap-2 min-w-0">
-            <span class="text-sm sm:text-base font-black text-red-950">🍗 ${order.itemName}</span>
-            <span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-extrabold">${order.quantity}</span>
+            <span class="text-sm sm:text-base font-black text-red-950">${getIcon(order.kind)} ${order.itemName}</span>
+            <span class="px-2.5 py-0.5 rounded-full ${getBadgeStyle(order.kind)} text-xs font-extrabold">${order.quantity}</span>
             <span class="text-[11px] font-semibold text-stone-500">• Added by ${order.requestedByName || 'Squad'}</span>
           </div>
           <button type="button" onclick="deleteFeastOrder('${order.id}')" title="Remove item" class="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-extrabold transition shrink-0">

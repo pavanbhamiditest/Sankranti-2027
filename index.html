@@ -789,7 +789,7 @@
             <div>
               <span class="text-xs font-extrabold uppercase tracking-wider text-purple-700">Original Quality • Zero Compression</span>
               <h2 class="text-2xl font-extrabold text-red-950 mt-0.5">Sankranti 2027 HD Photo Vault</h2>
-              <p class="text-xs sm:text-sm text-stone-600 mt-1">Browse and download full-resolution HD photos anytime. Only Host Admin can upload or delete photos.</p>
+              <p class="text-xs sm:text-sm text-stone-600 mt-1">All squad members can upload and download full-resolution HD photos anytime. Only Host Admin can delete photos.</p>
             </div>
             <div id="gallery-admin-upload-controls" class="flex flex-wrap items-center gap-2.5">
               <input id="photo-caption-input" type="text" placeholder="Caption (e.g., Bhogi Bonfire)" class="px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-bold text-red-950" />
@@ -798,12 +798,6 @@
                 <span>Upload HD Photos</span>
                 <input id="hd-photo-upload" type="file" accept="image/*" multiple onchange="handleHdPhotoUpload(event)" class="hidden" />
               </label>
-            </div>
-            <div id="gallery-locked-badge" class="hidden flex items-center gap-2.5 bg-amber-50 border border-amber-300 px-3.5 py-2 rounded-2xl">
-              <span class="text-xs font-bold text-amber-950">🔒 Admin Only Upload/Delete</span>
-              <button type="button" onclick="openAdminPinModal()" class="px-3 py-1.5 rounded-xl bg-red-900 hover:bg-red-800 text-amber-50 text-xs font-extrabold shadow">
-                🔓 Unlock Admin
-              </button>
             </div>
           </div>
 
@@ -3068,19 +3062,17 @@
     // 7. HD PHOTO GALLERY & LIGHTBOX
     // =========================================================================
     async function handleHdPhotoUpload(event) {
-      if (!requireAdmin('upload HD photos')) {
-        event.target.value = '';
-        return;
-      }
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
-      const caption = document.getElementById('photo-caption-input').value.trim() || 'Sankranti 2027 Memory';
+      const actorName = getCurrentActorName();
+      const caption = document.getElementById('photo-caption-input').value.trim() || `Sankranti 2027 Memory (by ${actorName})`;
 
       for (const file of files) {
         const photoObj = {
           id: 'photo-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
           name: file.name,
           caption,
+          uploadedBy: actorName,
           sizeMB: (file.size / (1024 * 1024)).toFixed(2),
           uploadedAt: new Date().toLocaleString('en-IN'),
           blob: file
@@ -3092,71 +3084,19 @@
       event.target.value = '';
       hdPhotosCache = await getAllPhotosFromDB();
       saveAppState({
-        actor: 'Host Admin',
+        actor: actorName,
         category: 'PHOTO',
         action: 'Uploaded HD Photos',
-        msg: `Uploaded ${files.length} original HD photo(s) ("${caption}").`
+        msg: `${actorName} uploaded ${files.length} original HD photo(s) ("${caption}").`
       });
       showToast(`Uploaded ${files.length} HD photo(s)!`);
     }
 
     async function deleteHdPhoto(photoId) {
-      if (!requireAdmin('delete HD photos')) return;
-      await deletePhotoFromDB(photoId);
-      hdPhotosCache = await getAllPhotosFromDB();
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'PHOTO',
-        action: 'Deleted HD Photo',
-        msg: 'Deleted an HD photo from the vault.'
-      });
-      showToast('Photo removed from vault.');
-    }
-
-    function downloadHdPhoto(photoId) {
-      const p = hdPhotosCache.find(x => x.id === photoId);
-      if (!p || !p.blob) return;
-      const url = URL.createObjectURL(p.blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = p.name || 'Sankranti2027_HD.jpg';
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showToast('Downloading original HD photo...');
-    }
-
-    function openLightbox(src, caption, meta, photoId = null) {
-      document.getElementById('lightbox-img').src = src;
-      document.getElementById('lightbox-caption').textContent = caption || 'HD Photo';
-      document.getElementById('lightbox-meta').textContent = meta || '';
-      const dlBtn = document.getElementById('lightbox-download-btn');
-      dlBtn.onclick = () => {
-        if (photoId) {
-          downloadHdPhoto(photoId);
-        } else {
-          const a = document.createElement('a');
-          a.href = src;
-          a.download = 'Receipt_HD.png';
-          a.click();
-        }
-      };
-      document.getElementById('photo-lightbox-modal').classList.remove('hidden');
-    }
-
-    function closeLightbox() {
-      document.getElementById('photo-lightbox-modal').classList.add('hidden');
-    }
-
+// ... existing code ... -->
     function renderGallerySection() {
       const uploadControls = document.getElementById('gallery-admin-upload-controls');
-      const lockedBadge = document.getElementById('gallery-locked-badge');
-      if (isAdminUnlocked) {
-        uploadControls.classList.remove('hidden');
-        lockedBadge.classList.add('hidden');
-      } else {
-        uploadControls.classList.add('hidden');
-        lockedBadge.classList.remove('hidden');
-      }
+      if (uploadControls) uploadControls.classList.remove('hidden');
 
       const grid = document.getElementById('hd-gallery-grid');
       if (!hdPhotosCache.length) {
@@ -3164,7 +3104,7 @@
           <div class="col-span-full py-12 text-center bg-parchment/70 rounded-3xl border-2 border-dashed border-amber-300">
             <div class="text-4xl mb-2">📸</div>
             <p class="font-extrabold text-red-950">No HD photos uploaded yet</p>
-            <p class="text-xs text-stone-500 mt-1">Host Admin can upload lossless original photos here for the whole squad to view and download in HD.</p>
+            <p class="text-xs text-stone-500 mt-1">Anyone in the squad can upload lossless original photos here to view and download in HD.</p>
           </div>
         `;
         return;
@@ -3172,7 +3112,8 @@
 
       grid.innerHTML = hdPhotosCache.map(p => {
         const objUrl = URL.createObjectURL(p.blob);
-        const meta = `${p.sizeMB} MB • ${p.uploadedAt}`;
+        const byTag = p.uploadedBy ? `by ${p.uploadedBy} • ` : '';
+        const meta = `${byTag}${p.sizeMB} MB • ${p.uploadedAt}`;
         return `
           <div class="rounded-2xl overflow-hidden bg-parchment border border-amber-200 shadow-md flex flex-col">
             <img src="${objUrl}" alt="${p.caption}" onclick="openLightbox('${objUrl}', '${p.caption.replace(/'/g, "\\'")}', '${meta}', '${p.id}')" class="w-full h-48 object-cover cursor-pointer hover:opacity-95 transition" />

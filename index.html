@@ -3093,7 +3093,59 @@
     }
 
     async function deleteHdPhoto(photoId) {
-// ... existing code ... -->
+      if (!requireAdmin('delete HD photos')) return;
+      const photo = hdPhotosCache.find(p => p.id === photoId);
+      await deletePhotoFromDB(photoId);
+      hdPhotosCache = await getAllPhotosFromDB();
+      saveAppState({
+        actor: 'Host Admin',
+        category: 'PHOTO',
+        action: 'Deleted HD Photo',
+        msg: `Admin deleted HD photo "${photo ? photo.caption : photoId}".`
+      });
+      showToast('HD photo deleted.');
+    }
+
+    function downloadHdPhoto(photoId) {
+      const photo = hdPhotosCache.find(p => p.id === photoId);
+      if (!photo || !photo.blob) {
+        showToast('Photo file not found.', 'error');
+        return;
+      }
+      const url = URL.createObjectURL(photo.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = photo.name || `${photo.caption || 'Sankranti2027_HD'}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('Downloading original HD photo...');
+    }
+
+    function openLightbox(srcUrl, caption, meta, photoId = '') {
+      document.getElementById('lightbox-img').src = srcUrl;
+      document.getElementById('lightbox-caption').textContent = caption || 'Sankranti 2027 Memory';
+      document.getElementById('lightbox-meta').textContent = meta || '';
+      const dlBtn = document.getElementById('lightbox-download-btn');
+      dlBtn.onclick = () => {
+        if (photoId) {
+          downloadHdPhoto(photoId);
+        } else {
+          const a = document.createElement('a');
+          a.href = srcUrl;
+          a.download = 'Sankranti2027_Receipt.png';
+          a.click();
+        }
+      };
+      document.getElementById('photo-lightbox-modal').classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      document.getElementById('photo-lightbox-modal').classList.add('hidden');
+      document.getElementById('lightbox-img').src = '';
+    }
+
     function renderGallerySection() {
       const uploadControls = document.getElementById('gallery-admin-upload-controls');
       if (uploadControls) uploadControls.classList.remove('hidden');

@@ -92,11 +92,6 @@
             <span id="admin-lock-icon">🔒</span>
             <span id="admin-lock-label">Guest Mode (Unlock Admin)</span>
           </button>
-
-          <button onclick="openSyncModal()" class="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 font-bold text-xs sm:text-sm transition flex items-center gap-1.5">
-            <span>🔄</span>
-            <span>Sync / Share</span>
-          </button>
         </div>
       </div>
     </div>
@@ -163,18 +158,18 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amber-100">
             <div>
               <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">✅ Invite Accepted • #DhummuLeputunnam</span>
-              <h3 id="home-pref-heading" class="text-xl sm:text-2xl font-extrabold text-red-950 mt-2">My Trip Itinerary & Preferences</h3>
-              <p class="text-xs text-stone-600 mt-0.5">Fill out your departure/arrival cities, travel dates, starters, spirits, essentials, and smokes below.</p>
+              <h3 id="home-pref-heading" class="text-xl sm:text-2xl font-extrabold text-red-950 mt-2">My Trip Confirmation & Packing Checklist</h3>
+              <p class="text-xs text-stone-600 mt-0.5">Confirm your departure/arrival cities, travel dates, and check off your travel essentials as you pack!</p>
             </div>
             <button type="button" onclick="saveGuestPreferences('home')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm shadow-lg transition">
-              💾 Save My Details
+              💾 Save Confirmation
             </button>
           </div>
 
           <!-- 1. Travel & Route Details (From City, To City, Arrival Date, Departure Date) -->
           <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
             <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
-              <span>🚆</span><span>1. Travel Route & Dates</span>
+              <span>🚆</span><span>1. Travel Route & Dates Confirmation</span>
             </h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
@@ -205,141 +200,35 @@
             </div>
           </div>
 
-          <!-- 2. Starters & Feast Preference -->
+          <!-- 2. Cheeky Travel Essentials Packing Checklist -->
           <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
-                <span>🍗</span><span>2. Starters & Feast Preference</span>
-              </h4>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-amber-950">Diet Mode:</span>
-                <button type="button" onclick="setDietPreference('Non-Veg', false, 'home')" id="home-diet-nonveg-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-red-700 text-white shadow">🍖 Non-Veg</button>
-                <button type="button" onclick="setDietPreference('Veg', false, 'home')" id="home-diet-veg-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-emerald-900 border border-emerald-300">🥗 Pure Veg</button>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
+                  <span>🎒</span><span>2. Travel Essentials Packing Checklist</span>
+                </h4>
+                <p class="text-xs text-stone-600 mt-0.5">Tick items off as you throw them in your bag—so nobody asks to borrow toothpaste or a charger at 2 AM!</p>
               </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end bg-white p-3.5 rounded-2xl border border-amber-200">
-              <div class="sm:col-span-6">
-                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Starter Dish</label>
-                <select id="home-starter-item-select" onchange="toggleCustomStarterInput(this.value, 'home-starter-custom-input')" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
-                <input id="home-starter-custom-input" type="text" placeholder="Type custom starter name..." class="hidden mt-2 w-full px-3 py-2 rounded-xl bg-white border border-orange-400 text-sm font-bold text-red-950" />
-              </div>
-              <div class="sm:col-span-3">
-                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Quantity (Plates)</label>
-                <select id="home-starter-qty-select" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
-                  <option value="1">1 Plate</option>
-                  <option value="2">2 Plates</option>
-                  <option value="3">3 Plates</option>
-                  <option value="4">4 Plates</option>
-                  <option value="5">5 Plates</option>
-                  <option value="6">6 Plates</option>
-                </select>
-              </div>
-              <div class="sm:col-span-3">
-                <button type="button" onclick="addStarterItemToGuest('home')" class="w-full py-2 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
-                  + Add Starter
-                </button>
-              </div>
-            </div>
-            <div id="home-guest-starters-list" class="flex flex-wrap gap-2"></div>
-          </div>
-
-          <!-- 3. Alcohol & Spirits Preference -->
-          <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
-            <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
-              <span>🍻</span><span>3. Alcohol & Spirits Preference</span>
-            </h4>
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end bg-white p-3.5 rounded-2xl border border-amber-200">
-              <div class="sm:col-span-3">
-                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Category</label>
-                <select id="home-alc-category-select" onchange="populateAlcoholBrands('home')" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
-                  <option value="Beer">🍺 Beer</option>
-                  <option value="Whiskey">🥃 Whiskey</option>
-                  <option value="Vodka">🍸 Vodka</option>
-                  <option value="Rum">🏴‍☠️ Rum</option>
-                  <option value="Wine">🍷 Wine</option>
-                  <option value="Non-Alcoholic">🥤 Non-Alcoholic / Mocktails</option>
-                </select>
-              </div>
-              <div class="sm:col-span-4">
-                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Brand</label>
-                <select id="home-alc-brand-select" onchange="toggleCustomAlcoholInput(this.value, 'home-alc-custom-brand-input')" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
-                <input id="home-alc-custom-brand-input" type="text" placeholder="Type custom brand name..." class="hidden mt-2 w-full px-3 py-2 rounded-xl bg-white border border-amber-500 text-sm font-bold text-red-950" />
-              </div>
-              <div class="sm:col-span-3">
-                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Quantity</label>
-                <select id="home-alc-qty-select" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950"></select>
-              </div>
-              <div class="sm:col-span-2">
-                <button type="button" onclick="addAlcoholItemToGuest('home')" class="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
-                  + Add
-                </button>
-              </div>
-            </div>
-            <div id="home-guest-alcohol-list" class="flex flex-wrap gap-2"></div>
-          </div>
-
-          <!-- 4. Essentials & Cigarettes -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-3">
-              <h4 class="text-sm font-extrabold text-red-950">🥤 4. Party Essentials & Mixers</h4>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <select id="home-essential-item-select" onchange="toggleCustomEssentialInput(this.value, 'home-essential-custom-input')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
-                  <option value="Water Bottles (1L / Case)">💧 Water Bottles (1L / Case)</option>
-                  <option value="Disposable Glasses (Pack)">🥤 Disposable Glasses (Pack)</option>
-                  <option value="Paper Plates (Pack)">🍽️ Paper Plates (Pack)</option>
-                  <option value="Tissues / Napkins (Pack)">🧻 Tissues / Napkins (Pack)</option>
-                  <option value="Soda Bottles (Club / Kinley)">🫧 Soda Bottles (Club / Kinley)</option>
-                  <option value="Chips & Munchies (Packs)">🥔 Chips & Munchies (Packs)</option>
-                  <option value="Ice Cubes (Bag)">🧊 Ice Cubes (Bag)</option>
-                  <option value="Lemon, Salt & Chaat Masala">🍋 Lemon, Salt & Chaat Masala</option>
-                  <option value="Other">➕ Other</option>
-                </select>
-                <select id="home-essential-qty-select" class="px-2.5 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
-                  <option value="1">1×</option>
-                  <option value="2">2×</option>
-                  <option value="3">3×</option>
-                  <option value="4">4×</option>
-                  <option value="5">5×</option>
-                </select>
-                <button type="button" onclick="addEssentialItemToGuest('home')" class="px-3.5 py-2 rounded-xl bg-teal-700 text-white text-xs font-extrabold">+ Add</button>
-              </div>
-              <input id="home-essential-custom-input" type="text" placeholder="Type custom essential..." class="hidden w-full px-3 py-2 rounded-xl bg-white border border-orange-400 text-xs font-bold text-red-950" />
-              <div id="home-guest-essentials-list" class="flex flex-wrap gap-1.5"></div>
+              <span id="home-packing-progress" class="px-3 py-1 rounded-full bg-amber-200 text-red-950 text-xs font-black self-start sm:self-center">
+                0 / 0 Packed
+              </span>
             </div>
 
-            <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-3">
-              <h4 class="text-sm font-extrabold text-red-950">🚬 5. Cigarettes & Smokes</h4>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <select id="home-cig-brand-select" onchange="toggleCustomCigaretteInput(this.value, 'home-cig-custom-input')" class="flex-grow px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
-                  <option value="Classic Milds">Classic Milds</option>
-                  <option value="Classic Regular">Classic Regular</option>
-                  <option value="Classic Ice Burst">Classic Ice Burst</option>
-                  <option value="Gold Flake Kings">Gold Flake Kings</option>
-                  <option value="Gold Flake Lights">Gold Flake Lights</option>
-                  <option value="Marlboro Advance">Marlboro Advance</option>
-                  <option value="Marlboro Red">Marlboro Red</option>
-                  <option value="Marlboro Clove Mix">Marlboro Clove Mix</option>
-                  <option value="Benson & Hedges">Benson & Hedges</option>
-                  <option value="Dunhill">Dunhill</option>
-                  <option value="Other">➕ Other</option>
-                </select>
-                <select id="home-cig-qty-select" class="px-2.5 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
-                  <option value="1">1 Pack</option>
-                  <option value="2">2 Packs</option>
-                  <option value="3">3 Packs</option>
-                  <option value="4">4 Packs</option>
-                  <option value="5">5 Packs</option>
-                </select>
-                <button type="button" onclick="addCigaretteItemToGuest('home')" class="px-3.5 py-2 rounded-xl bg-stone-800 text-amber-50 text-xs font-extrabold">+ Add</button>
-              </div>
-              <input id="home-cig-custom-input" type="text" placeholder="Type custom brand..." class="hidden w-full px-3 py-2 rounded-xl bg-white border border-orange-400 text-xs font-bold text-red-950" />
-              <div id="home-guest-cigarettes-list" class="flex flex-wrap gap-1.5"></div>
+            <div id="home-packing-checklist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              <!-- Populated dynamically -->
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+              <input id="home-custom-pack-input" type="text" placeholder="Add your own item (e.g., Power bank, Extra socks...)" onkeydown="if(event.key==='Enter') addCustomPackingItem('home')" class="flex-grow px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950" />
+              <button type="button" onclick="addCustomPackingItem('home')" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition shrink-0">
+                + Add to Checklist
+              </button>
             </div>
           </div>
 
           <div class="flex justify-end">
             <button type="button" onclick="saveGuestPreferences('home')" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm sm:text-base shadow-xl transition">
-              💾 Save & Update My Trip Details
+              💾 Save & Confirm My Details
             </button>
           </div>
         </div>
@@ -691,81 +580,81 @@
                 <select id="essential-qty-select" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
                   <option value="1">1 Unit / Pack</option>
                   <option value="2">2 Units / Packs</option>
-                  <option value="3">3 Units / Packs</option>
-                  <option value="4">4 Units / Packs</option>
-                  <option value="5">5 Units / Packs</option>
-                  <option value="6">6 Units / Packs</option>
-                  <option value="8">8 Units / Packs</option>
-                  <option value="10">10 Units / Packs</option>
-                  <option value="12">12 Units / Packs</option>
-                </select>
-              </div>
-              <div class="sm:col-span-3">
-                <button type="button" onclick="addEssentialItemToGuest()" class="w-full py-2 px-4 rounded-xl bg-teal-700 hover:bg-teal-600 text-white text-xs sm:text-sm font-extrabold shadow transition">
-                  + Add Essential
-                </button>
-              </div>
+        <!-- Step 2: Unlocked Confirmation & Packing Form (Only visible when RSVP === 'accepted') -->
+        <div id="preferences-form-container" class="hidden bg-white rounded-3xl p-5 sm:p-8 border border-amber-200 shadow-lg space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-amber-100">
+            <div>
+              <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">✅ Invite Accepted • #DhummuLeputunnam</span>
+              <h3 id="pref-form-heading" class="text-2xl font-extrabold text-red-950 mt-2">Travel Confirmation & Packing Checklist</h3>
             </div>
+            <button onclick="saveGuestPreferences('rsvp')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm shadow-lg transition transform hover:scale-[1.02]">
+              💾 Save Confirmation
+            </button>
+          </div>
 
-            <!-- List of Added Essentials -->
-            <div id="guest-essentials-list" class="flex flex-wrap gap-2">
-              <!-- Rendered dynamically -->
+          <!-- A. Travel Details -->
+          <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
+            <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
+              <span>🚆</span><span>1. Travel Route & Dates Confirmation</span>
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">From City (Origin)</label>
+                <input id="pref-from-city" type="text" placeholder="e.g., Hyderabad" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">To City / Arrival Hub</label>
+                <select id="pref-arrival-city" onchange="toggleCustomCityInput(this.value, 'pref-custom-city')" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950">
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Tanuku">Tanuku</option>
+                  <option value="Narsapuram">Narsapuram</option>
+                  <option value="Kothapeta">Kothapeta</option>
+                  <option value="Jangareddygudem">Jangareddygudem</option>
+                  <option value="Kirlampudi">Kirlampudi</option>
+                  <option value="Others">Others</option>
+                </select>
+                <input id="pref-custom-city" type="text" placeholder="Enter destination city name" class="hidden mt-2 w-full px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Arrival Date</label>
+                <input id="pref-travel-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold uppercase text-amber-950 mb-1">Departure / Return Date</label>
+                <input id="pref-return-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+              </div>
             </div>
           </div>
 
-          <!-- E. Cigarettes & Smokes Preference -->
+          <!-- B. Cheeky Travel Essentials Packing Checklist -->
           <div class="bg-parchment/70 p-5 rounded-2xl border border-amber-200 space-y-4">
-            <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
-              <span>🚬</span><span>5. Cigarettes & Smokes (Brand & Quantity)</span>
-            </h4>
-
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end bg-white p-3.5 rounded-2xl border border-amber-200">
-              <div class="sm:col-span-6">
-                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Cigarette Brand</label>
-                <select id="cig-brand-select" onchange="toggleCustomCigaretteInput(this.value)" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
-                  <option value="Classic Milds">Classic Milds</option>
-                  <option value="Classic Regular">Classic Regular</option>
-                  <option value="Classic Ice Burst">Classic Ice Burst</option>
-                  <option value="Gold Flake Kings">Gold Flake Kings</option>
-                  <option value="Gold Flake Lights">Gold Flake Lights</option>
-                  <option value="Marlboro Advance">Marlboro Advance</option>
-                  <option value="Marlboro Red">Marlboro Red</option>
-                  <option value="Marlboro Clove Mix">Marlboro Clove Mix</option>
-                  <option value="Benson & Hedges">Benson & Hedges</option>
-                  <option value="Dunhill">Dunhill</option>
-                  <option value="Other">➕ Other (Type Manually)</option>
-                </select>
-                <input id="cig-custom-input" type="text" placeholder="Type custom cigarette brand..." class="hidden mt-2 w-full px-3 py-2 rounded-xl bg-white border border-orange-400 text-sm font-bold text-red-950 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 class="text-base font-extrabold text-red-950 flex items-center gap-2">
+                  <span>🎒</span><span>2. Travel Essentials Packing Checklist</span>
+                </h4>
+                <p class="text-xs text-stone-600 mt-0.5">Tick items off as you pack—so nobody borrows toothpaste or a charger at 2 AM!</p>
               </div>
-              <div class="sm:col-span-3">
-                <label class="block text-[11px] font-extrabold uppercase text-stone-500 mb-1">Quantity (Packs)</label>
-                <select id="cig-qty-select" class="w-full px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
-                  <option value="1">1 Pack</option>
-                  <option value="2">2 Packs</option>
-                  <option value="3">3 Packs</option>
-                  <option value="4">4 Packs</option>
-                  <option value="5">5 Packs</option>
-                  <option value="6">6 Packs</option>
-                  <option value="8">8 Packs</option>
-                  <option value="10">10 Packs</option>
-                </select>
-              </div>
-              <div class="sm:col-span-3">
-                <button type="button" onclick="addCigaretteItemToGuest()" class="w-full py-2 px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-50 text-xs sm:text-sm font-extrabold shadow transition">
-                  + Add Pack
-                </button>
-              </div>
+              <span id="packing-progress" class="px-3 py-1 rounded-full bg-amber-200 text-red-950 text-xs font-black self-start sm:self-center">
+                0 / 0 Packed
+              </span>
             </div>
 
-            <!-- List of Added Cigarettes -->
-            <div id="guest-cigarettes-list" class="flex flex-wrap gap-2">
-              <!-- Rendered dynamically -->
+            <div id="packing-checklist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              <!-- Populated dynamically -->
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+              <input id="custom-pack-input" type="text" placeholder="Add your own item (e.g., Power bank, Extra socks...)" onkeydown="if(event.key==='Enter') addCustomPackingItem('rsvp')" class="flex-grow px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-bold text-red-950" />
+              <button type="button" onclick="addCustomPackingItem('rsvp')" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition shrink-0">
+                + Add to Checklist
+              </button>
             </div>
           </div>
 
           <div class="flex justify-end pt-2">
-            <button onclick="saveGuestPreferences()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm sm:text-base shadow-xl transition">
-              💾 Save & Confirm Preferences
+            <button onclick="saveGuestPreferences('rsvp')" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-sm sm:text-base shadow-xl transition">
+              💾 Save & Confirm My Details
             </button>
           </div>
         </div>
@@ -776,147 +665,83 @@
       <!-- TAB 3: EXPENSE MANAGER & CUSTOM INCLUDE/EXCLUDE SPLIT               -->
       <!-- =================================================================== -->
       <section id="tab-expenses" class="main-tab-panel hidden space-y-6">
-        
-        <!-- Dynamic Post-Purchase Brand & Item Price Entry -> Auto Individual Expense -->
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-300 shadow-lg space-y-4">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b border-amber-100">
-            <div>
-              <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950 text-[11px] font-extrabold uppercase tracking-wider">No Predefined Prices • Personal, Common & Custom Group Splits</span>
-              <h2 class="text-xl font-extrabold text-red-950 mt-1">🏷️ Enter Brand / Item Prices → Auto-Bill Personal, Common & Custom Splits</h2>
-              <p class="text-xs text-stone-600 mt-0.5">Enter unit prices (`₹`). Switch any item between <strong>👤 Personal</strong>, <strong>👥 All Confirmed</strong>, or <strong>🎯 Custom Group</strong> (e.g., 1 person ordered for 3 friends—just tick those 3 guests!).</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2.5">
-              <div>
-                <label class="block text-[10px] font-extrabold uppercase text-stone-500">Who Paid the Bill?</label>
-                <select id="auto-bill-payer" class="px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
-                  <option value="">-- No Confirmed Guests Yet --</option>
-                </select>
-              </div>
-              <button type="button" onclick="autoGenerateIndividualBills()" class="self-end px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white text-xs sm:text-sm font-extrabold shadow-md transition">
-                ⚡ Auto-Add Personal & Common Bills
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Requested Brands & Items Grid (Blank Prices by Default) -->
-          <div id="requested-price-inputs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <!-- Populated dynamically from requested items -->
-          </div>
-
-          <!-- Live Per-Guest Preview Strip -->
-          <div id="auto-bill-preview-strip" class="flex flex-wrap items-center gap-2 pt-2 border-t border-amber-100 text-xs">
-            <!-- Populated dynamically -->
-          </div>
-        </div>
-
-        <!-- Dedicated Fuel & Road-Trip Expense Share Panel -->
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-sky-300 shadow-lg space-y-4">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-sky-100">
-            <div>
-              <span class="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 text-[11px] font-extrabold uppercase tracking-wider">Road-Trip & Carpool Split</span>
-              <h2 class="text-xl font-extrabold text-red-950 mt-1">⛽ Fuel Expense Share Calculator</h2>
-              <p class="text-xs text-stone-600 mt-0.5">Enter total fuel paid directly OR calculate from distance, mileage & fuel rate, then pick the passengers sharing the ride.</p>
-            </div>
-            <div class="px-3.5 py-2 rounded-2xl bg-sky-50 border border-sky-200 text-right">
-              <div class="text-[10px] font-extrabold uppercase text-sky-800">Estimated Fuel Split</div>
-              <div id="fuel-live-preview" class="text-sm sm:text-base font-black text-red-950">₹0 total • ₹0 / rider</div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-            <div class="lg:col-span-3">
-              <label class="block text-[11px] font-extrabold uppercase text-stone-600 mb-1">Route / Vehicle Label</label>
-              <input id="fuel-route-desc" type="text" placeholder="e.g., Hyd → Jangareddygudem (Car 1)" oninput="updateFuelPreview()" class="w-full px-3 py-2 rounded-xl bg-sky-50/50 border border-sky-300 text-xs sm:text-sm font-bold text-red-950" />
-            </div>
-            <div class="lg:col-span-2">
-              <label class="block text-[11px] font-extrabold uppercase text-stone-600 mb-1">Distance (km)</label>
-              <input id="fuel-distance-km" type="number" min="0" step="any" placeholder="380" oninput="recalcFuelFromDistance()" class="w-full px-3 py-2 rounded-xl bg-sky-50/50 border border-sky-300 text-xs sm:text-sm font-bold text-red-950" />
-            </div>
-            <div class="lg:col-span-2">
-              <label class="block text-[11px] font-extrabold uppercase text-stone-600 mb-1">Mileage (km/L)</label>
-              <input id="fuel-mileage" type="number" min="1" step="any" placeholder="15" oninput="recalcFuelFromDistance()" class="w-full px-3 py-2 rounded-xl bg-sky-50/50 border border-sky-300 text-xs sm:text-sm font-bold text-red-950" />
-            </div>
-            <div class="lg:col-span-2">
-              <label class="block text-[11px] font-extrabold uppercase text-stone-600 mb-1">Fuel Rate (₹/L)</label>
-              <input id="fuel-rate-per-liter" type="number" min="1" step="any" placeholder="109" oninput="recalcFuelFromDistance()" class="w-full px-3 py-2 rounded-xl bg-sky-50/50 border border-sky-300 text-xs sm:text-sm font-bold text-red-950" />
-            </div>
-            <div class="lg:col-span-3">
-              <label class="block text-[11px] font-extrabold uppercase text-emerald-800 mb-1">Total Fuel Amount (₹)</label>
-              <input id="fuel-total-amount" type="number" min="1" step="any" placeholder="Enter ₹ or auto-calc" oninput="updateFuelPreview()" class="w-full px-3 py-2 rounded-xl bg-emerald-50/60 border-2 border-emerald-400 text-xs sm:text-sm font-black text-red-950" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-parchment/70 p-3.5 rounded-2xl border border-amber-200">
-            <div class="lg:col-span-3">
-              <label class="block text-[11px] font-extrabold uppercase text-stone-600 mb-1">Paid at Pump By</label>
-              <select id="fuel-paid-by" class="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
-                <option value="">-- No Confirmed Guests Yet --</option>
-              </select>
-            </div>
-            <div class="lg:col-span-6">
-              <div class="flex items-center justify-between mb-1.5">
-                <label class="text-[11px] font-extrabold uppercase text-red-950">Passengers Sharing Fuel</label>
-                <div class="flex gap-2">
-                  <button type="button" onclick="toggleAllFuelRiders(true)" class="text-[11px] font-extrabold text-emerald-700 hover:underline">All Confirmed</button>
-                  <button type="button" onclick="toggleAllFuelRiders(false)" class="text-[11px] font-extrabold text-red-700 hover:underline">Clear</button>
-                </div>
-              </div>
-              <div id="fuel-riders-checkboxes" class="flex flex-wrap gap-1.5">
-                <!-- Populated dynamically -->
-              </div>
-            </div>
-            <div class="lg:col-span-3 flex justify-end">
-              <button type="button" onclick="addFuelExpense()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-sky-700 to-indigo-700 hover:from-sky-600 hover:to-indigo-600 text-white text-xs sm:text-sm font-extrabold shadow-md transition">
-                ⛽ Add & Split Fuel Share
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          <!-- Left: Add / Edit Expense (Open to All Guests) -->
-          <div class="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-6 border border-amber-200 shadow-lg space-y-4 relative">
+          <!-- Left: Unified Cascading Expense Form -->
+          <div class="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-300 shadow-lg space-y-4">
             <div class="pb-3 border-b border-amber-100 flex items-center justify-between gap-2">
               <div>
-                <span class="text-xs font-extrabold uppercase tracking-wider text-orange-600">Splitwise Engine</span>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-orange-600">Smart Splitwise Engine</span>
                 <h2 id="exp-form-title" class="text-xl font-extrabold text-red-950">Add Expense & Split</h2>
               </div>
               <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 text-[11px] font-extrabold">
-                ✨ Open to All Guests
+                ✨ Unified Flow
               </span>
             </div>
 
             <div id="exp-form-fields" class="space-y-4">
-              <div>
-                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Description</label>
-                <input id="exp-desc" type="text" placeholder="e.g., Bhogi Dinner, Kothapeta Stay, Bar Stock..." class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/50 border border-amber-300 text-sm font-bold text-red-950" />
-              </div>
-
-              <div class="grid grid-cols-2 gap-3">
+              <!-- 1. Category & Dynamic Sub-Option -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Amount (₹ INR)</label>
-                  <input id="exp-amount" type="number" min="1" step="any" placeholder="5000" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/50 border border-amber-300 text-sm font-extrabold text-red-950" />
+                  <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">1. Category</label>
+                  <select id="exp-category" onchange="handleExpenseCategoryChange()" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-extrabold text-red-950">
+                    <option value="Fuel">⛽ Fuel</option>
+                    <option value="Starters">🍗 Starters & Food</option>
+                    <option value="Spirits">🍻 Spirits & Alcohol</option>
+                    <option value="Essentials">🥤 Essentials (Water, Plates, Tissues)</option>
+                    <option value="Stay">🏨 Stay & Accommodation</option>
+                    <option value="Other">🧾 Other Expense</option>
+                  </select>
                 </div>
+
                 <div>
-                  <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Date</label>
-                  <input id="exp-date" type="date" value="2027-01-14" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/50 border border-amber-300 text-sm font-bold text-red-950" />
+                  <label id="exp-option-label" class="block text-xs font-extrabold uppercase text-stone-600 mb-1">2. Fuel Option</label>
+                  <select id="exp-option-select" onchange="handleExpenseOptionChange()" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-bold text-red-950">
+                    <!-- Dynamically populated based on Category -->
+                  </select>
                 </div>
               </div>
 
-              <div>
-                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Paid By</label>
-                <select id="exp-paid-by" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/50 border border-amber-300 text-sm font-extrabold text-red-950">
-                  <option value="">-- No Confirmed Guests Yet --</option>
-                </select>
+              <!-- Custom Note / Route Input (shown for Custom/Other or Fuel Route details) -->
+              <div id="exp-custom-desc-wrap">
+                <label id="exp-custom-desc-label" class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Route / Vehicle Note (Optional)</label>
+                <input id="exp-desc" type="text" placeholder="e.g., Hyd → Jangareddygudem (Car 1)" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/40 border border-amber-300 text-sm font-bold text-red-950" />
               </div>
 
-              <!-- Include / Exclude Guests Checkboxes -->
-              <div class="bg-parchment p-3.5 rounded-2xl border border-amber-200">
+              <!-- Optional Fuel Quick Calculator (Only visible when Category === 'Fuel') -->
+              <div id="exp-fuel-calc-box" class="bg-sky-50/80 p-3 rounded-2xl border border-sky-200 space-y-2">
+                <div class="text-[11px] font-extrabold uppercase text-sky-900">⚡ Optional Fuel Calculator (Auto-fills Amount)</div>
+                <div class="grid grid-cols-3 gap-2">
+                  <input id="fuel-distance-km" type="number" min="0" step="any" placeholder="Km (e.g. 380)" oninput="recalcFuelFromDistance()" class="px-2.5 py-1.5 rounded-xl bg-white border border-sky-300 text-xs font-bold text-red-950" />
+                  <input id="fuel-mileage" type="number" min="1" step="any" placeholder="Km/L (e.g. 15)" oninput="recalcFuelFromDistance()" class="px-2.5 py-1.5 rounded-xl bg-white border border-sky-300 text-xs font-bold text-red-950" />
+                  <input id="fuel-rate-per-liter" type="number" min="1" step="any" placeholder="₹/L (e.g. 109)" oninput="recalcFuelFromDistance()" class="px-2.5 py-1.5 rounded-xl bg-white border border-sky-300 text-xs font-bold text-red-950" />
+                </div>
+              </div>
+
+              <!-- 3. Who Paid & 4. Split Mode -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">3. Who Paid?</label>
+                  <select id="exp-paid-by" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-extrabold text-red-950">
+                    <option value="">-- No Confirmed Guests Yet --</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">4. Split Mode</label>
+                  <select id="exp-split-mode" onchange="handleExpenseSplitModeChange()" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-300 text-sm font-extrabold text-red-950">
+                    <option value="equal">👥 Split Equally (All Confirmed)</option>
+                    <option value="custom">🎯 Custom Choose</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Custom Guest Checkboxes (Shown only when Split Mode === 'custom') -->
+              <div id="exp-custom-split-box" class="hidden bg-parchment p-3.5 rounded-2xl border border-amber-200">
                 <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-extrabold uppercase text-red-950">Split Between (Confirmed Only)</label>
+                  <label class="text-xs font-extrabold uppercase text-red-950">Select Guests to Split With</label>
                   <div class="flex gap-2">
-                    <button type="button" onclick="toggleAllExpenseGuests(true)" class="text-[11px] font-extrabold text-emerald-700 hover:underline">Include All</button>
+                    <button type="button" onclick="toggleAllExpenseGuests(true)" class="text-[11px] font-extrabold text-emerald-700 hover:underline">Select All</button>
                     <button type="button" onclick="toggleAllExpenseGuests(false)" class="text-[11px] font-extrabold text-red-700 hover:underline">Clear</button>
                   </div>
                 </div>
@@ -925,15 +750,22 @@
                 </div>
               </div>
 
-              <!-- Optional Bill Receipt Photo -->
-              <div>
-                <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Optional Bill Receipt Photo</label>
-                <input id="exp-receipt-input" type="file" accept="image/*" class="w-full text-xs text-stone-600 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-amber-100 file:text-amber-950 hover:file:bg-amber-200 cursor-pointer" />
+              <!-- 5. Amount & Date -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-extrabold uppercase text-emerald-900 mb-1">5. Amount (₹ INR)</label>
+                  <input id="exp-amount" type="number" min="1" step="any" placeholder="e.g., 2500" class="w-full px-3.5 py-2.5 rounded-xl bg-emerald-50/60 border-2 border-emerald-400 text-sm font-black text-red-950" />
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Date</label>
+                  <input id="exp-date" type="date" value="2027-01-14" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/50 border border-amber-300 text-sm font-bold text-red-950" />
+                </div>
               </div>
 
-              <div class="flex gap-2">
-                <button id="exp-submit-btn" onclick="saveExpenseForm()" class="flex-grow py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-red-800 hover:from-orange-500 hover:to-red-700 text-white font-extrabold text-sm shadow-lg transition">
-                  ➕ Record & Split Expense
+              <!-- 6. Save Expense -->
+              <div class="flex gap-2 pt-1">
+                <button id="exp-submit-btn" type="button" onclick="saveExpenseForm()" class="flex-grow py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-red-800 hover:from-orange-500 hover:to-red-700 text-white font-extrabold text-sm shadow-lg transition">
+                  💾 Save Expense
                 </button>
                 <button id="exp-cancel-edit-btn" type="button" onclick="cancelEditExpense()" class="hidden px-4 py-3.5 rounded-2xl bg-stone-200 hover:bg-stone-300 text-stone-800 font-extrabold text-sm transition">
                   Cancel
@@ -950,9 +782,9 @@
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amber-100">
                 <div>
                   <h3 class="text-lg font-extrabold text-red-950">🤝 Who Pays Whom (Simplified Settlements)</h3>
-                  <p class="text-xs text-stone-500">Calculated automatically across all included/excluded splits</p>
+                  <p class="text-xs text-stone-500">Calculated automatically across all equal & custom splits</p>
                 </div>
-                <button onclick="shareSettlementsWhatsApp()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow transition flex items-center gap-1.5 self-start">
+                <button type="button" onclick="shareSettlementsWhatsApp()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow transition flex items-center gap-1.5 self-start">
                   <span>📲</span><span>Share on WhatsApp</span>
                 </button>
               </div>
@@ -1110,10 +942,15 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Add New Guest & Manage Guests -->
             <div class="lg:col-span-7 space-y-4">
-              <h3 class="text-lg font-extrabold text-red-950">Add New Squad Member & Send WhatsApp Invite</h3>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-lg font-extrabold text-red-950">Add Squad Member & Phone Directory</h3>
+                <button type="button" onclick="pickContactFromMobile('admin')" class="px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition">
+                  <span>📱</span><span>Pick from Mobile Contacts</span>
+                </button>
+              </div>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-parchment p-4 rounded-2xl border border-amber-200">
                 <input id="admin-new-guest-name" type="text" placeholder="Guest Name (e.g., Karthik)" class="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
-                <input id="admin-new-guest-phone" type="tel" placeholder="Phone (e.g., 919876543210)" class="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
+                <input id="admin-new-guest-phone" type="tel" placeholder="Phone (e.g., 9876543210)" class="px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-sm font-bold text-red-950" />
                 <button onclick="adminAddGuest()" class="py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-extrabold shadow transition">
                   + Add Guest
                 </button>
@@ -1126,6 +963,18 @@
 
             <!-- Security PIN & Activity Log -->
             <div class="lg:col-span-5 space-y-5">
+              <div class="bg-parchment p-4 rounded-2xl border border-amber-200 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <h4 class="text-sm font-extrabold uppercase text-red-950">Data Sync & Backup</h4>
+                    <p class="text-xs text-stone-600 mt-0.5">Export master trip JSON or merge updates from guests.</p>
+                  </div>
+                  <button type="button" onclick="openSyncModal()" class="px-4 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-extrabold shadow transition flex items-center gap-1.5 shrink-0">
+                    <span>🔄</span><span>Sync / Share</span>
+                  </button>
+                </div>
+              </div>
+
               <div class="bg-parchment p-4 rounded-2xl border border-amber-200 space-y-3">
                 <h4 class="text-sm font-extrabold uppercase text-red-950">Change Host Admin PIN</h4>
                 <div class="flex gap-2">
@@ -1155,158 +1004,163 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-red-950 text-amber-100/80 py-5 px-4 text-center text-xs border-t border-amber-500/30">
-    <p class="font-extrabold text-amber-200">☀️ Sankranti 2027 • Jangareddygudem • Kothapeta • Narsapuram 🪁</p>
-    <p class="mt-1">#DhummuLeputunnam • Built for the Sankranti 2027 Squad</p>
+  <footer class="bg-red-950 text-amber-100/80 py-5 px-4 text-center text-xs border-t border-amber-800/60">
+    <p class="font-bold text-amber-200">Sankranti 2027 • #DhummuLeputunnam</p>
+    <p class="mt-1">Jangareddygudem • Kothapeta • Narsapuram</p>
   </footer>
 
   </div><!-- End #app-shell -->
 
   <!-- ===================================================================== -->
-  <!-- INVITATION ACCEPT / DECLINE GATE MODAL (OUTSIDE #app-shell)           -->
+  <!-- MODALS (OUTSIDE #app-shell SO INVITE GATE WORKS WHILE SHELL HIDDEN)   -->
   <!-- ===================================================================== -->
-  <div id="invite-gate-modal" class="fixed inset-0 z-[70] hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border-4 border-amber-400 animate-pop">
-      <div class="bg-gradient-to-br from-amber-500 via-orange-600 to-red-900 p-7 text-center text-white">
-        <div class="text-5xl mb-2">☀️🪁🔥</div>
-        <span class="px-3 py-1 rounded-full bg-yellow-300 text-red-950 text-[11px] font-black uppercase tracking-wider">
-          Personal Squad Invitation
-        </span>
-        <h2 id="invite-gate-title" class="font-display text-2xl sm:text-3xl font-black text-amber-50 mt-3">
-          Hey Guest!
-        </h2>
-        <p class="text-sm font-extrabold text-yellow-300 mt-1">#DhummuLeputunnam</p>
+
+  <!-- 1. Personal Squad Invitation Gate Modal -->
+  <div id="invite-gate-modal" class="hidden fixed inset-0 z-50 bg-gradient-to-br from-amber-900/95 via-red-950/95 to-stone-950/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-cream max-w-md w-full rounded-3xl p-6 sm:p-8 border-2 border-amber-400 shadow-2xl text-center space-y-5 animate-pop">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 text-white flex items-center justify-center text-3xl shadow-lg">
+        🪁
       </div>
-      <div id="invite-gate-body" class="p-6 text-center space-y-4">
-        <p class="text-sm text-stone-700 font-medium leading-relaxed">
-          You are invited to <strong>Sankranti 2027</strong> (Jangareddygudem • Kothapeta • Narsapuram). Please accept or decline your invitation below.
-        </p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-          <button type="button" id="invite-gate-accept-btn" class="py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm shadow-lg transition">
-            ✅ Accept Invitation
-          </button>
-          <button type="button" id="invite-gate-decline-btn" class="py-3.5 px-5 rounded-2xl bg-red-100 hover:bg-red-200 text-red-900 font-extrabold text-sm transition">
-            ❌ Decline
-          </button>
-        </div>
+      <div>
+        <span class="px-3 py-1 rounded-full bg-amber-200 text-red-950 text-xs font-black uppercase tracking-wider">Personal Squad Invitation</span>
+        <h2 id="invite-gate-title" class="font-display text-2xl sm:text-3xl font-black text-red-950 mt-2">Hey Friend!</h2>
+      </div>
+      <div id="invite-gate-body" class="space-y-4">
+        <!-- Populated dynamically -->
       </div>
     </div>
   </div>
 
-  <!-- ===================================================================== -->
-  <!-- CELEBRATORY WELCOME MODAL ON ACCEPTING INVITE                         -->
-  <!-- ===================================================================== -->
-  <div id="welcome-rsvp-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-amber-500 via-orange-600 to-red-800 text-white w-full max-w-md rounded-3xl p-7 text-center shadow-2xl border-4 border-yellow-300 animate-pop">
-      <div class="text-6xl mb-3 animate-bounce">🎉🪁🔥</div>
-      <span class="px-3 py-1 rounded-full bg-yellow-300 text-red-950 text-xs font-black tracking-wider uppercase">
-        RSVP Confirmed!
-      </span>
-      <h3 id="welcome-guest-name" class="font-display text-3xl font-black text-yellow-100 mt-3">
-        Welcome to Sankranti 2027!
-      </h3>
-      <p class="text-xl font-extrabold text-yellow-300 mt-1">#DhummuLeputunnam</p>
-      <p class="text-sm text-amber-100 mt-3 leading-relaxed">
-        Your spot for the Jangareddygudem – Kothapeta – Narsapuram Sankranti 2027 trip is locked in! Please fill out your travel itinerary, starter preferences, and favorite spirits below.
+  <!-- 2. Welcome Celebration Modal (After Accepting Invite) -->
+  <div id="welcome-rsvp-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-cream max-w-md w-full rounded-3xl p-6 sm:p-8 border-2 border-emerald-500 shadow-2xl text-center space-y-5 animate-pop">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl shadow-inner">
+        🎉
+      </div>
+      <div>
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black uppercase tracking-wider">#DhummuLeputunnam</span>
+        <h2 id="welcome-guest-name" class="text-2xl sm:text-3xl font-black text-red-950 mt-2">Welcome aboard!</h2>
+      </div>
+      <p class="text-sm sm:text-base text-stone-700 font-semibold leading-relaxed">
+        Good friends, endless laughs, bonfires, and unforgettable Sankranti memories await!
       </p>
-      <button onclick="closeWelcomeModal()" class="mt-6 w-full py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-red-950 font-black text-base shadow-xl transition">
-        Fill My Preferences Now →
+      <button type="button" onclick="closeWelcomeModal()" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm sm:text-base shadow-lg transition">
+        Fill My Trip Details →
       </button>
     </div>
   </div>
 
-  <!-- ===================================================================== -->
-  <!-- ADMIN PIN VERIFICATION MODAL                                          -->
-  <!-- ===================================================================== -->
-  <div id="admin-pin-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-amber-300 animate-pop">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-lg font-extrabold text-red-950">🛡️ Host Admin Verification</h3>
-        <button onclick="closeAdminPinModal()" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
-      </div>
-      <p class="text-xs text-stone-600 mb-4">Enter the Host Admin PIN to unlock adding or deleting guests, expenses, and HD photos.</p>
-      <input id="admin-pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••" onkeydown="if(event.key==='Enter') verifyAdminPin()" class="w-full px-4 py-3 rounded-xl bg-amber-50 border border-amber-300 text-center text-lg font-black tracking-widest text-red-950 focus:outline-none focus:ring-2 focus:ring-orange-500" />
-      <button onclick="verifyAdminPin()" class="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-700 to-green-600 text-white font-extrabold text-sm shadow-md">
-        Unlock Host Admin
-      </button>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- MULTI-DEVICE SYNC / SHARE JSON MODAL                                  -->
-  <!-- ===================================================================== -->
-  <div id="sync-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border-2 border-amber-300 animate-pop space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-extrabold text-red-950">🔄 Multi-Device Sync & Backup</h3>
-        <button onclick="closeSyncModal()" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
-      </div>
-      <p class="text-xs text-stone-600 leading-relaxed">
-        Since this app runs 100% statically with zero server setup, you can copy your entire trip state (RSVPs, food/alcohol counts, and expenses) to share with co-hosts or restore on another device.
-      </p>
-      <div class="flex flex-wrap gap-2">
-        <button onclick="copySyncJson()" class="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-extrabold shadow">📋 Copy Trip Data JSON</button>
-        <button onclick="downloadSyncJson()" class="px-4 py-2 rounded-xl bg-amber-100 text-amber-950 text-xs font-extrabold">⬇️ Download Backup .json</button>
-      </div>
-      <div>
-        <label class="block text-xs font-extrabold text-red-950 mb-1">Paste Trip JSON to Import / Merge:</label>
-        <textarea id="sync-import-textarea" rows="4" placeholder='Paste JSON here and click Import...' class="w-full p-3 rounded-xl bg-amber-50/60 border border-amber-300 text-xs font-mono"></textarea>
-        <button onclick="importSyncJson()" class="mt-2 w-full py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-extrabold">📥 Import & Sync State</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- FULLSCREEN HD PHOTO LIGHTBOX MODAL                                    -->
-  <!-- ===================================================================== -->
-  <div id="photo-lightbox-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-5xl flex items-center justify-between text-white mb-3">
-      <div>
-        <h4 id="lightbox-caption" class="font-extrabold text-base sm:text-lg">Photo</h4>
-        <p id="lightbox-meta" class="text-xs text-amber-300"></p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button id="lightbox-download-btn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-extrabold shadow">
-          ⬇️ Download Original HD
-        </button>
-        <button onclick="closeLightbox()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/30 text-white font-bold">✕</button>
-      </div>
-    </div>
-    <img id="lightbox-img" src="" alt="HD Sankranti 2027 Memory" class="max-h-[78vh] max-w-full rounded-2xl shadow-2xl object-contain border border-white/20" />
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- DASHLET BREAKDOWN DETAIL MODAL                                        -->
-  <!-- ===================================================================== -->
-  <div id="dashlet-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border-2 border-amber-300 animate-pop space-y-4">
+  <!-- 3. KPI Dashlet Breakdown Modal -->
+  <div id="dashlet-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full rounded-3xl p-6 border-2 border-amber-300 shadow-2xl space-y-4 animate-pop">
       <div class="flex items-center justify-between pb-3 border-b border-amber-100">
         <div class="flex items-center gap-2.5">
           <span id="modal-icon" class="text-2xl">📊</span>
-          <h3 id="modal-title" class="text-lg font-extrabold text-red-950">Details</h3>
+          <h3 id="modal-title" class="text-lg sm:text-xl font-extrabold text-red-950">Details</h3>
         </div>
-        <button type="button" onclick="closeDashletModal()" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
+        <button type="button" onclick="closeDashletModal()" class="w-8 h-8 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-black">✕</button>
       </div>
-      <div id="modal-body" class="space-y-2.5 max-h-80 overflow-y-auto pr-1 text-xs sm:text-sm"></div>
-      <div class="flex justify-end gap-2 pt-2 border-t border-amber-100">
+      <div id="modal-body" class="space-y-2.5 max-h-80 overflow-y-auto pr-1 text-sm">
+        <!-- Populated dynamically -->
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-amber-100">
         <button type="button" onclick="copyModalSummary()" class="px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-extrabold">📋 Copy Summary</button>
-        <button type="button" onclick="closeDashletModal()" class="px-4 py-2 rounded-xl bg-red-800 hover:bg-red-700 text-white text-xs font-extrabold">Close</button>
+        <button type="button" onclick="closeDashletModal()" class="px-4 py-2 rounded-xl bg-red-900 text-white text-xs font-extrabold">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Admin PIN Unlock Modal -->
+  <div id="admin-pin-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full rounded-3xl p-6 border-2 border-amber-400 shadow-2xl space-y-4 animate-pop">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-red-950">🛡️ Unlock Host Admin</h3>
+        <button type="button" onclick="closeAdminPinModal()" class="w-8 h-8 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-black">✕</button>
+      </div>
+      <p class="text-xs text-stone-600">Enter the Host Admin PIN to manage invites, sync backups, amend logs, or wipe data.</p>
+      <input id="admin-pin-input" type="password" maxlength="8" placeholder="Enter PIN" onkeydown="if(event.key==='Enter') verifyAdminPin()" class="w-full px-4 py-3 rounded-2xl bg-amber-50 border border-amber-300 text-center text-lg font-black tracking-widest text-red-950 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+      <div class="flex gap-2">
+        <button type="button" onclick="closeAdminPinModal()" class="flex-1 py-2.5 rounded-xl bg-stone-200 text-stone-800 text-xs font-extrabold">Cancel</button>
+        <button type="button" onclick="verifyAdminPin()" class="flex-1 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow">Unlock 🔓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Sync / Backup JSON Modal -->
+  <div id="sync-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full rounded-3xl p-6 border-2 border-indigo-400 shadow-2xl space-y-4 animate-pop">
+      <div class="flex items-center justify-between pb-3 border-b border-indigo-100">
+        <h3 class="text-lg font-extrabold text-red-950">🔄 Sync & Backup Trip Data</h3>
+        <button type="button" onclick="closeSyncModal()" class="w-8 h-8 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-black">✕</button>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="copySyncJson()" class="flex-1 py-2.5 px-4 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-extrabold shadow">📋 Copy Trip Data JSON</button>
+        <button type="button" onclick="downloadSyncJson()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow">⬇️ Download Backup .json</button>
+      </div>
+      <div>
+        <label class="block text-xs font-extrabold uppercase text-stone-600 mb-1">Paste Guest / Master JSON to Merge & Sync</label>
+        <textarea id="sync-import-textarea" rows="4" placeholder='Paste JSON here...' class="w-full p-3 rounded-2xl bg-amber-50/60 border border-amber-300 text-xs font-mono text-red-950"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeSyncModal()" class="px-4 py-2 rounded-xl bg-stone-200 text-stone-800 text-xs font-extrabold">Close</button>
+        <button type="button" onclick="importSyncJson()" class="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-extrabold shadow">📥 Import & Sync State</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. HD Photo Lightbox Modal -->
+  <div id="photo-lightbox-modal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="max-w-4xl w-full bg-stone-900 rounded-3xl overflow-hidden border border-amber-400/40 shadow-2xl">
+      <div class="p-4 flex items-center justify-between border-b border-white/10 text-white">
+        <div>
+          <h4 id="lightbox-caption" class="font-extrabold text-sm sm:text-base">Photo</h4>
+          <p id="lightbox-meta" class="text-xs text-stone-400">Meta</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="lightbox-download-btn" type="button" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">⬇️ Download Original</button>
+          <button type="button" onclick="closeLightbox()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white font-black">✕</button>
+        </div>
+      </div>
+      <div class="bg-black flex items-center justify-center max-h-[75vh] overflow-hidden">
+        <img id="lightbox-img" src="" alt="Full HD Preview" class="max-h-[75vh] w-auto object-contain" />
       </div>
     </div>
   </div>
 
   <!-- ===================================================================== -->
-  <!-- APPLICATION STATE, INDEXEDDB & INTERACTIVE LOGIC                      -->
+  <!-- APPLICATION JAVASCRIPT                                                -->
   <!-- ===================================================================== -->
   <script>
-    // =========================================================================
-    // 1. CORE STATE, CONSTANTS & STORAGE
-    // =========================================================================
-    const STORAGE_KEY = 'sankranti_2027_trip_state_v5';
-    const LEGACY_STORAGE_KEYS = ['sankranti_2027_reunion_state_v4'];
-    const DB_NAME = 'Sankranti2027_HD_Vault';
-    const DB_STORE = 'photos';
-// ... existing code ... -->
+    const STORAGE_KEY = 'sankranti_2027_trip_state_v6';
+    const LEGACY_STORAGE_KEYS = [
+      'sankranti_2027_reunion_state_v1',
+      'sankranti_2027_reunion_state_v2',
+      'sankranti_2027_reunion_state_v3',
+      'sankranti_2027_reunion_state_v4',
+      'sankranti_2027_trip_state_v5'
+    ];
+    const DB_NAME = 'Sankranti2027HdPhotoVault';
+    const DB_STORE = 'hd_photos';
+
+    const DEFAULT_PACKING_ESSENTIALS = [
+      { id: 'charger', label: '🔌 Mobile Charger & Power Bank (1% battery panic is real)' },
+      { id: 'camera', label: '📸 Camera / GoPro (for proof of shenanigans)' },
+      { id: 'brush', label: '🪥 Toothbrush & Toothpaste (please don’t borrow)' },
+      { id: 'shampoo', label: '🧴 Shampoo & Conditioner (for silky festival hair)' },
+      { id: 'innerwear', label: '🩲 Extra Innerwears (don’t ask why, just pack 2 extra 😜)' },
+      { id: 'ethnic', label: '👘 Traditional / Ethnic Wear & Festive Outfits' },
+      { id: 'shades', label: '🕶️ Sunglasses & Sunscreen (look cool, beat the sun)' },
+      { id: 'meds', label: '💊 Headache & Hangover Meds (future you will thank you)' },
+      { id: 'deodorant', label: '✨ Deodorant / Perfume (stay fresh after bonfires)' },
+      { id: 'slippers', label: '🩴 Comfy Slippers & Shoes (for village walks & dances)' },
+      { id: 'idcard', label: '🪪 Govt ID Card & Cash / UPI Ready' },
+      { id: 'earphones', label: '🎧 Earphones / AirPods (for travel playlists)' }
+    ];
+
+    function buildDefaultPackingList() {
+      return DEFAULT_PACKING_ESSENTIALS.map(it => ({ ...it, packed: false }));
+    }
+
     function getDefaultState() {
       return {
         adminPin: '0089',
@@ -1315,20 +1169,160 @@
         itemCustomSplits: {},
         pickedChecklist: {},
         guests: [
-          { id: 'srinu', name: 'Srinu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'praveen', name: 'Praveen', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'chandu', name: 'Chandu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kothapeta', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'pavan', name: 'Pavan', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Narsapuram', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'lella', name: 'Lella', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Tanuku', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'palla', name: 'Palla', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kirlampudi', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'palli', name: 'Palli', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
-          { id: 'jayanth', name: 'Jayanth', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] }
+          { id: 'srinu', name: 'Srinu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'praveen', name: 'Praveen', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'chandu', name: 'Chandu', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kothapeta', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'pavan', name: 'Pavan', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Narsapuram', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'lella', name: 'Lella', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Tanuku', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'palla', name: 'Palla', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Kirlampudi', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'palli', name: 'Palli', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] },
+          { id: 'jayanth', name: 'Jayanth', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', packingList: buildDefaultPackingList(), starters: [], alcohol: [], essentials: [], cigarettes: [] }
         ],
         expenses: [],
         activityLog: [
           { id: 'init-log', timestamp: new Date().toLocaleString('en-IN'), actor: 'System', category: 'ADMIN', action: 'Initialized', msg: 'Sankranti 2027 workspace initialized clean.' }
         ]
       };
+    }
+
+    function loadAppState() {
+      try {
+        LEGACY_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return getDefaultState();
+        const parsed = JSON.parse(raw);
+        const def = getDefaultState();
+        return {
+          ...def,
+          ...parsed,
+          guests: Array.isArray(parsed.guests) ? parsed.guests.map(g => ({
+            starters: [],
+            alcohol: [],
+            essentials: [],
+            cigarettes: [],
+            packingList: Array.isArray(g.packingList) && g.packingList.length ? g.packingList : buildDefaultPackingList(),
+            ...g
+          })) : def.guests,
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+          activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : def.activityLog
+        };
+      } catch (e) {
+        return getDefaultState();
+      }
+    }
+// ... existing code ... -->
+    function populatePreferenceFormForGuest(guest, prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const heading = document.getElementById(p + 'pref-form-heading') || document.getElementById('home-pref-heading');
+      if (heading) heading.textContent = `${guest.name}'s Trip Confirmation & Packing Checklist`;
+
+      const fromEl = document.getElementById(p + 'pref-from-city');
+      if (fromEl) fromEl.value = guest.fromCity || '';
+
+      const tDateEl = document.getElementById(p + 'pref-travel-date');
+      if (tDateEl) tDateEl.value = guest.travelDate || '2027-01-13';
+
+      const rDateEl = document.getElementById(p + 'pref-return-date');
+      if (rDateEl) rDateEl.value = guest.returnDate || '2027-01-17';
+
+      const citySelect = document.getElementById(p + 'pref-arrival-city');
+      const customCity = document.getElementById(p + 'pref-custom-city');
+      const standardCities = ['Hyderabad', 'Tanuku', 'Narsapuram', 'Kothapeta', 'Jangareddygudem', 'Kirlampudi'];
+      if (citySelect && customCity) {
+        if (standardCities.includes(guest.arrivalCity)) {
+          citySelect.value = guest.arrivalCity;
+          customCity.classList.add('hidden');
+        } else {
+          citySelect.value = 'Others';
+          customCity.classList.remove('hidden');
+          customCity.value = guest.arrivalCity || '';
+        }
+      }
+
+      if (!Array.isArray(guest.packingList) || !guest.packingList.length) {
+        guest.packingList = buildDefaultPackingList();
+      }
+      renderGuestPackingChecklist(guest, prefix);
+    }
+
+    function toggleCustomCityInput(val, customId = 'pref-custom-city') {
+      const el = document.getElementById(customId);
+      if (!el) return;
+      if (val === 'Others') el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function toggleGuestPackingItem(itemId, checked, prefix = 'rsvp') {
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest || !Array.isArray(guest.packingList)) return;
+      const item = guest.packingList.find(it => it.id === itemId);
+      if (!item) return;
+      item.packed = checked;
+      saveAppState();
+      renderGuestPackingChecklist(guest, prefix);
+    }
+
+    function addCustomPackingItem(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest) return;
+      const input = document.getElementById(p + 'custom-pack-input');
+      const label = (input?.value || '').trim();
+      if (!label) return showToast('Type an essential item to add.', 'error');
+      if (!Array.isArray(guest.packingList)) guest.packingList = buildDefaultPackingList();
+      guest.packingList.push({
+        id: 'pack-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+        label: '🎒 ' + label,
+        packed: false
+      });
+      input.value = '';
+      saveAppState();
+      renderGuestPackingChecklist(guest, prefix);
+      showToast('Added to your packing checklist!');
+    }
+
+    function renderGuestPackingChecklist(guest, prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const grid = document.getElementById(p + 'packing-checklist-grid');
+      const badge = document.getElementById(p + 'packing-progress');
+      const list = Array.isArray(guest.packingList) ? guest.packingList : [];
+      const packedCount = list.filter(it => it.packed).length;
+
+      if (badge) {
+        badge.textContent = `${packedCount} / ${list.length} Packed ${packedCount === list.length && list.length > 0 ? '🎉' : ''}`;
+      }
+      if (!grid) return;
+
+      grid.innerHTML = list.map(it => `
+        <label class="flex items-start gap-2.5 p-3 rounded-2xl border transition cursor-pointer select-none ${it.packed ? 'bg-emerald-50 border-emerald-400 text-emerald-950' : 'bg-white border-amber-200 text-red-950 hover:border-orange-400'}">
+          <input type="checkbox" ${it.packed ? 'checked' : ''} onchange="toggleGuestPackingItem('${it.id}', this.checked, '${prefix}')" class="mt-0.5 w-4 h-4 accent-emerald-600 cursor-pointer shrink-0" />
+          <span class="text-xs sm:text-sm font-bold leading-snug ${it.packed ? 'line-through opacity-75' : ''}">${it.label}</span>
+        </label>
+      `).join('');
+    }
+
+    function saveGuestPreferences(prefix = 'rsvp') {
+      const p = prefix === 'home' ? 'home-' : '';
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
+      if (!guest) return;
+      guest.fromCity = (document.getElementById(p + 'pref-from-city')?.value || '').trim();
+      guest.travelDate = document.getElementById(p + 'pref-travel-date').value;
+      guest.returnDate = document.getElementById(p + 'pref-return-date').value;
+      const cityVal = document.getElementById(p + 'pref-arrival-city').value;
+      guest.arrivalCity = cityVal === 'Others'
+        ? (document.getElementById(p + 'pref-custom-city').value.trim() || 'Others')
+        : cityVal;
+
+      const packedCount = (guest.packingList || []).filter(it => it.packed).length;
+      const totalPack = (guest.packingList || []).length;
+
+      saveAppState({
+        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
+        category: 'PREFS',
+        action: 'Confirmed Travel',
+        msg: `${guest.name} confirmed route (${guest.fromCity || 'Origin'} → ${guest.arrivalCity}, ${guest.travelDate} to ${guest.returnDate}) & packed ${packedCount}/${totalPack} essentials.`
+      });
+      showToast(`Travel confirmation & checklist saved for ${guest.name}!`);
     }
 
     function loadAppState() {
@@ -1429,12 +1423,377 @@
     }
 
     // =========================================================================
-    // 2. INDEXEDDB HD PHOTO VAULT
+    // 1. NAVIGATION, ROLE SWITCHER & ADMIN AUTHENTICATION
+    // =========================================================================
+    function switchMainTab(tabId) {
+      document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.add('hidden'));
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.main-nav-btn').forEach(btn => {
+        if (btn.id === 'nav-admin') {
+          btn.className = 'main-nav-btn ' + (isAdminUnlocked ? '' : 'hidden ') +
+            'cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 ' +
+            (tabId === 'admin' ? 'bg-emerald-950 text-amber-300 ring-2 ring-amber-400 shadow' : 'bg-emerald-800 text-white shadow');
+        } else if (btn.id === 'nav-' + tabId) {
+          btn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow';
+        } else {
+          const isHidden = btn.classList.contains('hidden');
+          btn.className = 'main-nav-btn ' + (isHidden ? 'hidden ' : '') +
+            'cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200';
+        }
+      });
+
+      if (tabId === 'rsvp') renderRsvpSection();
+      if (tabId === 'expenses') renderExpensesSection();
+      if (tabId === 'gallery') renderGallerySection();
+      if (tabId === 'logs') renderLogsSection();
+      if (tabId === 'admin') renderAdminSection();
+    }
+
+    function handleRoleSwitch(val) {
+      currentRole = val;
+      if (val !== 'overview') {
+        selectedRsvpGuestId = val;
+        const g = appState.guests.find(x => x.id === val);
+        if (g && g.rsvp !== 'accepted' && !isAdminUnlocked) {
+          openInviteGateForGuest(g);
+          return;
+        }
+      }
+      renderAllUI();
+      showToast(val === 'overview' ? 'Switched to Group Overview' : `Viewing as ${getActiveActorName()}`);
+    }
+
+    function openAdminPinModal() {
+      if (isAdminUnlocked) {
+        switchMainTab('admin');
+        return;
+      }
+      const input = document.getElementById('admin-pin-input');
+      if (input) input.value = '';
+      document.getElementById('admin-pin-modal')?.classList.remove('hidden');
+      setTimeout(() => input?.focus(), 50);
+    }
+
+    function closeAdminPinModal() {
+      document.getElementById('admin-pin-modal')?.classList.add('hidden');
+    }
+
+    function verifyAdminPin() {
+      const entered = (document.getElementById('admin-pin-input')?.value || '').trim();
+      if (entered === (appState.adminPin || '0089')) {
+        isAdminUnlocked = true;
+        closeAdminPinModal();
+        document.getElementById('app-shell')?.classList.remove('hidden');
+        document.getElementById('invite-gate-modal')?.classList.add('hidden');
+        renderAllUI();
+        switchMainTab('admin');
+        showToast('Host Admin unlocked!');
+      } else {
+        showToast('Incorrect Admin PIN.', 'error');
+      }
+    }
+
+    function logoutAdmin() {
+      isAdminUnlocked = false;
+      renderAllUI();
+      switchMainTab('home');
+      showToast('Admin mode locked.');
+    }
+
+    function changeAdminPin() {
+      if (!isAdminUnlocked) return;
+      const newPin = (document.getElementById('admin-new-pin')?.value || '').trim();
+      if (!/^\d{4,8}$/.test(newPin)) {
+        return showToast('Enter a valid 4 to 8 digit numeric PIN.', 'error');
+      }
+      appState.adminPin = newPin;
+      document.getElementById('admin-new-pin').value = '';
+      saveAppState({
+        actor: 'Host Admin',
+        category: 'ADMIN',
+        action: 'Changed PIN',
+        msg: 'Host Admin updated the security PIN.'
+      });
+      showToast('Admin PIN updated successfully!');
+    }
+
+    // =========================================================================
+    // 2. INVITE GATE, WHATSAPP INVITES, PHONE DIRECTORY & RSVP HANDLERS
+    // =========================================================================
+    function normalizeIndianPhone(raw) {
+      const digits = String(raw || '').replace(/\D/g, '');
+      if (!digits) return '';
+      if (digits.length === 10) return '91' + digits;
+      return digits;
+    }
+
+    function getPersonalInviteLink(guest) {
+      const base = window.location.href.split('?')[0].split('#')[0];
+      return `${base}?invite=${encodeURIComponent(guest.id)}`;
+    }
+
+    function getWhatsAppInviteUrl(guest) {
+      const link = getPersonalInviteLink(guest);
+      const msg = [
+        `Hey ${guest.name}! Sankranti is around the corner. Just accept the invite. No excuses, no 'boss didn't approve leave,' and definitely no cancelling last minute! (#DhummuLeputunnam)`,
+        ``,
+        `Tap your invite link below to accept & confirm your travel dates:`,
+        link
+      ].join('\n');
+      const phone = normalizeIndianPhone(guest.phone);
+      return phone
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    }
+
+    function copyInviteLink(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      const link = getPersonalInviteLink(guest);
+      const ta = document.createElement('textarea');
+      ta.value = link;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast(`Invite link copied for ${guest.name}!`);
+    }
+
+    async function pickContactFromMobile(targetMode, guestId) {
+      if (navigator.contacts && typeof navigator.contacts.select === 'function') {
+        try {
+          const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+          if (contacts && contacts.length) {
+            const cName = (contacts[0].name && contacts[0].name[0]) || '';
+            const cTel = normalizeIndianPhone((contacts[0].tel && contacts[0].tel[0]) || '');
+            if (targetMode === 'admin') {
+              if (cName) document.getElementById('admin-new-guest-name').value = cName;
+              if (cTel) document.getElementById('admin-new-guest-phone').value = cTel;
+              showToast(`Pulled ${cName || 'contact'} from phonebook!`);
+            } else if (guestId) {
+              const g = appState.guests.find(x => x.id === guestId);
+              if (g && cTel) {
+                g.phone = cTel;
+                saveAppState({
+                  actor: 'Host Admin',
+                  category: 'ADMIN',
+                  action: 'Updated Phone',
+                  msg: `Saved phone number for ${g.name} from contacts.`
+                });
+                showToast(`Saved ${g.name}'s number!`);
+              }
+            }
+          }
+          return;
+        } catch (err) {
+          console.warn('Contact picker cancelled or unavailable:', err);
+        }
+      }
+      if (targetMode === 'admin') {
+        document.getElementById('admin-new-guest-phone')?.focus();
+        showToast('Direct phonebook access is supported on mobile Chrome/Android. Enter number manually here.');
+      } else if (guestId) {
+        selectedRsvpGuestId = guestId;
+        switchMainTab('rsvp');
+        setTimeout(() => document.getElementById('rsvp-phone-input')?.focus(), 80);
+        showToast('Enter or paste mobile number in the box below.');
+      }
+    }
+
+    function saveGuestPhone(guestId) {
+      const g = appState.guests.find(x => x.id === guestId);
+      if (!g) return;
+      const raw = document.getElementById('rsvp-phone-input')?.value || '';
+      g.phone = normalizeIndianPhone(raw);
+      saveAppState({
+        actor: 'Host Admin',
+        category: 'ADMIN',
+        action: 'Saved Phone',
+        msg: `Updated phone directory entry for ${g.name}.`
+      });
+      showToast(`Phone saved for ${g.name}!`);
+    }
+
+    function openInviteGateForGuest(guest) {
+      const modal = document.getElementById('invite-gate-modal');
+      const shell = document.getElementById('app-shell');
+      const titleEl = document.getElementById('invite-gate-title');
+      const bodyEl = document.getElementById('invite-gate-body');
+      if (!modal || !bodyEl) return;
+
+      if (shell) shell.classList.add('hidden');
+      modal.classList.remove('hidden');
+      if (titleEl) titleEl.textContent = `Hey ${guest.name}!`;
+
+      if (guest.rsvp === 'exited' || guest.rsvp === 'declined') {
+        bodyEl.innerHTML = `
+          <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-950 text-xs sm:text-sm font-bold">
+            Your invitation status is currently marked as <span class="uppercase underline">${guest.rsvp}</span>. Contact Host Admin if you'd like to rejoin Sankranti 2027!
+          </div>
+          <button type="button" onclick="openAdminPinModal()" class="w-full py-3 rounded-2xl bg-stone-800 text-amber-200 text-xs font-extrabold">
+            🛡️ Host Admin Override
+          </button>
+        `;
+      } else {
+        bodyEl.innerHTML = `
+          <p class="text-sm text-stone-700 font-semibold leading-relaxed">
+            You’re invited to <strong>Sankranti 2027</strong> (Jangareddygudem • Kothapeta • Narsapuram). Ready to lock in your spot?
+          </p>
+          <div class="flex flex-col gap-2.5 pt-2">
+            <button type="button" onclick="acceptInviteFromGate('${guest.id}')" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm sm:text-base shadow-lg transition">
+              ✅ Accept Invitation
+            </button>
+            <button type="button" onclick="declineInviteFromGate('${guest.id}')" class="w-full py-3 px-6 rounded-2xl bg-red-100 hover:bg-red-200 text-red-900 font-extrabold text-xs sm:text-sm transition">
+              ❌ Decline
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function acceptInviteFromGate(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      guest.rsvp = 'accepted';
+      currentRole = guest.id;
+      selectedRsvpGuestId = guest.id;
+
+      document.getElementById('invite-gate-modal')?.classList.add('hidden');
+      document.getElementById('app-shell')?.classList.remove('hidden');
+
+      saveAppState({
+        actor: guest.name,
+        category: 'RSVP',
+        action: 'Accepted Invite',
+        msg: `${guest.name} accepted the Sankranti 2027 invitation!`
+      });
+
+      switchMainTab('home');
+      const welcomeTitle = document.getElementById('welcome-guest-name');
+      if (welcomeTitle) welcomeTitle.textContent = `Welcome aboard! ${guest.name}`;
+      document.getElementById('welcome-rsvp-modal')?.classList.remove('hidden');
+    }
+
+    function declineInviteFromGate(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      guest.rsvp = 'declined';
+      saveAppState({
+        actor: guest.name,
+        category: 'RSVP',
+        action: 'Declined Invite',
+        msg: `${guest.name} declined the Sankranti 2027 invitation.`
+      });
+      openInviteGateForGuest(guest);
+    }
+
+    function closeWelcomeModal() {
+      document.getElementById('welcome-rsvp-modal')?.classList.add('hidden');
+      const formSec = document.getElementById('home-guest-details-section');
+      if (formSec) {
+        formSec.classList.remove('hidden');
+        formSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function confirmGuestExit(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      guest.rsvp = 'exited';
+      saveAppState({
+        actor: guest.name,
+        category: 'RSVP',
+        action: 'Exited Trip',
+        msg: `${guest.name} exited Sankranti 2027.`
+      });
+      openInviteGateForGuest(guest);
+    }
+
+    function selectGuestForRsvp(guestId) {
+      selectedRsvpGuestId = guestId;
+      renderRsvpSection();
+    }
+
+    function renderRsvpSection() {
+      const selectEl = document.getElementById('rsvp-guest-select');
+      if (selectEl) {
+        selectEl.innerHTML = appState.guests.map(g =>
+          `<option value="${g.id}" ${g.id === selectedRsvpGuestId ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`
+        ).join('');
+      }
+
+      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || appState.guests[0];
+      if (!guest) return;
+
+      const box = document.getElementById('rsvp-invite-box');
+      const formContainer = document.getElementById('preferences-form-container');
+
+      if (box) {
+        box.innerHTML = `
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-lg sm:text-xl font-extrabold text-red-950">${guest.name}</h3>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${guest.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-200 text-red-950'}">${guest.rsvp}</span>
+              </div>
+              <p class="text-xs text-stone-600 break-all">Personal Link: <span class="font-mono text-red-900">${getPersonalInviteLink(guest)}</span></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input id="rsvp-phone-input" type="tel" value="${guest.phone || ''}" placeholder="Phone (e.g. 9876543210)" class="px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950 w-40" />
+              <button type="button" onclick="saveGuestPhone('${guest.id}')" class="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold">💾 Save #</button>
+              <button type="button" onclick="pickContactFromMobile('rsvp', '${guest.id}')" class="px-3 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-extrabold">📱 Contacts</button>
+              <a href="${getWhatsAppInviteUrl(guest)}" target="_blank" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">📲 Send WhatsApp</a>
+              <button type="button" onclick="copyInviteLink('${guest.id}')" class="px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-amber-950 text-xs font-extrabold">🔗 Copy Link</button>
+              ${guest.rsvp !== 'accepted' ? `<button type="button" onclick="acceptInviteFromGate('${guest.id}')" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-extrabold shadow">✅ Accept Invite</button>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      if (formContainer) {
+        if (guest.rsvp === 'accepted') {
+          formContainer.classList.remove('hidden');
+          populatePreferenceFormForGuest(guest, 'rsvp');
+        } else {
+          formContainer.classList.add('hidden');
+        }
+      }
+    }
+
+    function getAggregatedRequestedItems() {
+      const map = new Map();
+      appState.guests.filter(g => g.rsvp === 'accepted').forEach(g => {
+        (g.starters || []).forEach(it => {
+          const key = `Starter:${it.name}`;
+          const prev = map.get(key) || { category: 'Starter', label: it.name, totalQty: 0 };
+          prev.totalQty += Number(it.qty) || 1;
+          map.set(key, prev);
+        });
+        (g.alcohol || []).forEach(it => {
+          const key = `Alcohol:${it.brand}`;
+          const prev = map.get(key) || { category: it.category || 'Spirit', label: it.brand, totalQty: 0 };
+          prev.totalQty += Number(it.qty) || 1;
+          map.set(key, prev);
+        });
+        (g.essentials || []).forEach(it => {
+          const key = `Essential:${it.name}`;
+          const prev = map.get(key) || { category: 'Essential', label: it.name, totalQty: 0 };
+          prev.totalQty += Number(it.qty) || 1;
+          map.set(key, prev);
+        });
+      });
+      return Array.from(map.values());
+    }
+
+    // =========================================================================
+    // 3. INDEXEDDB HD PHOTO VAULT (ORIGINAL FULL RESOLUTION)
     // =========================================================================
     function openPhotoDb() {
       return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
+        req.onupgradeneeded = e => {
           const db = e.target.result;
           if (!db.objectStoreNames.contains(DB_STORE)) {
             db.createObjectStore(DB_STORE, { keyPath: 'id' });
@@ -1448,10 +1807,10 @@
     async function getAllHdPhotos() {
       try {
         const db = await openPhotoDb();
-        return new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
           const tx = db.transaction(DB_STORE, 'readonly');
           const req = tx.objectStore(DB_STORE).getAll();
-          req.onsuccess = () => resolve(req.result || []);
+          req.onsuccess = () => resolve((req.result || []).sort((a, b) => b.createdAt - a.createdAt));
           req.onerror = () => reject(req.error);
         });
       } catch (e) {
@@ -1463,7 +1822,7 @@
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
       const captionInput = document.getElementById('photo-caption-input');
-      const customCaption = (captionInput?.value || '').trim();
+      const baseCaption = (captionInput?.value || '').trim();
       const uploader = getActiveActorName();
 
       try {
@@ -1476,12 +1835,12 @@
             reader.readAsDataURL(file);
           });
           const photoRecord = {
-            id: 'photo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-            name: file.name,
-            caption: customCaption || file.name.replace(/\.[^/.]+$/, ''),
+            id: 'photo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            caption: baseCaption || file.name.replace(/\.[^/.]+$/, ''),
+            fileName: file.name,
+            sizeKB: Math.max(1, Math.round(file.size / 1024)),
             uploadedBy: uploader,
-            uploadedAt: new Date().toLocaleString('en-IN'),
-            sizeKB: Math.round(file.size / 1024),
+            createdAt: Date.now(),
             dataUrl
           };
           await new Promise((res, rej) => {
@@ -1496,1249 +1855,74 @@
         saveAppState({
           actor: uploader,
           category: 'PHOTO',
-          action: 'Uploaded HD Photo',
-          msg: `${uploader} uploaded ${files.length} original HD photo(s) to the vault.`
+          action: 'Uploaded HD Photos',
+          msg: `${uploader} uploaded ${files.length} original HD photo(s).`
         });
+        renderGallerySection();
         showToast(`Uploaded ${files.length} HD photo(s)!`);
       } catch (e) {
-        showToast('Could not save photo to browser storage.', 'error');
-      }
-    }
-
-    async function deleteHdPhoto(photoId) {
-      const photos = await getAllHdPhotos();
-      const target = photos.find(p => p.id === photoId);
-      if (!target) return;
-      const actor = getActiveActorName();
-      if (!isAdminUnlocked && target.uploadedBy !== actor) {
-        showToast('You can only delete photos you uploaded.', 'error');
-        return;
-      }
-      try {
-        const db = await openPhotoDb();
-        await new Promise((res, rej) => {
-          const tx = db.transaction(DB_STORE, 'readwrite');
-          tx.objectStore(DB_STORE).delete(photoId);
-          tx.oncomplete = () => res();
-          tx.onerror = () => rej(tx.error);
-        });
-        saveAppState({
-          actor,
-          category: 'PHOTO',
-          action: 'Deleted HD Photo',
-          msg: `${actor} removed photo "${target.caption}".`
-        });
-        showToast('Photo removed from vault.');
-      } catch (e) {
-        showToast('Failed to delete photo.', 'error');
+        showToast('Failed to store photo in browser vault.', 'error');
       }
     }
 
     async function downloadHdPhoto(photoId) {
       const photos = await getAllHdPhotos();
-      const photo = photos.find(p => p.id === photoId);
-      if (!photo) return;
+      const p = photos.find(x => x.id === photoId);
+      if (!p) return;
       const a = document.createElement('a');
-      a.href = photo.dataUrl;
-      a.download = photo.name || `${photo.caption}.jpg`;
-      document.body.appendChild(a);
+      a.href = p.dataUrl;
+      a.download = p.fileName || 'sankranti-2027-hd.jpg';
       a.click();
-      a.remove();
+    }
+
+    async function deleteHdPhoto(photoId) {
+      const photos = await getAllHdPhotos();
+      const p = photos.find(x => x.id === photoId);
+      if (!p) return;
+      const actor = getActiveActorName();
+      if (!isAdminUnlocked && p.uploadedBy !== actor) {
+        return showToast('You can only delete photos you uploaded.', 'error');
+      }
+      const db = await openPhotoDb();
+      await new Promise((res, rej) => {
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).delete(photoId);
+        tx.oncomplete = () => res();
+        tx.onerror = () => rej(tx.error);
+      });
+      saveAppState({
+        actor,
+        category: 'PHOTO',
+        action: 'Deleted HD Photo',
+        msg: `${actor} deleted photo "${p.caption}".`
+      });
+      renderGallerySection();
+      showToast('Photo removed.');
     }
 
     async function openLightbox(photoId) {
       const photos = await getAllHdPhotos();
-      const photo = photos.find(p => p.id === photoId);
-      if (!photo) return;
-      document.getElementById('lightbox-img').src = photo.dataUrl;
-      document.getElementById('lightbox-caption').textContent = photo.caption;
-      document.getElementById('lightbox-meta').textContent = `Uploaded by ${photo.uploadedBy} • ${photo.uploadedAt} • ${photo.sizeKB} KB`;
-      document.getElementById('lightbox-download-btn').onclick = () => downloadHdPhoto(photo.id);
+      const p = photos.find(x => x.id === photoId);
+      if (!p) return;
+      document.getElementById('lightbox-img').src = p.dataUrl;
+      document.getElementById('lightbox-caption').textContent = p.caption;
+      document.getElementById('lightbox-meta').textContent = `Uploaded by ${p.uploadedBy} • ${p.sizeKB} KB`;
+      document.getElementById('lightbox-download-btn').onclick = () => downloadHdPhoto(p.id);
       document.getElementById('photo-lightbox-modal').classList.remove('hidden');
     }
 
     function closeLightbox() {
       document.getElementById('photo-lightbox-modal').classList.add('hidden');
-      document.getElementById('lightbox-img').src = '';
     }
 
     // =========================================================================
-    // 3. NAVIGATION, ROLE SWITCHING & ADMIN ACCESS
+    // 4. GUEST TRAVEL & PACKING CHECKLIST HELPERS
     // =========================================================================
-    function switchMainTab(tabKey) {
-      const activeGuest = getActiveGuest();
-      if (activeGuest && activeGuest.rsvp === 'exited' && !isAdminUnlocked && tabKey !== 'rsvp') {
-        tabKey = 'rsvp';
-      }
-      if (tabKey === 'admin' && !isAdminUnlocked) {
-        openAdminPinModal();
-        return;
-      }
-      if (tabKey === 'rsvp' && !isAdminUnlocked && currentRole === 'overview') {
-        openAdminPinModal();
-        return;
-      }
-
-      document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.add('hidden'));
-      const targetPanel = document.getElementById('tab-' + tabKey);
-      if (targetPanel) targetPanel.classList.remove('hidden');
-
-      document.querySelectorAll('.main-nav-btn').forEach(btn => {
-        if (btn.id === 'nav-admin') return;
-        btn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200';
-      });
-      const activeBtn = document.getElementById('nav-' + tabKey);
-      if (activeBtn && tabKey !== 'admin') {
-        activeBtn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow';
-      }
-
-      if (tabKey === 'rsvp') renderRsvpSection();
-      if (tabKey === 'expenses') renderExpensesSection();
-      if (tabKey === 'gallery') renderGallerySection();
-      if (tabKey === 'logs') renderLogsSection();
-      if (tabKey === 'admin') renderAdminSection();
-    }
-
-    function handleRoleSwitch(val) {
-      currentRole = val;
-      if (val !== 'overview') {
-        selectedRsvpGuestId = val;
-        const g = getActiveGuest();
-        if (g && (g.rsvp === 'pending' || g.rsvp === 'exited') && !isAdminUnlocked) {
-          switchMainTab('rsvp');
-        }
-      }
-      renderAllUI();
-    }
-
-    function openAdminPinModal() {
-      if (isAdminUnlocked) {
-        switchMainTab('admin');
-        return;
-      }
-      document.getElementById('admin-pin-input').value = '';
-      document.getElementById('admin-pin-modal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('admin-pin-input').focus(), 60);
-    }
-
-    function closeAdminPinModal() {
-      document.getElementById('admin-pin-modal').classList.add('hidden');
-    }
-
-    function verifyAdminPin() {
-      const entered = document.getElementById('admin-pin-input').value.trim();
-      if (entered === appState.adminPin) {
-        isAdminUnlocked = true;
-        closeAdminPinModal();
-        saveAppState({
-          actor: 'Host Admin',
-          category: 'ADMIN',
-          action: 'Unlocked Admin',
-          msg: 'Host Admin unlocked full control mode.'
-        });
-        switchMainTab('admin');
-        showToast('Host Admin unlocked!');
-      } else {
-        showToast('Incorrect PIN! Try again.', 'error');
-      }
-    }
-
-    function logoutAdmin() {
-      isAdminUnlocked = false;
-      renderAllUI();
-      switchMainTab('home');
-      showToast('Admin mode locked.');
-    }
-
-    function changeAdminPin() {
-      const newPin = document.getElementById('admin-new-pin').value.trim();
-      if (newPin.length < 4) {
-        showToast('PIN must be at least 4 characters.', 'error');
-        return;
-      }
-      appState.adminPin = newPin;
-      document.getElementById('admin-new-pin').value = '';
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Changed PIN',
-        msg: 'Host Admin security PIN was updated.'
-      });
-      showToast('Admin PIN updated!');
-    }
-
-    // =========================================================================
-    // 4. RSVP, INVITES & GUEST PREFERENCES
-    // =========================================================================
-    function openInviteGateForGuest(guest) {
-      const appShell = document.getElementById('app-shell');
-      const modal = document.getElementById('invite-gate-modal');
-      const title = document.getElementById('invite-gate-title');
-      const body = document.getElementById('invite-gate-body');
-      if (appShell) appShell.classList.add('hidden');
-      title.textContent = `Hey ${guest.name}!`;
-
-      if (guest.rsvp === 'exited' || guest.rsvp === 'declined') {
-        body.innerHTML = `
-          <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-950 space-y-2">
-            <div class="text-2xl">🔒</div>
-            <div class="font-extrabold text-base">Access Locked</div>
-            <p class="text-xs text-red-800">You have declined or exited Sankranti 2027. Only Host Admin can re-invite you.</p>
-          </div>
-        `;
-      } else {
-        body.innerHTML = `
-          <p class="text-sm text-stone-700 font-medium leading-relaxed">
-            You are invited to <strong>Sankranti 2027</strong> (Jangareddygudem • Kothapeta • Narsapuram). Please accept or decline your invitation below.
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <button type="button" onclick="acceptGuestInvite('${guest.id}')" class="py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-black text-sm shadow-lg transition">
-              ✅ Accept Invitation
-            </button>
-            <button type="button" onclick="declineGuestInvite('${guest.id}')" class="py-3.5 px-5 rounded-2xl bg-red-100 hover:bg-red-200 text-red-900 font-extrabold text-sm transition">
-              ❌ Decline
-            </button>
-          </div>
-        `;
-      }
-      modal.classList.remove('hidden');
-    }
-
-    function declineGuestInvite(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      guest.rsvp = 'declined';
-      currentRole = guest.id;
-      saveAppState({
-        actor: guest.name,
-        category: 'RSVP',
-        action: 'Declined Invite',
-        msg: `${guest.name} declined the Sankranti 2027 invitation.`
-      });
-      openInviteGateForGuest(guest);
-    }
-
-    function confirmGuestExit(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      guest.rsvp = 'exited';
-      saveAppState({
-        actor: guest.name,
-        category: 'RSVP',
-        action: 'Exited Trip',
-        msg: `${guest.name} exited the Sankranti 2027 trip and revoked their access.`
-      });
-      openInviteGateForGuest(guest);
-    }
-
-    function renderRsvpSection() {
-      const select = document.getElementById('rsvp-guest-select');
-      if (select) {
-        select.innerHTML = appState.guests.map(g =>
-          `<option value="${g.id}" ${g.id === selectedRsvpGuestId ? 'selected' : ''}>${g.name} (${g.rsvp.toUpperCase()})</option>`
-        ).join('');
-      }
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId) || appState.guests[0];
-      if (!guest) return;
-
-      const box = document.getElementById('rsvp-invite-box');
-      const prefContainer = document.getElementById('preferences-form-container');
-      if (box) {
-        box.innerHTML = `
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase ${guest.rsvp === 'accepted' ? 'bg-emerald-100 text-emerald-900' : guest.rsvp === 'declined' || guest.rsvp === 'exited' ? 'bg-red-100 text-red-900' : 'bg-amber-200 text-amber-950'}">
-                Status: ${guest.rsvp}
-              </span>
-              <h3 class="text-xl font-extrabold text-red-950 mt-2">${guest.name}</h3>
-              <p class="text-xs text-stone-600 mt-0.5 break-all">${getGuestInviteLink(guest.id)}</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <a href="${getWhatsAppInviteUrl(guest)}" target="_blank" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">
-                📲 Send WhatsApp Invite
-              </a>
-              <button type="button" onclick="copyInviteLink('${guest.id}')" class="px-4 py-2.5 rounded-xl bg-white border border-amber-300 text-amber-950 text-xs font-extrabold">
-                🔗 Copy Invite Link
-              </button>
-              ${guest.rsvp !== 'accepted' ? `
-                <button type="button" onclick="acceptGuestInvite('${guest.id}')" class="px-4 py-2.5 rounded-xl bg-orange-600 text-white text-xs font-extrabold shadow">
-                  ✅ Mark Accepted
-                </button>
-              ` : ''}
-            </div>
-          </div>
-        `;
-      }
-
-      if (prefContainer) {
-        if (guest.rsvp === 'accepted') {
-          prefContainer.classList.remove('hidden');
-          populatePreferenceFormForGuest(guest, 'rsvp');
-        } else {
-          prefContainer.classList.add('hidden');
-        }
-      }
-    }
-
-    function getGuestInviteLink(guestId) {
-      const url = new URL(window.location.href);
-      url.search = `?invite=${encodeURIComponent(guestId)}`;
-      return url.toString();
-    }
-
-    function getWhatsAppInviteUrl(guest) {
-      const link = getGuestInviteLink(guest.id);
-      const text = [
-        `☀️🪁 *Sankranti 2027 Squad Invite* 🔥`,
-        `Hey *${guest.name}*! You're invited to our Sankranti 2027 celebration (#DhummuLeputunnam).`,
-        `Tap your personal link below to Accept your invite and add your travel dates, starter choices, and spirits preferences:`,
-        link
-      ].join('\n\n');
-      const phone = (guest.phone || '').replace(/\D/g, '');
-      return phone
-        ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
-        : `https://wa.me/?text=${encodeURIComponent(text)}`;
-    }
-
-    function copyInviteLink(guestId) {
-      const link = getGuestInviteLink(guestId);
-      const ta = document.createElement('textarea');
-      ta.value = link;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast('Personal invite URL copied!');
-    }
-
-    function selectGuestForRsvp(guestId) {
-      selectedRsvpGuestId = guestId;
-      renderRsvpSection();
-    }
-
-    function acceptGuestInvite(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      guest.rsvp = 'accepted';
-      currentRole = guest.id;
-      selectedRsvpGuestId = guest.id;
-      document.getElementById('invite-gate-modal')?.classList.add('hidden');
-      document.getElementById('app-shell')?.classList.remove('hidden');
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'RSVP',
-        action: 'Accepted Invite',
-        msg: `${guest.name} accepted the Sankranti 2027 invite!`
-      });
-      switchMainTab('home');
-      const homeSection = document.getElementById('home-guest-details-section');
-      if (homeSection) homeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      showToast(`Welcome ${guest.name}! Please fill out your travel & preferences below.`);
-    }
-
-    function closeWelcomeModal() {
-      document.getElementById('welcome-rsvp-modal').classList.add('hidden');
-      switchMainTab('home');
-    }
-
     function populatePreferenceFormForGuest(guest, prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const heading = document.getElementById(p + 'pref-form-heading') || document.getElementById('home-pref-heading');
-      if (heading) heading.textContent = `${guest.name}'s Travel Itinerary & Preferences`;
-
-      const fromEl = document.getElementById(p + 'pref-from-city');
-      if (fromEl) fromEl.value = guest.fromCity || '';
-
-      const tDateEl = document.getElementById(p + 'pref-travel-date');
-      if (tDateEl) tDateEl.value = guest.travelDate || '2027-01-13';
-
-      const rDateEl = document.getElementById(p + 'pref-return-date');
-      if (rDateEl) rDateEl.value = guest.returnDate || '2027-01-17';
-
-      const citySelect = document.getElementById(p + 'pref-arrival-city');
-      const customCity = document.getElementById(p + 'pref-custom-city');
-      const standardCities = ['Hyderabad', 'Tanuku', 'Narsapuram', 'Kothapeta', 'Jangareddygudem', 'Kirlampudi'];
-      if (citySelect && customCity) {
-        if (standardCities.includes(guest.arrivalCity)) {
-          citySelect.value = guest.arrivalCity;
-          customCity.classList.add('hidden');
-        } else {
-          citySelect.value = 'Others';
-          customCity.classList.remove('hidden');
-          customCity.value = guest.arrivalCity || '';
-        }
       }
 
-      setDietPreference(guest.diet || 'Non-Veg', true, prefix);
-      populateAlcoholBrands(prefix);
-      populateAlcoholQuantities(prefix);
-      renderGuestPreferenceChips(guest, prefix);
-    }
-
-    function toggleCustomCityInput(val, customId = 'pref-custom-city') {
-      const el = document.getElementById(customId);
-      if (!el) return;
-      if (val === 'Others') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function setDietPreference(diet, skipSave = false, prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (guest) guest.diet = diet;
-
-      const nvBtn = document.getElementById(p + 'diet-nonveg-btn');
-      const vBtn = document.getElementById(p + 'diet-veg-btn');
-      if (nvBtn && vBtn) {
-        if (diet === 'Non-Veg') {
-          nvBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-red-700 text-white shadow';
-          vBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-emerald-900 border border-emerald-300';
-        } else {
-          vBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-700 text-white shadow';
-          nvBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-red-900 border border-red-300';
-        }
-      }
-
-      const select = document.getElementById(p + 'starter-item-select');
-      if (select) {
-        const dishes = STARTER_MENU[diet] || STARTER_MENU['Non-Veg'];
-        select.innerHTML = dishes.map(d => `<option value="${d}">${d}</option>`).join('');
-        toggleCustomStarterInput(select.value, p + 'starter-custom-input');
-      }
-      if (!skipSave && guest) saveAppState();
-    }
-
-    function toggleCustomStarterInput(val, customId = 'starter-custom-input') {
-      const el = document.getElementById(customId);
-      if (!el) return;
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function addStarterItemToGuest(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      let item = document.getElementById(p + 'starter-item-select').value;
-      if (item === 'Other') {
-        item = document.getElementById(p + 'starter-custom-input').value.trim();
-        if (!item) return showToast('Enter a custom starter name.', 'error');
-      }
-      const qty = parseInt(document.getElementById(p + 'starter-qty-select').value, 10) || 1;
-      const existing = guest.starters.find(s => s.item.toLowerCase() === item.toLowerCase());
-      if (existing) existing.qty += qty;
-      else guest.starters.push({ item, qty, diet: guest.diet });
-
-      document.getElementById(p + 'starter-custom-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Starter',
-        msg: `${guest.name} added ${qty}x ${item}.`
-      });
-      renderGuestPreferenceChips(guest, prefix);
-    }
-
-    function removeGuestItem(type, index, prefix = 'rsvp') {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest || !Array.isArray(guest[type])) return;
-      const removed = guest[type].splice(index, 1)[0];
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Removed Item',
-        msg: `${guest.name} removed ${removed?.item || removed?.brand || 'item'} from ${type}.`
-      });
-      renderGuestPreferenceChips(guest, prefix);
-    }
-
-    function populateAlcoholBrands(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const catEl = document.getElementById(p + 'alc-category-select');
-      const sel = document.getElementById(p + 'alc-brand-select');
-      if (!catEl || !sel) return;
-      const brands = ALCOHOL_BRANDS[catEl.value] || ['Other'];
-      sel.innerHTML = brands.map(b => `<option value="${b}">${b}</option>`).join('');
-      toggleCustomAlcoholInput(sel.value, p + 'alc-custom-brand-input');
-    }
-
-    function toggleCustomAlcoholInput(val, customId = 'alc-custom-brand-input') {
-      const el = document.getElementById(customId);
-      if (!el) return;
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function populateAlcoholQuantities(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const sel = document.getElementById(p + 'alc-qty-select');
-      if (!sel || sel.options.length > 0) return;
-      let html = '';
-      for (let i = 1; i <= 24; i++) {
-        html += `<option value="${i}">${i} ${i === 1 ? 'Unit / Bottle' : 'Units / Bottles'}</option>`;
-      }
-      sel.innerHTML = html;
-    }
-
-    function addAlcoholItemToGuest(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      const category = document.getElementById(p + 'alc-category-select').value;
-      let brand = document.getElementById(p + 'alc-brand-select').value;
-      if (brand === 'Other') {
-        brand = document.getElementById(p + 'alc-custom-brand-input').value.trim();
-        if (!brand) return showToast('Enter a custom brand name.', 'error');
-      }
-      const qty = parseInt(document.getElementById(p + 'alc-qty-select').value, 10) || 1;
-      const existing = guest.alcohol.find(a => a.brand.toLowerCase() === brand.toLowerCase() && a.category === category);
-      if (existing) existing.qty += qty;
-      else guest.alcohol.push({ category, brand, qty });
-
-      document.getElementById(p + 'alc-custom-brand-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Spirits',
-        msg: `${guest.name} added ${qty}x ${brand} (${category}).`
-      });
-      renderGuestPreferenceChips(guest, prefix);
-    }
-
-    function toggleCustomEssentialInput(val, customId = 'essential-custom-input') {
-      const el = document.getElementById(customId);
-      if (!el) return;
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function addEssentialItemToGuest(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      let item = document.getElementById(p + 'essential-item-select').value;
-      if (item === 'Other') {
-        item = document.getElementById(p + 'essential-custom-input').value.trim();
-        if (!item) return showToast('Enter a custom essential item.', 'error');
-      }
-      const qty = parseInt(document.getElementById(p + 'essential-qty-select').value, 10) || 1;
-      const existing = guest.essentials.find(e => e.item.toLowerCase() === item.toLowerCase());
-      if (existing) existing.qty += qty;
-      else guest.essentials.push({ item, qty });
-
-      document.getElementById(p + 'essential-custom-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Essential',
-        msg: `${guest.name} added ${qty}x ${item}.`
-      });
-      renderGuestPreferenceChips(guest, prefix);
-    }
-
-    function toggleCustomCigaretteInput(val, customId = 'cig-custom-input') {
-      const el = document.getElementById(customId);
-      if (!el) return;
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function addCigaretteItemToGuest(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      let brand = document.getElementById(p + 'cig-brand-select').value;
-      if (brand === 'Other') {
-        brand = document.getElementById(p + 'cig-custom-input').value.trim();
-        if (!brand) return showToast('Enter a custom cigarette brand.', 'error');
-      }
-      const qty = parseInt(document.getElementById(p + 'cig-qty-select').value, 10) || 1;
-      const existing = guest.cigarettes.find(c => c.brand.toLowerCase() === brand.toLowerCase());
-      if (existing) existing.qty += qty;
-      else guest.cigarettes.push({ brand, qty });
-
-      document.getElementById(p + 'cig-custom-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Smokes',
-        msg: `${guest.name} added ${qty} pack(s) of ${brand}.`
-      });
-      renderGuestPreferenceChips(guest, prefix);
-    }
-
-    function renderGuestPreferenceChips(guest, prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const sList = document.getElementById(p + 'guest-starters-list');
-      if (sList) {
-        sList.innerHTML = guest.starters.length
-          ? guest.starters.map((s, idx) => `
-              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-orange-100 text-red-950 text-xs font-extrabold border border-orange-300">
-                <span>${s.qty}× ${s.item}</span>
-                <button type="button" onclick="removeGuestItem('starters', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
-              </span>
-            `).join('')
-          : '<span class="text-xs text-stone-500 italic">No starters added yet.</span>';
-      }
-
-      const aList = document.getElementById(p + 'guest-alcohol-list');
-      if (aList) {
-        aList.innerHTML = guest.alcohol.length
-          ? guest.alcohol.map((a, idx) => `
-              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-950 text-xs font-extrabold border border-amber-300">
-                <span>${a.qty}× ${a.brand} (${a.category})</span>
-                <button type="button" onclick="removeGuestItem('alcohol', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
-              </span>
-            `).join('')
-          : '<span class="text-xs text-stone-500 italic">No spirits added yet.</span>';
-      }
-
-      const eList = document.getElementById(p + 'guest-essentials-list');
-      if (eList) {
-        eList.innerHTML = guest.essentials.length
-          ? guest.essentials.map((e, idx) => `
-              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-100 text-teal-950 text-xs font-extrabold border border-teal-300">
-                <span>${e.qty}× ${e.item}</span>
-                <button type="button" onclick="removeGuestItem('essentials', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
-              </span>
-            `).join('')
-          : '<span class="text-xs text-stone-500 italic">No essentials added yet.</span>';
-      }
-
-      const cList = document.getElementById(p + 'guest-cigarettes-list');
-      if (cList) {
-        cList.innerHTML = guest.cigarettes.length
-          ? guest.cigarettes.map((c, idx) => `
-              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-200 text-stone-900 text-xs font-extrabold border border-stone-300">
-                <span>${c.qty}× ${c.brand}</span>
-                <button type="button" onclick="removeGuestItem('cigarettes', ${idx}, '${prefix}')" class="text-red-700 hover:text-red-950 font-black">✕</button>
-              </span>
-            `).join('')
-          : '<span class="text-xs text-stone-500 italic">No cigarettes added yet.</span>';
-      }
-    }
-
-    function saveGuestPreferences(prefix = 'rsvp') {
-      const p = prefix === 'home' ? 'home-' : '';
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      guest.fromCity = (document.getElementById(p + 'pref-from-city')?.value || '').trim();
-      guest.travelDate = document.getElementById(p + 'pref-travel-date').value;
-      guest.returnDate = document.getElementById(p + 'pref-return-date').value;
-      const cityVal = document.getElementById(p + 'pref-arrival-city').value;
-      guest.arrivalCity = cityVal === 'Others'
-        ? (document.getElementById(p + 'pref-custom-city').value.trim() || 'Others')
-        : cityVal;
-
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Saved Preferences',
-        msg: `${guest.name} saved route (${guest.fromCity || 'Origin'} → ${guest.arrivalCity}, ${guest.travelDate} to ${guest.returnDate}) & party preferences.`
-      });
-      showToast(`Trip details & preferences saved for ${guest.name}!`);
-    }
-
-    // =========================================================================
-    // 5. EXPENSES, AUTO-BILLING, FUEL & SETTLEMENT ENGINE
-    // =========================================================================
-    function getAggregatedRequestedItems() {
-      const map = new Map();
-      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
-      confirmed.forEach(g => {
-        (g.starters || []).forEach(s => {
-          const key = `starter:${s.item}`;
-          if (!map.has(key)) map.set(key, { key, label: s.item, category: 'Starter', totalQty: 0, byGuest: {} });
-          const entry = map.get(key);
-          entry.totalQty += s.qty;
-          entry.byGuest[g.id] = (entry.byGuest[g.id] || 0) + s.qty;
-        });
-        (g.alcohol || []).forEach(a => {
-          const key = `alcohol:${a.brand}`;
-          if (!map.has(key)) map.set(key, { key, label: a.brand, category: a.category, totalQty: 0, byGuest: {} });
-          const entry = map.get(key);
-          entry.totalQty += a.qty;
-          entry.byGuest[g.id] = (entry.byGuest[g.id] || 0) + a.qty;
-        });
-        (g.essentials || []).forEach(e => {
-          const key = `essential:${e.item}`;
-          if (!map.has(key)) map.set(key, { key, label: e.item, category: 'Essential', totalQty: 0, byGuest: {} });
-          const entry = map.get(key);
-          entry.totalQty += e.qty;
-          entry.byGuest[g.id] = (entry.byGuest[g.id] || 0) + e.qty;
-        });
-        (g.cigarettes || []).forEach(c => {
-          const key = `cig:${c.brand}`;
-          if (!map.has(key)) map.set(key, { key, label: c.brand, category: 'Smokes', totalQty: 0, byGuest: {} });
-          const entry = map.get(key);
-          entry.totalQty += c.qty;
-          entry.byGuest[g.id] = (entry.byGuest[g.id] || 0) + c.qty;
-        });
-      });
-      return Array.from(map.values());
-    }
-
-    function updateItemUnitPrice(key, val) {
-      const num = parseFloat(val);
-      if (!val || isNaN(num) || num <= 0) delete appState.itemPrices[key];
-      else appState.itemPrices[key] = num;
-      saveAppState();
-      renderAutoBillPreview();
-    }
-
-    function updateItemSplitMode(key, mode) {
-      appState.itemSplitModes[key] = mode;
-      saveAppState();
-      renderRequestedPriceInputs();
-    }
-
-    function toggleCustomItemGuest(key, guestId, checked) {
-      if (!Array.isArray(appState.itemCustomSplits[key])) appState.itemCustomSplits[key] = [];
-      if (checked && !appState.itemCustomSplits[key].includes(guestId)) {
-        appState.itemCustomSplits[key].push(guestId);
-      } else if (!checked) {
-        appState.itemCustomSplits[key] = appState.itemCustomSplits[key].filter(id => id !== guestId);
-      }
-      saveAppState();
-      renderAutoBillPreview();
-    }
-
-    function renderRequestedPriceInputs() {
-      const grid = document.getElementById('requested-price-inputs-grid');
-      if (!grid) return;
-      const items = getAggregatedRequestedItems();
-      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
-
-      if (!items.length) {
-        grid.innerHTML = `<p class="col-span-full text-xs text-stone-500 italic">No starters, drinks, essentials, or cigarettes requested by confirmed guests yet.</p>`;
-        renderAutoBillPreview();
-        return;
-      }
-
-      grid.innerHTML = items.map(it => {
-        const price = appState.itemPrices[it.key] || '';
-        const mode = appState.itemSplitModes[it.key] || 'personal';
-        const customIds = appState.itemCustomSplits[it.key] || [];
-        return `
-          <div class="bg-parchment/70 p-3.5 rounded-2xl border border-amber-200 space-y-2">
-            <div class="flex items-start justify-between gap-2">
-              <div>
-                <span class="text-[10px] font-extrabold uppercase text-orange-700">${it.category}</span>
-                <div class="text-sm font-extrabold text-red-950">${it.label}</div>
-                <div class="text-[11px] text-stone-600 font-semibold">Total Qty: <strong>${it.totalQty}</strong></div>
-              </div>
-              <div class="w-24">
-                <label class="block text-[10px] font-extrabold text-stone-500">Unit ₹</label>
-                <input type="number" min="0" step="any" value="${price}" placeholder="0" oninput="updateItemUnitPrice('${it.key.replace(/'/g, "\\'")}', this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-extrabold text-red-950" />
-              </div>
-            </div>
-            <div>
-              <select onchange="updateItemSplitMode('${it.key.replace(/'/g, "\\'")}', this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950">
-                <option value="personal" ${mode === 'personal' ? 'selected' : ''}>👤 Personal (By Requester Qty)</option>
-                <option value="common" ${mode === 'common' ? 'selected' : ''}>👥 Split Equally (All Confirmed)</option>
-                <option value="custom" ${mode === 'custom' ? 'selected' : ''}>🎯 Custom Group Split</option>
-              </select>
-            </div>
-            ${mode === 'custom' ? `
-              <div class="flex flex-wrap gap-1 pt-1">
-                ${confirmed.map(g => `
-                  <label class="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-amber-200 text-[11px] font-bold">
-                    <input type="checkbox" ${customIds.includes(g.id) ? 'checked' : ''} onchange="toggleCustomItemGuest('${it.key.replace(/'/g, "\\'")}', '${g.id}', this.checked)" />
-                    <span>${g.name}</span>
-                  </label>
-                `).join('')}
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }).join('');
-      renderAutoBillPreview();
-    }
-
-    function renderAutoBillPreview() {
-      const strip = document.getElementById('auto-bill-preview-strip');
-      if (!strip) return;
-      const items = getAggregatedRequestedItems();
-      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
-      const perGuest = {};
-      confirmed.forEach(g => perGuest[g.id] = 0);
-
-      items.forEach(it => {
-        const unitPrice = parseFloat(appState.itemPrices[it.key]) || 0;
-        if (unitPrice <= 0) return;
-        const totalCost = unitPrice * it.totalQty;
-        const mode = appState.itemSplitModes[it.key] || 'personal';
-        if (mode === 'personal') {
-          Object.entries(it.byGuest).forEach(([gid, q]) => {
-            if (perGuest[gid] !== undefined) perGuest[gid] += unitPrice * q;
-          });
-        } else if (mode === 'common' && confirmed.length > 0) {
-          const share = totalCost / confirmed.length;
-          confirmed.forEach(g => perGuest[g.id] += share);
-        } else if (mode === 'custom') {
-          const targets = (appState.itemCustomSplits[it.key] || []).filter(id => perGuest[id] !== undefined);
-          if (targets.length > 0) {
-            const share = totalCost / targets.length;
-            targets.forEach(id => perGuest[id] += share);
-          }
-        }
-      });
-
-      const entries = confirmed.filter(g => perGuest[g.id] > 0);
-      strip.innerHTML = entries.length
-        ? `<span class="font-extrabold text-red-950">Estimated Share:</span> ` + entries.map(g =>
-            `<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-950 font-extrabold">${g.name}: ₹${Math.round(perGuest[g.id])}</span>`
-          ).join('')
-        : `<span class="text-stone-500 italic">Enter unit prices above to preview individual bills.</span>`;
-    }
-
-    function autoGenerateIndividualBills() {
-      const payerId = document.getElementById('auto-bill-payer').value;
-      if (!payerId) return showToast('Select who paid the bill first.', 'error');
-      const items = getAggregatedRequestedItems();
-      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
-      let addedCount = 0;
-
-      items.forEach(it => {
-        const unitPrice = parseFloat(appState.itemPrices[it.key]) || 0;
-        if (unitPrice <= 0) return;
-        const mode = appState.itemSplitModes[it.key] || 'personal';
-        if (mode === 'personal') {
-          Object.entries(it.byGuest).forEach(([gid, q]) => {
-            const amt = Math.round(unitPrice * q * 100) / 100;
-            if (amt > 0) {
-              appState.expenses.unshift({
-                id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-                desc: `${it.label} (${q}× personal)`,
-                amount: amt,
-                date: new Date().toISOString().slice(0, 10),
-                paidBy: payerId,
-                splitBetween: [gid]
-              });
-              addedCount++;
-            }
-          });
-        } else if (mode === 'common' && confirmed.length > 0) {
-          const amt = Math.round(unitPrice * it.totalQty * 100) / 100;
-          appState.expenses.unshift({
-            id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-            desc: `${it.label} (${it.totalQty}× common)`,
-            amount: amt,
-            date: new Date().toISOString().slice(0, 10),
-            paidBy: payerId,
-            splitBetween: confirmed.map(g => g.id)
-          });
-          addedCount++;
-        } else if (mode === 'custom') {
-          const targets = appState.itemCustomSplits[it.key] || [];
-          if (targets.length > 0) {
-            const amt = Math.round(unitPrice * it.totalQty * 100) / 100;
-            appState.expenses.unshift({
-              id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-              desc: `${it.label} (${it.totalQty}× group split)`,
-              amount: amt,
-              date: new Date().toISOString().slice(0, 10),
-              paidBy: payerId,
-              splitBetween: [...targets]
-            });
-            addedCount++;
-          }
-        }
-      });
-
-      if (!addedCount) return showToast('Enter at least one item unit price above.', 'error');
-      saveAppState({
-        actor: getActiveActorName(),
-        category: 'EXPENSE',
-        action: 'Auto-Billed Items',
-        msg: `Generated ${addedCount} itemized bill(s) from requested food & spirits.`
-      });
-      showToast(`Added ${addedCount} itemized bill(s) to ledger!`);
-    }
-
-    function recalcFuelFromDistance() {
-      const dist = parseFloat(document.getElementById('fuel-distance-km').value) || 0;
-      const mileage = parseFloat(document.getElementById('fuel-mileage').value) || 0;
-      const rate = parseFloat(document.getElementById('fuel-rate-per-liter').value) || 0;
-      if (dist > 0 && mileage > 0 && rate > 0) {
-        const total = Math.round((dist / mileage) * rate);
-        document.getElementById('fuel-total-amount').value = total;
-      }
-      updateFuelPreview();
-    }
-
-    function updateFuelPreview() {
-      const total = parseFloat(document.getElementById('fuel-total-amount').value) || 0;
-      const riders = Array.from(document.querySelectorAll('.fuel-rider-cb:checked')).length;
-      const perRider = riders > 0 ? Math.round(total / riders) : 0;
-      const preview = document.getElementById('fuel-live-preview');
-      if (preview) preview.textContent = `₹${total.toLocaleString('en-IN')} total • ₹${perRider.toLocaleString('en-IN')} / rider`;
-    }
-
-    function toggleAllFuelRiders(checked) {
-      document.querySelectorAll('.fuel-rider-cb').forEach(cb => cb.checked = checked);
-      updateFuelPreview();
-    }
-
-    function addFuelExpense() {
-      const desc = document.getElementById('fuel-route-desc').value.trim() || 'Road-Trip Fuel Share';
-      const amount = parseFloat(document.getElementById('fuel-total-amount').value);
-      const paidBy = document.getElementById('fuel-paid-by').value;
-      const splitBetween = Array.from(document.querySelectorAll('.fuel-rider-cb:checked')).map(cb => cb.value);
-
-      if (!paidBy) return showToast('Select who paid at the pump.', 'error');
-      if (!amount || amount <= 0) return showToast('Enter a valid fuel amount.', 'error');
-      if (!splitBetween.length) return showToast('Select at least one rider sharing fuel.', 'error');
-
-      appState.expenses.unshift({
-        id: 'exp-' + Date.now(),
-        desc: `⛽ ${desc}`,
-        amount,
-        date: new Date().toISOString().slice(0, 10),
-        paidBy,
-        splitBetween
-      });
-      document.getElementById('fuel-route-desc').value = '';
-      document.getElementById('fuel-total-amount').value = '';
-      updateFuelPreview();
-      saveAppState({
-        actor: getActiveActorName(),
-        category: 'EXPENSE',
-        action: 'Added Fuel Split',
-        msg: `Added fuel expense "${desc}" (₹${amount}) split among ${splitBetween.length} rider(s).`
-      });
-      showToast('Fuel expense recorded!');
-    }
-
-    function toggleAllExpenseGuests(checked) {
-      document.querySelectorAll('.exp-split-cb').forEach(cb => cb.checked = checked);
-    }
-
-    function saveExpenseForm() {
-      const desc = document.getElementById('exp-desc').value.trim();
-      const amount = parseFloat(document.getElementById('exp-amount').value);
-      const date = document.getElementById('exp-date').value || '2027-01-14';
-      const paidBy = document.getElementById('exp-paid-by').value;
-      const splitBetween = Array.from(document.querySelectorAll('.exp-split-cb:checked')).map(cb => cb.value);
-
-      if (!desc) return showToast('Enter an expense description.', 'error');
-      if (!amount || amount <= 0) return showToast('Enter a valid amount in ₹.', 'error');
-      if (!paidBy) return showToast('Select who paid.', 'error');
-      if (!splitBetween.length) return showToast('Select at least one person to split between.', 'error');
-
-      if (editingExpenseId) {
-        const idx = appState.expenses.findIndex(e => e.id === editingExpenseId);
-        if (idx !== -1) {
-          appState.expenses[idx] = { ...appState.expenses[idx], desc, amount, date, paidBy, splitBetween };
-        }
-        editingExpenseId = null;
-        document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
-        document.getElementById('exp-submit-btn').textContent = '➕ Record & Split Expense';
-        document.getElementById('exp-cancel-edit-btn').classList.add('hidden');
-        saveAppState({
-          actor: getActiveActorName(),
-          category: 'EXPENSE',
-          action: 'Edited Expense',
-          msg: `Updated expense "${desc}" to ₹${amount}.`
-        });
-        showToast('Expense updated!');
-      } else {
-        appState.expenses.unshift({
-          id: 'exp-' + Date.now(),
-          desc,
-          amount,
-          date,
-          paidBy,
-          splitBetween
-        });
-        saveAppState({
-          actor: getActiveActorName(),
-          category: 'EXPENSE',
-          action: 'Added Expense',
-          msg: `Added "${desc}" for ₹${amount} split across ${splitBetween.length} member(s).`
-        });
-        showToast('Expense added & split!');
-      }
-
-      document.getElementById('exp-desc').value = '';
-      document.getElementById('exp-amount').value = '';
-    }
-
-    function startEditExpense(expId) {
-      const exp = appState.expenses.find(e => e.id === expId);
-      if (!exp) return;
-      editingExpenseId = exp.id;
-      document.getElementById('exp-form-title').textContent = 'Edit Expense';
-      document.getElementById('exp-desc').value = exp.desc;
-      document.getElementById('exp-amount').value = exp.amount;
-      document.getElementById('exp-date').value = exp.date;
-      document.getElementById('exp-paid-by').value = exp.paidBy;
-      document.querySelectorAll('.exp-split-cb').forEach(cb => {
-        cb.checked = exp.splitBetween.includes(cb.value);
-      });
-      document.getElementById('exp-submit-btn').textContent = '💾 Save Expense Changes';
-      document.getElementById('exp-cancel-edit-btn').classList.remove('hidden');
-    }
-
-    function cancelEditExpense() {
-      editingExpenseId = null;
-      document.getElementById('exp-form-title').textContent = 'Add Expense & Split';
-      document.getElementById('exp-desc').value = '';
-      document.getElementById('exp-amount').value = '';
-      document.getElementById('exp-submit-btn').textContent = '➕ Record & Split Expense';
-      document.getElementById('exp-cancel-edit-btn').classList.add('hidden');
-    }
-
-    function deleteExpense(expId) {
-      const exp = appState.expenses.find(e => e.id === expId);
-      if (!exp) return;
-      appState.expenses = appState.expenses.filter(e => e.id !== expId);
-      saveAppState({
-        actor: getActiveActorName(),
-        category: 'EXPENSE',
-        action: 'Deleted Expense',
-        msg: `Deleted expense "${exp.desc}" (₹${exp.amount}).`
-      });
-      showToast('Expense removed.');
-    }
-
-    function computeSettlements() {
-      const balances = {};
-      appState.guests.forEach(g => balances[g.id] = 0);
-
-      appState.expenses.forEach(exp => {
-        const amount = parseFloat(exp.amount) || 0;
-        const participants = (exp.splitBetween || []).filter(id => balances[id] !== undefined);
-        if (amount <= 0 || !participants.length) return;
-        if (balances[exp.paidBy] !== undefined) balances[exp.paidBy] += amount;
-        const share = amount / participants.length;
-        participants.forEach(id => balances[id] -= share);
-      });
-
-      const debtors = [];
-      const creditors = [];
-      Object.entries(balances).forEach(([id, bal]) => {
-        const rounded = Math.round(bal * 100) / 100;
-        if (rounded < -0.5) debtors.push({ id, amount: -rounded });
-        else if (rounded > 0.5) creditors.push({ id, amount: rounded });
-      });
-
-      debtors.sort((a, b) => b.amount - a.amount);
-      creditors.sort((a, b) => b.amount - a.amount);
-
-      const txns = [];
-      let i = 0, j = 0;
-      while (i < debtors.length && j < creditors.length) {
-        const pay = Math.min(debtors[i].amount, creditors[j].amount);
-        const fromGuest = appState.guests.find(g => g.id === debtors[i].id);
-        const toGuest = appState.guests.find(g => g.id === creditors[j].id);
-        if (fromGuest && toGuest && pay >= 1) {
-          txns.push({ from: fromGuest.name, to: toGuest.name, amount: Math.round(pay) });
-        }
-        debtors[i].amount -= pay;
-        creditors[j].amount -= pay;
-        if (debtors[i].amount < 0.5) i++;
-        if (creditors[j].amount < 0.5) j++;
-      }
-      return txns;
-    }
-
-    function shareSettlementsWhatsApp() {
-      const txns = computeSettlements();
-      const total = appState.expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-      const lines = [
-        `💸 *Sankranti 2027 Expense Settlement* 🔥`,
-        `Total Trip Spend: *₹${total.toLocaleString('en-IN')}*`,
-        txns.length
-          ? txns.map(t => `• *${t.from}* pays *${t.to}* → *₹${t.amount.toLocaleString('en-IN')}*`).join('\n')
-          : `✅ Everyone is settled up!`
-      ].join('\n\n');
-      window.open(`https://wa.me/?text=${encodeURIComponent(lines)}`, '_blank');
-    }
-
-    // =========================================================================
-    // 6. RENDERING PIPELINE (DASHLETS, EXPENSES, GALLERY, LOGS, ADMIN)
-    // =========================================================================
-    function renderAllUI() {
-      // Role Switcher
-      const roleSelect = document.getElementById('role-switcher');
-      if (roleSelect) {
-        roleSelect.innerHTML = `<option value="overview">🏠 Group Overview (Public)</option>` +
-          appState.guests.map(g => `<option value="${g.id}" ${currentRole === g.id ? 'selected' : ''}>👤 ${g.name} (${g.rsvp})</option>`).join('');
-      }
-
-      // Admin Lock & Nav Visibility
-      const lockBtn = document.getElementById('admin-lock-btn');
-      const lockIcon = document.getElementById('admin-lock-icon');
-      const lockLabel = document.getElementById('admin-lock-label');
-      const navAdmin = document.getElementById('nav-admin');
-      const navRsvp = document.getElementById('nav-rsvp');
-      const amendBtn = document.getElementById('logs-admin-amend-btn');
-
-      if (isAdminUnlocked) {
-        lockBtn.className = 'px-3.5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-red-950 font-extrabold text-xs sm:text-sm shadow transition flex items-center gap-1.5';
-        lockIcon.textContent = '🔓';
-        lockLabel.textContent = 'Host Admin Active';
-        navAdmin.classList.remove('hidden');
-        navRsvp.classList.remove('hidden');
-        if (amendBtn) amendBtn.classList.remove('hidden');
-      } else {
-        lockBtn.className = 'px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-extrabold text-xs sm:text-sm shadow transition flex items-center gap-1.5';
-        lockIcon.textContent = '🔒';
-        lockLabel.textContent = 'Guest Mode (Unlock Admin)';
-        navAdmin.classList.add('hidden');
-        if (amendBtn) amendBtn.classList.add('hidden');
-        const activeG = getActiveGuest();
-        if (activeG && (activeG.rsvp === 'pending' || activeG.rsvp === 'exited')) {
-          navRsvp.classList.remove('hidden');
-        } else {
-          navRsvp.classList.add('hidden');
-        }
-      }
-
-      // Home KPI Dashlets
-      const confirmed = appState.guests.filter(g => g.rsvp === 'accepted');
-      document.getElementById('kpi-confirmed-count').textContent = confirmed.length;
-      document.getElementById('kpi-total-invited').textContent = `/ ${appState.guests.length} Invited`;
-      document.getElementById('kpi-guests-sub').textContent = confirmed.length
-        ? confirmed.map(g => g.name).join(', ')
-        : 'Waiting for first RSVP acceptance...';
-
-      const hubs = [...new Set(confirmed.map(g => g.arrivalCity).filter(Boolean))];
-      document.getElementById('kpi-cities-count').textContent = hubs.length;
-      document.getElementById('kpi-travel-sub').textContent = hubs.length
-        ? hubs.join(' • ')
-        : 'Arrival cities appear as squad confirms';
-
-      const totalStarters = confirmed.reduce((sum, g) => sum + (g.starters || []).reduce((s, it) => s + it.qty, 0), 0);
-      document.getElementById('kpi-starters-qty').textContent = totalStarters;
-      document.getElementById('kpi-food-sub').textContent = totalStarters
-        ? `${confirmed.filter(g => g.diet === 'Non-Veg').length} Non-Veg • ${confirmed.filter(g => g.diet === 'Veg').length} Veg`
-        : 'No starter plates logged yet';
-
-      const totalAlcohol = confirmed.reduce((sum, g) => sum + (g.alcohol || []).reduce((s, it) => s + it.qty, 0), 0);
-      document.getElementById('kpi-alcohol-qty').textContent = totalAlcohol;
-      document.getElementById('kpi-alcohol-sub').textContent = totalAlcohol
-        ? `${totalAlcohol} bottles/units across ${confirmed.length} confirmed`
-        : 'No spirits or beverages logged yet';
-
-      const totalExpense = appState.expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-      document.getElementById('kpi-expense-total').textContent = `₹${Math.round(totalExpense).toLocaleString('en-IN')}`;
-      const txns = computeSettlements();
-      document.getElementById('kpi-expense-sub').textContent = txns.length
-        ? `${txns.length} pending settlement transfer(s)`
-        : 'Zero pending balances';
-
-      document.getElementById('kpi-logs-count').textContent = `${appState.activityLog.length} Entries`;
-      document.getElementById('kpi-latest-log').textContent = appState.activityLog[0]
-        ? `[${appState.activityLog[0].actor}] ${appState.activityLog[0].msg}`
-        : 'No activity recorded yet.';
-
-      getAllHdPhotos().then(photos => {
-        const el = document.getElementById('kpi-photos-count');
-        if (el) el.textContent = photos.length;
-      });
-
-      // Home Squad Status Strip
-      const pills = document.getElementById('home-squad-pills');
-      if (pills) {
-        pills.innerHTML = appState.guests.map(g => {
-          const badge = g.rsvp === 'accepted'
-            ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-            : g.rsvp === 'exited' || g.rsvp === 'declined'
-            ? 'bg-red-100 text-red-900 border-red-300'
-            : 'bg-amber-50 text-amber-900 border-amber-200';
-          return `
-            <button type="button" onclick="handleSquadPillClick('${g.id}')" class="p-3 rounded-2xl border ${badge} text-left transition hover:shadow">
-              <div class="font-extrabold text-xs sm:text-sm truncate">${g.name}</div>
-              <div class="text-[10px] font-black uppercase mt-0.5">${g.rsvp}</div>
-            </button>
-          `;
-        }).join('');
-      }
-
-      // Render Exit Banner & Personal Preferences Form on Home Page for active accepted guest
-      const homeTab = document.getElementById('tab-home');
-      let exitBanner = document.getElementById('guest-exit-banner');
-      const homeDetailsSec = document.getElementById('home-guest-details-section');
-      const homeRsvpBtn = document.getElementById('home-rsvp-btn');
-      const activeGuest = getActiveGuest();
-
-      if (homeRsvpBtn) {
-        if (isAdminUnlocked) homeRsvpBtn.classList.remove('hidden');
-        else homeRsvpBtn.classList.add('hidden');
-      }
-
-      if (activeGuest && activeGuest.rsvp === 'accepted') {
-        selectedRsvpGuestId = activeGuest.id;
-        if (homeDetailsSec) {
-          homeDetailsSec.classList.remove('hidden');
-          populatePreferenceFormForGuest(activeGuest, 'home');
-        }
-      } else if (homeDetailsSec) {
-        homeDetailsSec.classList.add('hidden');
-      }
-
-      if (activeGuest && activeGuest.rsvp === 'accepted' && !isAdminUnlocked) {
-        if (!exitBanner) {
-          exitBanner = document.createElement('div');
-          exitBanner.id = 'guest-exit-banner';
-          homeTab.insertBefore(exitBanner, homeTab.children[1]);
-        }
-        exitBanner.className = 'bg-red-50 border border-red-200 rounded-2xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3';
-        exitBanner.innerHTML = `
-          <div class="text-xs sm:text-sm text-red-950 font-semibold">
-            Signed in as <strong>${activeGuest.name}</strong>. Need to drop out of the Sankranti 2027 trip?
-          </div>
-          <button type="button" onclick="confirmGuestExit('${activeGuest.id}')" class="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-white text-xs font-extrabold shadow self-start sm:self-center">
-            🚪 Exit Sankranti 2027
-          </button>
-        `;
-      } else if (exitBanner) {
-        exitBanner.remove();
-      }
-
-      const currentTab = document.querySelector('.main-tab-panel:not(.hidden)');
-      if (currentTab) {
-        if (currentTab.id === 'tab-rsvp') renderRsvpSection();
-        if (currentTab.id === 'tab-expenses') renderExpensesSection();
-        if (currentTab.id === 'tab-gallery') renderGallerySection();
-        if (currentTab.id === 'tab-logs') renderLogsSection();
-        if (currentTab.id === 'tab-admin') renderAdminSection();
-      }
-    }
-
-    function handleSquadPillClick(guestId) {
-      if (isAdminUnlocked) {
-        selectedRsvpGuestId = guestId;
-        switchMainTab('rsvp');
-      } else {
-        const g = appState.guests.find(x => x.id === guestId);
-        if (g && g.rsvp === 'accepted') {
-          currentRole = g.id;
-          renderAllUI();
-          showToast(`Viewing as ${g.name}`);
-        } else {
-          showToast('Only Host Admin can open pending/exited invites.', 'error');
-        }
-      }
-    }
-
-    function renderExpensesSection() {
-      const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
-      const payerSelects = ['exp-paid-by', 'auto-bill-payer', 'fuel-paid-by'];
-      payerSelects.forEach(selId => {
-        const el = document.getElementById(selId);
-        if (!el) return;
-        const prev = el.value;
-        if (confirmedGuests.length === 0) {
-          el.innerHTML = `<option value="">-- No Confirmed Guests Yet --</option>`;
-        } else {
-          el.innerHTML = confirmedGuests.map(g =>
-            `<option value="${g.id}" ${g.id === prev ? 'selected' : ''}>${g.name}</option>`
-          ).join('');
-        }
-      });
+      handleExpenseCategoryChange(true);
+      handleExpenseSplitModeChange();
 
       const expCheckboxes = document.getElementById('exp-guest-checkboxes');
       if (expCheckboxes) {
@@ -2753,23 +1937,6 @@
           `).join('');
         }
       }
-
-      const fuelCheckboxes = document.getElementById('fuel-riders-checkboxes');
-      if (fuelCheckboxes) {
-        if (confirmedGuests.length === 0) {
-          fuelCheckboxes.innerHTML = `<span class="text-xs text-stone-500 italic">No confirmed guests yet.</span>`;
-        } else {
-          fuelCheckboxes.innerHTML = confirmedGuests.map(g => `
-            <label class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-sky-200 text-xs font-bold text-red-950 cursor-pointer">
-              <input type="checkbox" class="fuel-rider-cb accent-sky-600" value="${g.id}" onchange="updateFuelPreview()" checked />
-              <span>${g.name}</span>
-            </label>
-          `).join('');
-        }
-      }
-
-      renderRequestedPriceInputs();
-      updateFuelPreview();
 
       // Settlements List
       const settlementsEl = document.getElementById('settlements-list');
@@ -2972,9 +2139,10 @@
           <div class="p-3.5 rounded-2xl bg-parchment border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
               <div class="font-extrabold text-sm text-red-950">${g.name} <span class="text-xs font-bold text-amber-800">(${g.rsvp.toUpperCase()})</span></div>
-              <div class="text-xs text-stone-600">${g.phone || 'No phone number set'}</div>
+              <div class="text-xs text-stone-600">${g.phone ? '+' + g.phone : 'No phone number saved'}</div>
             </div>
             <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="pickContactFromMobile('rsvp', '${g.id}')" class="px-3 py-1.5 rounded-xl bg-sky-700 text-white text-xs font-extrabold">📱 Phonebook</button>
               <a href="${getWhatsAppInviteUrl(g)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">📲 WhatsApp</a>
               <button type="button" onclick="copyInviteLink('${g.id}')" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-950 text-xs font-extrabold">🔗 Link</button>
               ${g.rsvp === 'exited' ? `<button type="button" onclick="adminReinviteGuest('${g.id}')" class="px-3 py-1.5 rounded-xl bg-amber-200 text-amber-950 text-xs font-extrabold">♻️ Re-Invite</button>` : ''}
@@ -2994,7 +2162,7 @@
 
     function adminAddGuest() {
       const name = document.getElementById('admin-new-guest-name').value.trim();
-      const phone = document.getElementById('admin-new-guest-phone').value.trim();
+      const phone = normalizeIndianPhone(document.getElementById('admin-new-guest-phone').value.trim());
       if (!name) return showToast('Enter guest name.', 'error');
       const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).slice(2, 5);
       appState.guests.push({

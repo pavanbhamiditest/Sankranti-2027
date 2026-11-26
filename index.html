@@ -1298,7 +1298,349 @@
           { id: 'palli', name: 'Palli', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Jangareddygudem', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] },
           { id: 'jayanth', name: 'Jayanth', phone: '', rsvp: 'pending', fromCity: '', travelDate: '', arrivalCity: 'Hyderabad', returnDate: '', diet: 'Non-Veg', starters: [], alcohol: [], essentials: [], cigarettes: [] }
         ],
-// ... existing code ... -->
+        expenses: [],
+        activityLog: [
+          { id: 'init-log', timestamp: new Date().toLocaleString('en-IN'), actor: 'System', category: 'ADMIN', action: 'Initialized', msg: 'Sankranti 2027 workspace initialized clean.' }
+        ]
+      };
+    }
+
+    function loadAppState() {
+      try {
+        LEGACY_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return getDefaultState();
+        const parsed = JSON.parse(raw);
+        const def = getDefaultState();
+        return {
+          ...def,
+          ...parsed,
+          guests: Array.isArray(parsed.guests) ? parsed.guests.map(g => ({
+            starters: [],
+            alcohol: [],
+            essentials: [],
+            cigarettes: [],
+            ...g
+          })) : def.guests,
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+          activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : def.activityLog
+        };
+      } catch (e) {
+        return getDefaultState();
+      }
+    }
+
+    let appState = loadAppState();
+    let isAdminUnlocked = false;
+    let currentRole = 'overview';
+    let selectedRsvpGuestId = appState.guests[0]?.id || 'srinu';
+    let editingExpenseId = null;
+    let editingLogId = null;
+
+    const STARTER_MENU = {
+      'Non-Veg': [
+        'Chicken 65', 'Chilli Chicken', 'Chicken Lollipop', 'Tandoori Chicken (Half)',
+        'Apollo Fish', 'Loose Prawns', 'Mutton Pepper Fry', 'Natukodi Fry', 'Other'
+      ],
+      'Veg': [
+        'Paneer Tikka', 'Chilli Paneer', 'Crispy Corn', 'Gobi Manchurian',
+        'Hara Bhara Kabab', 'Mushroom Pepper Fry', 'Veg Spring Rolls', 'Other'
+      ]
+    };
+
+    const ALCOHOL_BRANDS = {
+      'Beer': ['Kingfisher Strong', 'Kingfisher Ultra', 'Budweiser Magnum', 'Corona Extra', 'Bira 91 White', 'Heineken', 'Other'],
+      'Whiskey': ['Jameson Irish', 'Jack Daniel’s', 'Black Dog Triple Gold', '100 Pipers', 'Teachers Highland Cream', 'Royal Stag', 'Blenders Pride', 'Other'],
+      'Vodka': ['Absolut', 'Smirnoff', 'Grey Goose', 'Magic Moments', 'Other'],
+      'Rum': ['Old Monk', 'Bacardi White', 'Captain Morgan', 'Other'],
+      'Wine': ['Sula Shiraz', 'Sula Chenin Blanc', 'Jacob’s Creek', 'Other'],
+      'Non-Alcoholic': ['Red Bull', 'Schweppes Ginger Ale', 'Fresh Lime Soda', 'Diet Coke', 'Other']
+    };
+
+    function getActiveActorName() {
+      if (isAdminUnlocked) return 'Host Admin';
+      const g = getActiveGuest();
+      return g ? g.name : 'Squad Member';
+    }
+
+    function getActiveGuest() {
+      if (currentRole === 'overview') return null;
+      return appState.guests.find(g => g.id === currentRole) || null;
+    }
+
+    function saveAppState(logEntry) {
+      if (logEntry) {
+        appState.activityLog.unshift({
+          id: 'log-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          timestamp: new Date().toLocaleString('en-IN'),
+          actor: logEntry.actor || getActiveActorName(),
+          category: logEntry.category || 'ADMIN',
+          action: logEntry.action || 'Updated',
+          msg: logEntry.msg || ''
+        });
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        console.error('Storage save failed:', e);
+      }
+      renderAllUI();
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const el = document.createElement('div');
+      const bg = type === 'error' ? 'bg-red-800 border-red-400' : 'bg-emerald-800 border-emerald-400';
+      el.className = `${bg} text-white border px-4 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-extrabold animate-pop pointer-events-auto`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => el.remove(), 260);
+      }, 3000);
+    }
+
+    // =========================================================================
+    // 2. INDEXEDDB HD PHOTO VAULT
+    // =========================================================================
+    function openPhotoDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(DB_STORE)) {
+            db.createObjectStore(DB_STORE, { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function getAllHdPhotos() {
+      try {
+        const db = await openPhotoDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readonly');
+          const req = tx.objectStore(DB_STORE).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (e) {
+        return [];
+      }
+    }
+
+    async function handleHdPhotoUpload(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      const captionInput = document.getElementById('photo-caption-input');
+      const customCaption = (captionInput?.value || '').trim();
+      const uploader = getActiveActorName();
+
+      try {
+        const db = await openPhotoDb();
+        for (const file of files) {
+          const dataUrl = await new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result);
+            reader.onerror = () => rej(reader.error);
+            reader.readAsDataURL(file);
+          });
+          const photoRecord = {
+            id: 'photo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+            name: file.name,
+            caption: customCaption || file.name.replace(/\.[^/.]+$/, ''),
+            uploadedBy: uploader,
+            uploadedAt: new Date().toLocaleString('en-IN'),
+            sizeKB: Math.round(file.size / 1024),
+            dataUrl
+          };
+          await new Promise((res, rej) => {
+            const tx = db.transaction(DB_STORE, 'readwrite');
+            tx.objectStore(DB_STORE).put(photoRecord);
+            tx.oncomplete = () => res();
+            tx.onerror = () => rej(tx.error);
+          });
+        }
+        if (captionInput) captionInput.value = '';
+        event.target.value = '';
+        saveAppState({
+          actor: uploader,
+          category: 'PHOTO',
+          action: 'Uploaded HD Photo',
+          msg: `${uploader} uploaded ${files.length} original HD photo(s) to the vault.`
+        });
+        showToast(`Uploaded ${files.length} HD photo(s)!`);
+      } catch (e) {
+        showToast('Could not save photo to browser storage.', 'error');
+      }
+    }
+
+    async function deleteHdPhoto(photoId) {
+      const photos = await getAllHdPhotos();
+      const target = photos.find(p => p.id === photoId);
+      if (!target) return;
+      const actor = getActiveActorName();
+      if (!isAdminUnlocked && target.uploadedBy !== actor) {
+        showToast('You can only delete photos you uploaded.', 'error');
+        return;
+      }
+      try {
+        const db = await openPhotoDb();
+        await new Promise((res, rej) => {
+          const tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).delete(photoId);
+          tx.oncomplete = () => res();
+          tx.onerror = () => rej(tx.error);
+        });
+        saveAppState({
+          actor,
+          category: 'PHOTO',
+          action: 'Deleted HD Photo',
+          msg: `${actor} removed photo "${target.caption}".`
+        });
+        showToast('Photo removed from vault.');
+      } catch (e) {
+        showToast('Failed to delete photo.', 'error');
+      }
+    }
+
+    async function downloadHdPhoto(photoId) {
+      const photos = await getAllHdPhotos();
+      const photo = photos.find(p => p.id === photoId);
+      if (!photo) return;
+      const a = document.createElement('a');
+      a.href = photo.dataUrl;
+      a.download = photo.name || `${photo.caption}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    async function openLightbox(photoId) {
+      const photos = await getAllHdPhotos();
+      const photo = photos.find(p => p.id === photoId);
+      if (!photo) return;
+      document.getElementById('lightbox-img').src = photo.dataUrl;
+      document.getElementById('lightbox-caption').textContent = photo.caption;
+      document.getElementById('lightbox-meta').textContent = `Uploaded by ${photo.uploadedBy} • ${photo.uploadedAt} • ${photo.sizeKB} KB`;
+      document.getElementById('lightbox-download-btn').onclick = () => downloadHdPhoto(photo.id);
+      document.getElementById('photo-lightbox-modal').classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      document.getElementById('photo-lightbox-modal').classList.add('hidden');
+      document.getElementById('lightbox-img').src = '';
+    }
+
+    // =========================================================================
+    // 3. NAVIGATION, ROLE SWITCHING & ADMIN ACCESS
+    // =========================================================================
+    function switchMainTab(tabKey) {
+      const activeGuest = getActiveGuest();
+      if (activeGuest && activeGuest.rsvp === 'exited' && !isAdminUnlocked && tabKey !== 'rsvp') {
+        tabKey = 'rsvp';
+      }
+      if (tabKey === 'admin' && !isAdminUnlocked) {
+        openAdminPinModal();
+        return;
+      }
+      if (tabKey === 'rsvp' && !isAdminUnlocked && currentRole === 'overview') {
+        openAdminPinModal();
+        return;
+      }
+
+      document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.add('hidden'));
+      const targetPanel = document.getElementById('tab-' + tabKey);
+      if (targetPanel) targetPanel.classList.remove('hidden');
+
+      document.querySelectorAll('.main-nav-btn').forEach(btn => {
+        if (btn.id === 'nav-admin') return;
+        btn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200';
+      });
+      const activeBtn = document.getElementById('nav-' + tabKey);
+      if (activeBtn && tabKey !== 'admin') {
+        activeBtn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow';
+      }
+
+      if (tabKey === 'rsvp') renderRsvpSection();
+      if (tabKey === 'expenses') renderExpensesSection();
+      if (tabKey === 'gallery') renderGallerySection();
+      if (tabKey === 'logs') renderLogsSection();
+      if (tabKey === 'admin') renderAdminSection();
+    }
+
+    function handleRoleSwitch(val) {
+      currentRole = val;
+      if (val !== 'overview') {
+        selectedRsvpGuestId = val;
+        const g = getActiveGuest();
+        if (g && (g.rsvp === 'pending' || g.rsvp === 'exited') && !isAdminUnlocked) {
+          switchMainTab('rsvp');
+        }
+      }
+      renderAllUI();
+    }
+
+    function openAdminPinModal() {
+      if (isAdminUnlocked) {
+        switchMainTab('admin');
+        return;
+      }
+      document.getElementById('admin-pin-input').value = '';
+      document.getElementById('admin-pin-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('admin-pin-input').focus(), 60);
+    }
+
+    function closeAdminPinModal() {
+      document.getElementById('admin-pin-modal').classList.add('hidden');
+    }
+
+    function verifyAdminPin() {
+      const entered = document.getElementById('admin-pin-input').value.trim();
+      if (entered === appState.adminPin) {
+        isAdminUnlocked = true;
+        closeAdminPinModal();
+        saveAppState({
+          actor: 'Host Admin',
+          category: 'ADMIN',
+          action: 'Unlocked Admin',
+          msg: 'Host Admin unlocked full control mode.'
+        });
+        switchMainTab('admin');
+        showToast('Host Admin unlocked!');
+      } else {
+        showToast('Incorrect PIN! Try again.', 'error');
+      }
+    }
+
+    function logoutAdmin() {
+      isAdminUnlocked = false;
+      renderAllUI();
+      switchMainTab('home');
+      showToast('Admin mode locked.');
+    }
+
+    function changeAdminPin() {
+      const newPin = document.getElementById('admin-new-pin').value.trim();
+      if (newPin.length < 4) {
+        showToast('PIN must be at least 4 characters.', 'error');
+        return;
+      }
+      appState.adminPin = newPin;
+      document.getElementById('admin-new-pin').value = '';
+      saveAppState({
+        actor: 'Host Admin',
+        category: 'ADMIN',
+        action: 'Changed PIN',
+        msg: 'Host Admin security PIN was updated.'
+      });
+      showToast('Admin PIN updated!');
+    }
+
     // =========================================================================
     // 4. RSVP, INVITES & GUEST PREFERENCES
     // =========================================================================
@@ -1766,664 +2108,6 @@
         msg: `${guest.name} saved route (${guest.fromCity || 'Origin'} → ${guest.arrivalCity}, ${guest.travelDate} to ${guest.returnDate}) & party preferences.`
       });
       showToast(`Trip details & preferences saved for ${guest.name}!`);
-    }
-        ]
-      };
-    }
-
-    function loadAppState() {
-      try {
-        LEGACY_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return getDefaultState();
-        const parsed = JSON.parse(raw);
-        const def = getDefaultState();
-        return {
-          ...def,
-          ...parsed,
-          guests: Array.isArray(parsed.guests) ? parsed.guests.map(g => ({
-            starters: [],
-            alcohol: [],
-            essentials: [],
-            cigarettes: [],
-            ...g
-          })) : def.guests,
-          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
-          activityLog: Array.isArray(parsed.activityLog) ? parsed.activityLog : def.activityLog
-        };
-      } catch (e) {
-        return getDefaultState();
-      }
-    }
-
-    let appState = loadAppState();
-    let isAdminUnlocked = false;
-    let currentRole = 'overview';
-    let selectedRsvpGuestId = appState.guests[0]?.id || 'srinu';
-    let editingExpenseId = null;
-    let editingLogId = null;
-
-    const STARTER_MENU = {
-      'Non-Veg': [
-        'Chicken 65', 'Chilli Chicken', 'Chicken Lollipop', 'Tandoori Chicken (Half)',
-        'Apollo Fish', 'Loose Prawns', 'Mutton Pepper Fry', 'Natukodi Fry', 'Other'
-      ],
-      'Veg': [
-        'Paneer Tikka', 'Chilli Paneer', 'Crispy Corn', 'Gobi Manchurian',
-        'Hara Bhara Kabab', 'Mushroom Pepper Fry', 'Veg Spring Rolls', 'Other'
-      ]
-    };
-
-    const ALCOHOL_BRANDS = {
-      'Beer': ['Kingfisher Strong', 'Kingfisher Ultra', 'Budweiser Magnum', 'Corona Extra', 'Bira 91 White', 'Heineken', 'Other'],
-      'Whiskey': ['Jameson Irish', 'Jack Daniel’s', 'Black Dog Triple Gold', '100 Pipers', 'Teachers Highland Cream', 'Royal Stag', 'Blenders Pride', 'Other'],
-      'Vodka': ['Absolut', 'Smirnoff', 'Grey Goose', 'Magic Moments', 'Other'],
-      'Rum': ['Old Monk', 'Bacardi White', 'Captain Morgan', 'Other'],
-      'Wine': ['Sula Shiraz', 'Sula Chenin Blanc', 'Jacob’s Creek', 'Other'],
-      'Non-Alcoholic': ['Red Bull', 'Schweppes Ginger Ale', 'Fresh Lime Soda', 'Diet Coke', 'Other']
-    };
-
-    function getActiveActorName() {
-      if (isAdminUnlocked) return 'Host Admin';
-      const g = getActiveGuest();
-      return g ? g.name : 'Squad Member';
-    }
-
-    function getActiveGuest() {
-      if (currentRole === 'overview') return null;
-      return appState.guests.find(g => g.id === currentRole) || null;
-    }
-
-    function saveAppState(logEntry) {
-      if (logEntry) {
-        appState.activityLog.unshift({
-          id: 'log-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-          timestamp: new Date().toLocaleString('en-IN'),
-          actor: logEntry.actor || getActiveActorName(),
-          category: logEntry.category || 'ADMIN',
-          action: logEntry.action || 'Updated',
-          msg: logEntry.msg || ''
-        });
-      }
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      } catch (e) {
-        console.error('Storage save failed:', e);
-      }
-      renderAllUI();
-    }
-
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const el = document.createElement('div');
-      const bg = type === 'error' ? 'bg-red-800 border-red-400' : 'bg-emerald-800 border-emerald-400';
-      el.className = `${bg} text-white border px-4 py-3 rounded-2xl shadow-xl text-xs sm:text-sm font-extrabold animate-pop pointer-events-auto`;
-      el.textContent = message;
-      container.appendChild(el);
-      setTimeout(() => {
-        el.style.opacity = '0';
-        el.style.transition = 'opacity 0.25s ease';
-        setTimeout(() => el.remove(), 260);
-      }, 3000);
-    }
-
-    // =========================================================================
-    // 2. INDEXEDDB HD PHOTO VAULT
-    // =========================================================================
-    function openPhotoDb() {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(DB_STORE)) {
-            db.createObjectStore(DB_STORE, { keyPath: 'id' });
-          }
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function getAllHdPhotos() {
-      try {
-        const db = await openPhotoDb();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction(DB_STORE, 'readonly');
-          const req = tx.objectStore(DB_STORE).getAll();
-          req.onsuccess = () => resolve(req.result || []);
-          req.onerror = () => reject(req.error);
-        });
-      } catch (e) {
-        return [];
-      }
-    }
-
-    async function handleHdPhotoUpload(event) {
-      const files = Array.from(event.target.files || []);
-      if (!files.length) return;
-      const captionInput = document.getElementById('photo-caption-input');
-      const customCaption = (captionInput?.value || '').trim();
-      const uploader = getActiveActorName();
-
-      try {
-        const db = await openPhotoDb();
-        for (const file of files) {
-          const dataUrl = await new Promise((res, rej) => {
-            const reader = new FileReader();
-            reader.onload = () => res(reader.result);
-            reader.onerror = () => rej(reader.error);
-            reader.readAsDataURL(file);
-          });
-          const photoRecord = {
-            id: 'photo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-            name: file.name,
-            caption: customCaption || file.name.replace(/\.[^/.]+$/, ''),
-            uploadedBy: uploader,
-            uploadedAt: new Date().toLocaleString('en-IN'),
-            sizeKB: Math.round(file.size / 1024),
-            dataUrl
-          };
-          await new Promise((res, rej) => {
-            const tx = db.transaction(DB_STORE, 'readwrite');
-            tx.objectStore(DB_STORE).put(photoRecord);
-            tx.oncomplete = () => res();
-            tx.onerror = () => rej(tx.error);
-          });
-        }
-        if (captionInput) captionInput.value = '';
-        event.target.value = '';
-        saveAppState({
-          actor: uploader,
-          category: 'PHOTO',
-          action: 'Uploaded HD Photo',
-          msg: `${uploader} uploaded ${files.length} original HD photo(s) to the vault.`
-        });
-        showToast(`Uploaded ${files.length} HD photo(s)!`);
-      } catch (e) {
-        showToast('Could not save photo to browser storage.', 'error');
-      }
-    }
-
-    async function deleteHdPhoto(photoId) {
-      const photos = await getAllHdPhotos();
-      const target = photos.find(p => p.id === photoId);
-      if (!target) return;
-      const actor = getActiveActorName();
-      if (!isAdminUnlocked && target.uploadedBy !== actor) {
-        showToast('You can only delete photos you uploaded.', 'error');
-        return;
-      }
-      try {
-        const db = await openPhotoDb();
-        await new Promise((res, rej) => {
-          const tx = db.transaction(DB_STORE, 'readwrite');
-          tx.objectStore(DB_STORE).delete(photoId);
-          tx.oncomplete = () => res();
-          tx.onerror = () => rej(tx.error);
-        });
-        saveAppState({
-          actor,
-          category: 'PHOTO',
-          action: 'Deleted HD Photo',
-          msg: `${actor} removed photo "${target.caption}".`
-        });
-        showToast('Photo removed from vault.');
-      } catch (e) {
-        showToast('Failed to delete photo.', 'error');
-      }
-    }
-
-    async function downloadHdPhoto(photoId) {
-      const photos = await getAllHdPhotos();
-      const photo = photos.find(p => p.id === photoId);
-      if (!photo) return;
-      const a = document.createElement('a');
-      a.href = photo.dataUrl;
-      a.download = photo.name || `${photo.caption}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-
-    async function openLightbox(photoId) {
-      const photos = await getAllHdPhotos();
-      const photo = photos.find(p => p.id === photoId);
-      if (!photo) return;
-      document.getElementById('lightbox-img').src = photo.dataUrl;
-      document.getElementById('lightbox-caption').textContent = photo.caption;
-      document.getElementById('lightbox-meta').textContent = `Uploaded by ${photo.uploadedBy} • ${photo.uploadedAt} • ${photo.sizeKB} KB`;
-      document.getElementById('lightbox-download-btn').onclick = () => downloadHdPhoto(photo.id);
-      document.getElementById('photo-lightbox-modal').classList.remove('hidden');
-    }
-
-    function closeLightbox() {
-      document.getElementById('photo-lightbox-modal').classList.add('hidden');
-      document.getElementById('lightbox-img').src = '';
-    }
-
-    // =========================================================================
-    // 3. NAVIGATION, ROLE SWITCHING & ADMIN ACCESS
-    // =========================================================================
-    function switchMainTab(tabKey) {
-      const activeGuest = getActiveGuest();
-      if (activeGuest && activeGuest.rsvp === 'exited' && !isAdminUnlocked && tabKey !== 'rsvp') {
-        tabKey = 'rsvp';
-      }
-      if (tabKey === 'admin' && !isAdminUnlocked) {
-        openAdminPinModal();
-        return;
-      }
-      if (tabKey === 'rsvp' && !isAdminUnlocked && currentRole === 'overview') {
-        openAdminPinModal();
-        return;
-      }
-
-      document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.add('hidden'));
-      const targetPanel = document.getElementById('tab-' + tabKey);
-      if (targetPanel) targetPanel.classList.remove('hidden');
-
-      document.querySelectorAll('.main-nav-btn').forEach(btn => {
-        if (btn.id === 'nav-admin') return;
-        btn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-amber-100/80 text-amber-950 hover:bg-amber-200';
-      });
-      const activeBtn = document.getElementById('nav-' + tabKey);
-      if (activeBtn && tabKey !== 'admin') {
-        activeBtn.className = 'main-nav-btn cursor-pointer select-none px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-red-800 text-white shadow';
-      }
-
-      if (tabKey === 'rsvp') renderRsvpSection();
-      if (tabKey === 'expenses') renderExpensesSection();
-      if (tabKey === 'gallery') renderGallerySection();
-      if (tabKey === 'logs') renderLogsSection();
-      if (tabKey === 'admin') renderAdminSection();
-    }
-
-    function handleRoleSwitch(val) {
-      currentRole = val;
-      if (val !== 'overview') {
-        selectedRsvpGuestId = val;
-        const g = getActiveGuest();
-        if (g && (g.rsvp === 'pending' || g.rsvp === 'exited') && !isAdminUnlocked) {
-          switchMainTab('rsvp');
-        }
-      }
-      renderAllUI();
-    }
-
-    function openAdminPinModal() {
-      if (isAdminUnlocked) {
-        switchMainTab('admin');
-        return;
-      }
-      document.getElementById('admin-pin-input').value = '';
-      document.getElementById('admin-pin-modal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('admin-pin-input').focus(), 60);
-    }
-
-    function closeAdminPinModal() {
-      document.getElementById('admin-pin-modal').classList.add('hidden');
-    }
-
-    function verifyAdminPin() {
-      const entered = document.getElementById('admin-pin-input').value.trim();
-      if (entered === appState.adminPin) {
-        isAdminUnlocked = true;
-        closeAdminPinModal();
-        saveAppState({
-          actor: 'Host Admin',
-          category: 'ADMIN',
-          action: 'Unlocked Admin',
-          msg: 'Host Admin unlocked full control mode.'
-        });
-        switchMainTab('admin');
-        showToast('Host Admin unlocked!');
-      } else {
-        showToast('Incorrect PIN! Try again.', 'error');
-      }
-    }
-
-    function logoutAdmin() {
-      isAdminUnlocked = false;
-      renderAllUI();
-      switchMainTab('home');
-      showToast('Admin mode locked.');
-    }
-
-    function changeAdminPin() {
-      const newPin = document.getElementById('admin-new-pin').value.trim();
-      if (newPin.length < 4) {
-        showToast('PIN must be at least 4 characters.', 'error');
-        return;
-      }
-      appState.adminPin = newPin;
-      document.getElementById('admin-new-pin').value = '';
-      saveAppState({
-        actor: 'Host Admin',
-        category: 'ADMIN',
-        action: 'Changed PIN',
-        msg: 'Host Admin security PIN was updated.'
-      });
-      showToast('Admin PIN updated!');
-    }
-
-    // =========================================================================
-    // 4. RSVP, INVITES & GUEST PREFERENCES
-    // =========================================================================
-    function getGuestInviteLink(guestId) {
-      const url = new URL(window.location.href);
-      url.search = `?invite=${encodeURIComponent(guestId)}`;
-      return url.toString();
-    }
-
-    function getWhatsAppInviteUrl(guest) {
-      const link = getGuestInviteLink(guest.id);
-      const text = [
-        `☀️🪁 *Sankranti 2027 Squad Invite* 🔥`,
-        `Hey *${guest.name}*! You're invited to our Sankranti 2027 celebration (#DhummuLeputunnam).`,
-        `Tap your personal link below to Accept your invite and add your travel dates, starter choices, and spirits preferences:`,
-        link
-      ].join('\n\n');
-      const phone = (guest.phone || '').replace(/\D/g, '');
-      return phone
-        ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
-        : `https://wa.me/?text=${encodeURIComponent(text)}`;
-    }
-
-    function copyInviteLink(guestId) {
-      const link = getGuestInviteLink(guestId);
-      const ta = document.createElement('textarea');
-      ta.value = link;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      showToast('Personal invite URL copied!');
-    }
-
-    function selectGuestForRsvp(guestId) {
-      selectedRsvpGuestId = guestId;
-      renderRsvpSection();
-    }
-
-    function acceptGuestInvite(guestId) {
-      const guest = appState.guests.find(g => g.id === guestId);
-      if (!guest) return;
-      guest.rsvp = 'accepted';
-      currentRole = guest.id;
-      selectedRsvpGuestId = guest.id;
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'RSVP',
-        action: 'Accepted Invite',
-        msg: `${guest.name} accepted the Sankranti 2027 invite!`
-      });
-      document.getElementById('welcome-guest-name').textContent = `Welcome, ${guest.name}!`;
-      document.getElementById('welcome-rsvp-modal').classList.remove('hidden');
-    }
-
-    function closeWelcomeModal() {
-      document.getElementById('welcome-rsvp-modal').classList.add('hidden');
-      switchMainTab('rsvp');
-    }
-
-    function populatePreferenceFormForGuest(guest) {
-      document.getElementById('pref-form-heading').textContent = `${guest.name}'s Travel, Starters & Spirits Preferences`;
-      document.getElementById('pref-travel-date').value = guest.travelDate || '2027-01-13';
-      document.getElementById('pref-return-date').value = guest.returnDate || '2027-01-17';
-
-      const citySelect = document.getElementById('pref-arrival-city');
-      const customCity = document.getElementById('pref-custom-city');
-      const standardCities = ['Hyderabad', 'Tanuku', 'Narsapuram', 'Kothapeta', 'Jangareddygudem', 'Kirlampudi'];
-      if (standardCities.includes(guest.arrivalCity)) {
-        citySelect.value = guest.arrivalCity;
-        customCity.classList.add('hidden');
-      } else {
-        citySelect.value = 'Others';
-        customCity.classList.remove('hidden');
-        customCity.value = guest.arrivalCity || '';
-      }
-
-      setDietPreference(guest.diet || 'Non-Veg', true);
-      populateAlcoholBrands();
-      populateAlcoholQuantities();
-      renderGuestPreferenceChips(guest);
-    }
-
-    function toggleCustomCityInput(val) {
-      const el = document.getElementById('pref-custom-city');
-      if (val === 'Others') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function setDietPreference(diet, skipSave = false) {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (guest) guest.diet = diet;
-
-      const nvBtn = document.getElementById('diet-nonveg-btn');
-      const vBtn = document.getElementById('diet-veg-btn');
-      if (diet === 'Non-Veg') {
-        nvBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-red-700 text-white shadow';
-        vBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-emerald-900 border border-emerald-300';
-      } else {
-        vBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-700 text-white shadow';
-        nvBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-red-900 border border-red-300';
-      }
-
-      const select = document.getElementById('starter-item-select');
-      const dishes = STARTER_MENU[diet] || STARTER_MENU['Non-Veg'];
-      select.innerHTML = dishes.map(d => `<option value="${d}">${d}</option>`).join('');
-      toggleCustomStarterInput(select.value);
-      if (!skipSave && guest) saveAppState();
-    }
-
-    function toggleCustomStarterInput(val) {
-      const el = document.getElementById('starter-custom-input');
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function addStarterItemToGuest() {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      let item = document.getElementById('starter-item-select').value;
-      if (item === 'Other') {
-        item = document.getElementById('starter-custom-input').value.trim();
-        if (!item) return showToast('Enter a custom starter name.', 'error');
-      }
-      const qty = parseInt(document.getElementById('starter-qty-select').value, 10) || 1;
-      const existing = guest.starters.find(s => s.item.toLowerCase() === item.toLowerCase());
-      if (existing) existing.qty += qty;
-      else guest.starters.push({ item, qty, diet: guest.diet });
-
-      document.getElementById('starter-custom-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Starter',
-        msg: `${guest.name} added ${qty}x ${item}.`
-      });
-      renderGuestPreferenceChips(guest);
-    }
-
-    function removeGuestItem(type, index) {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest || !Array.isArray(guest[type])) return;
-      const removed = guest[type].splice(index, 1)[0];
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Removed Item',
-        msg: `${guest.name} removed ${removed?.item || removed?.brand || 'item'} from ${type}.`
-      });
-      renderGuestPreferenceChips(guest);
-    }
-
-    function populateAlcoholBrands() {
-      const cat = document.getElementById('alc-category-select').value;
-      const brands = ALCOHOL_BRANDS[cat] || ['Other'];
-      const sel = document.getElementById('alc-brand-select');
-      sel.innerHTML = brands.map(b => `<option value="${b}">${b}</option>`).join('');
-      toggleCustomAlcoholInput(sel.value);
-    }
-
-    function toggleCustomAlcoholInput(val) {
-      const el = document.getElementById('alc-custom-brand-input');
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function populateAlcoholQuantities() {
-      const sel = document.getElementById('alc-qty-select');
-      if (sel.options.length > 0) return;
-      let html = '';
-      for (let i = 1; i <= 24; i++) {
-        html += `<option value="${i}">${i} ${i === 1 ? 'Unit / Bottle' : 'Units / Bottles'}</option>`;
-      }
-      sel.innerHTML = html;
-    }
-
-    function addAlcoholItemToGuest() {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      const category = document.getElementById('alc-category-select').value;
-      let brand = document.getElementById('alc-brand-select').value;
-      if (brand === 'Other') {
-        brand = document.getElementById('alc-custom-brand-input').value.trim();
-        if (!brand) return showToast('Enter a custom brand name.', 'error');
-      }
-      const qty = parseInt(document.getElementById('alc-qty-select').value, 10) || 1;
-      const existing = guest.alcohol.find(a => a.brand.toLowerCase() === brand.toLowerCase() && a.category === category);
-      if (existing) existing.qty += qty;
-      else guest.alcohol.push({ category, brand, qty });
-
-      document.getElementById('alc-custom-brand-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Spirits',
-        msg: `${guest.name} added ${qty}x ${brand} (${category}).`
-      });
-      renderGuestPreferenceChips(guest);
-    }
-
-    function toggleCustomEssentialInput(val) {
-      const el = document.getElementById('essential-custom-input');
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function addEssentialItemToGuest() {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      let item = document.getElementById('essential-item-select').value;
-      if (item === 'Other') {
-        item = document.getElementById('essential-custom-input').value.trim();
-        if (!item) return showToast('Enter a custom essential item.', 'error');
-      }
-      const qty = parseInt(document.getElementById('essential-qty-select').value, 10) || 1;
-      const existing = guest.essentials.find(e => e.item.toLowerCase() === item.toLowerCase());
-      if (existing) existing.qty += qty;
-      else guest.essentials.push({ item, qty });
-
-      document.getElementById('essential-custom-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Essential',
-        msg: `${guest.name} added ${qty}x ${item}.`
-      });
-      renderGuestPreferenceChips(guest);
-    }
-
-    function toggleCustomCigaretteInput(val) {
-      const el = document.getElementById('cig-custom-input');
-      if (val === 'Other') el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function addCigaretteItemToGuest() {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      let brand = document.getElementById('cig-brand-select').value;
-      if (brand === 'Other') {
-        brand = document.getElementById('cig-custom-input').value.trim();
-        if (!brand) return showToast('Enter a custom cigarette brand.', 'error');
-      }
-      const qty = parseInt(document.getElementById('cig-qty-select').value, 10) || 1;
-      const existing = guest.cigarettes.find(c => c.brand.toLowerCase() === brand.toLowerCase());
-      if (existing) existing.qty += qty;
-      else guest.cigarettes.push({ brand, qty });
-
-      document.getElementById('cig-custom-input').value = '';
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Added Smokes',
-        msg: `${guest.name} added ${qty} pack(s) of ${brand}.`
-      });
-      renderGuestPreferenceChips(guest);
-    }
-
-    function renderGuestPreferenceChips(guest) {
-      const sList = document.getElementById('guest-starters-list');
-      sList.innerHTML = guest.starters.length
-        ? guest.starters.map((s, idx) => `
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-orange-100 text-red-950 text-xs font-extrabold border border-orange-300">
-              <span>${s.qty}× ${s.item}</span>
-              <button type="button" onclick="removeGuestItem('starters', ${idx})" class="text-red-700 hover:text-red-950 font-black">✕</button>
-            </span>
-          `).join('')
-        : '<span class="text-xs text-stone-500 italic">No starters added yet.</span>';
-
-      const aList = document.getElementById('guest-alcohol-list');
-      aList.innerHTML = guest.alcohol.length
-        ? guest.alcohol.map((a, idx) => `
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-950 text-xs font-extrabold border border-amber-300">
-              <span>${a.qty}× ${a.brand} (${a.category})</span>
-              <button type="button" onclick="removeGuestItem('alcohol', ${idx})" class="text-red-700 hover:text-red-950 font-black">✕</button>
-            </span>
-          `).join('')
-        : '<span class="text-xs text-stone-500 italic">No spirits added yet.</span>';
-
-      const eList = document.getElementById('guest-essentials-list');
-      eList.innerHTML = guest.essentials.length
-        ? guest.essentials.map((e, idx) => `
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-100 text-teal-950 text-xs font-extrabold border border-teal-300">
-              <span>${e.qty}× ${e.item}</span>
-              <button type="button" onclick="removeGuestItem('essentials', ${idx})" class="text-red-700 hover:text-red-950 font-black">✕</button>
-            </span>
-          `).join('')
-        : '<span class="text-xs text-stone-500 italic">No essentials added yet.</span>';
-
-      const cList = document.getElementById('guest-cigarettes-list');
-      cList.innerHTML = guest.cigarettes.length
-        ? guest.cigarettes.map((c, idx) => `
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-200 text-stone-900 text-xs font-extrabold border border-stone-300">
-              <span>${c.qty}× ${c.brand}</span>
-              <button type="button" onclick="removeGuestItem('cigarettes', ${idx})" class="text-red-700 hover:text-red-950 font-black">✕</button>
-            </span>
-          `).join('')
-        : '<span class="text-xs text-stone-500 italic">No cigarettes added yet.</span>';
-    }
-
-    function saveGuestPreferences() {
-      const guest = appState.guests.find(g => g.id === selectedRsvpGuestId);
-      if (!guest) return;
-      guest.travelDate = document.getElementById('pref-travel-date').value;
-      guest.returnDate = document.getElementById('pref-return-date').value;
-      const cityVal = document.getElementById('pref-arrival-city').value;
-      guest.arrivalCity = cityVal === 'Others'
-        ? (document.getElementById('pref-custom-city').value.trim() || 'Others')
-        : cityVal;
-
-      saveAppState({
-        actor: isAdminUnlocked ? 'Host Admin' : guest.name,
-        category: 'PREFS',
-        action: 'Saved Preferences',
-        msg: `${guest.name} saved travel (${guest.arrivalCity}) & party preferences.`
-      });
-      showToast(`Preferences saved for ${guest.name}!`);
     }
 
     // =========================================================================
@@ -2928,6 +2612,22 @@
 
       // Home Squad Status Strip
       const pills = document.getElementById('home-squad-pills');
+      if (pills) {
+        pills.innerHTML = appState.guests.map(g => {
+          const badge = g.rsvp === 'accepted'
+            ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+            : g.rsvp === 'exited' || g.rsvp === 'declined'
+            ? 'bg-red-100 text-red-900 border-red-300'
+            : 'bg-amber-50 text-amber-900 border-amber-200';
+          return `
+            <button type="button" onclick="handleSquadPillClick('${g.id}')" class="p-3 rounded-2xl border ${badge} text-left transition hover:shadow">
+              <div class="font-extrabold text-xs sm:text-sm truncate">${g.name}</div>
+              <div class="text-[10px] font-black uppercase mt-0.5">${g.rsvp}</div>
+            </button>
+          `;
+        }).join('');
+      }
+
       // Render Exit Banner & Personal Preferences Form on Home Page for active accepted guest
       const homeTab = document.getElementById('tab-home');
       let exitBanner = document.getElementById('guest-exit-banner');

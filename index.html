@@ -1790,20 +1790,36 @@
     }
 
     async function pickContactFromMobile(source) {
-      if ('contacts' in navigator && 'select' in navigator.contacts) {
+      if (source) {
         try {
-          const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+          sessionStorage.setItem('sankranti_2027_contact_source', source);
+        } catch (e) {}
+      }
+
+      if ('contacts' in navigator && navigator.contacts && typeof navigator.contacts.select === 'function') {
+        try {
+          const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: true });
           if (contacts && contacts.length) {
             const c = contacts[0];
             const nameEl = document.getElementById(`${source}-new-name`);
             const phoneEl = document.getElementById(`${source}-new-phone`);
             if (nameEl && c.name?.[0]) nameEl.value = c.name[0];
             if (phoneEl && c.tel?.[0]) phoneEl.value = c.tel[0];
-            showToast('📱 Contact filled! Tap Add to save.');
+            showToast(`📱 Loaded ${c.name?.[0] || 'contact'}! Tap Add to save.`);
+            return;
           }
-        } catch (e) {}
+        } catch (err) {
+          if (err?.name === 'NotAllowedError' || err?.name === 'AbortError') {
+            showToast('📱 Contact selection cancelled or blocked—opening vCard (.vcf) file picker instead.', 'info');
+          }
+        }
+      }
+
+      const vcfInput = document.getElementById('vcf-file-input');
+      if (vcfInput) {
+        vcfInput.click();
       } else {
-        document.getElementById('vcf-file-input')?.click();
+        showToast('📱 Type the guest name & mobile number directly in the fields above.', 'info');
       }
     }
 
@@ -1813,17 +1829,26 @@
       const reader = new FileReader();
       reader.onload = () => {
         const text = String(reader.result || '');
-        const fnMatch = text.match(/FN:(.*)/i);
-        const telMatch = text.match(/TEL[^:]*:(.*)/i);
-        const name = fnMatch ? fnMatch[1].trim() : '';
-        const phone = telMatch ? normalizePhone(telMatch[1].trim()) : '';
-        if (name) {
-          const targetSource = !document.getElementById('tab-rsvp')?.classList.contains('hidden') ? 'rsvp' : 'admin';
-          const nameEl = document.getElementById(`${targetSource}-new-name`);
-          const phoneEl = document.getElementById(`${targetSource}-new-phone`);
-          if (nameEl) nameEl.value = name;
-          if (phoneEl) phoneEl.value = phone;
-          showToast(`📇 Loaded ${name} from vCard!`);
+        const fnMatch = text.match(/^FN[^:]*:(.*)$/im);
+        const telMatch = text.match(/^TEL[^:]*:(.*)$/im);
+        const name = fnMatch ? fnMatch[1].replace(/\r/g, '').trim() : '';
+        const phone = telMatch ? normalizePhone(telMatch[1].replace(/\r/g, '').trim()) : '';
+
+        let savedSource = 'rsvp';
+        try {
+          savedSource = sessionStorage.getItem('sankranti_2027_contact_source') || '';
+        } catch (e) {}
+        const targetSource = savedSource || (!document.getElementById('tab-rsvp')?.classList.contains('hidden') ? 'rsvp' : 'admin');
+
+        const nameEl = document.getElementById(`${targetSource}-new-name`);
+        const phoneEl = document.getElementById(`${targetSource}-new-phone`);
+        if (nameEl && name) nameEl.value = name;
+        if (phoneEl && phone) phoneEl.value = phone;
+
+        if (name || phone) {
+          showToast(`📇 Loaded ${name || 'contact'} from vCard! Tap Add to save.`);
+        } else {
+          showToast('⚠️ Could not read name/phone from that file. Please enter them manually.', 'error');
         }
       };
       reader.readAsText(file);

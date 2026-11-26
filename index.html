@@ -753,7 +753,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'sankranti-2027-squad';
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
@@ -761,10 +761,23 @@
     window.__cloudSync = {
       ready: false,
       user: null,
-      docRef: null,
-      pendingWrite: false,
-      push: async () => {
-        window.__cloudSync.pendingWrite = true;
+      db: null,
+      appId,
+      pendingOps: [],
+      pushGuest: async (guest) => {
+        window.__cloudSync.pendingOps.push({ type: 'guest', data: JSON.parse(JSON.stringify(guest)) });
+      },
+      deleteGuest: async (guestId) => {
+        window.__cloudSync.pendingOps.push({ type: 'deleteGuest', id: guestId });
+      },
+      pushExpense: async (exp) => {
+        window.__cloudSync.pendingOps.push({ type: 'expense', data: JSON.parse(JSON.stringify(exp)) });
+      },
+      deleteExpense: async (expId) => {
+        window.__cloudSync.pendingOps.push({ type: 'deleteExpense', id: expId });
+      },
+      pushMeta: async (meta) => {
+        window.__cloudSync.pendingOps.push({ type: 'meta', data: JSON.parse(JSON.stringify(meta)) });
       }
     };
 
@@ -790,48 +803,128 @@
         }
 
         if (auth.currentUser) {
-          const tripDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_trip', 'shared_state');
           window.__cloudSync.user = auth.currentUser;
-          window.__cloudSync.docRef = tripDocRef;
+          window.__cloudSync.db = db;
           window.__cloudSync.ready = true;
           setSyncBadge('🟢 Live Sync', true);
 
-          window.__cloudSync.push = async (stateObj) => {
-            if (!window.__cloudSync.user || !window.__cloudSync.docRef) {
-              window.__cloudSync.pendingWrite = true;
-              return;
-            }
+          const guestsCol = collection(db, 'artifacts', appId, 'public', 'data', 'sankranti_guests');
+          const expensesCol = collection(db, 'artifacts', appId, 'public', 'data', 'sankranti_expenses');
+          const metaDoc = doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_meta', 'config');
+
+          window.__cloudSync.pushGuest = async (guest) => {
+            if (!window.__cloudSync.user) return;
             try {
-              window.__cloudSync.pendingWrite = false;
-              await setDoc(window.__cloudSync.docRef, {
-                adminPin: stateObj.adminPin || '0089',
-                guestsJson: JSON.stringify(stateObj.guests || []),
-                expensesJson: JSON.stringify(stateObj.expenses || []),
-                logsJson: JSON.stringify(stateObj.logs || []),
+              await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_guests', guest.id), {
+                ...guest,
                 updatedAt: Date.now()
               }, { merge: true });
             } catch (err) {
-              console.error('Cloud sync write error:', err);
-              setSyncBadge('⚠️ Sync Retry', false);
+              console.error('Guest sync write error:', err);
             }
           };
 
-          // Flush any RSVP/travel change made while Firebase was still connecting
-          if (window.__cloudSync.pendingWrite && typeof window.__getLatestAppState === 'function') {
-            await window.__cloudSync.push(window.__getLatestAppState());
+          window.__cloudSync.deleteGuest = async (guestId) => {
+            if (!window.__cloudSync.user) return;
+            try {
+              await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_guests', guestId));
+            } catch (err) {
+              console.error('Guest delete sync error:', err);
+            }
+          };
+
+          window.__cloudSync.pushExpense = async (exp) => {
+            if (!window.__cloudSync.user) return;
+            try {
+              await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_expenses', exp.id), {
+                ...exp,
+                updatedAt: Date.now()
+              }, { merge: true });
+            } catch (err) {
+              console.error('Expense sync write error:', err);
+            }
+          };
+
+          window.__cloudSync.deleteExpense = async (expId) => {
+            if (!window.__cloudSync.user) return;
+            try {
+              await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sankranti_expenses', expId));
+            } catch (err) {
+              console.error('Expense delete sync error:', err);
+            }
+          };
+
+          window.__cloudSync.pushMeta = async (meta) => {
+            if (!window.__cloudSync.user) return;
+            try {
+              await setDoc(metaDoc, {
+                adminPin: meta.adminPin || '0089',
+                logsJson: JSON.stringify((meta.logs || []).slice(0, 100)),
+                updatedAt: Date.now()
+              }, { merge: true });
+            } catch (err) {
+              console.error('Meta sync write error:', err);
+            }
+          };
+
+          // Flush any pending operations queued before Firebase auth finished
+          const queued = [...window.__cloudSync.pendingOps];
+          window.__cloudSync.pendingOps = [];
+          for (const op of queued) {
+            if (op.type === 'guest') await window.__cloudSync.pushGuest(op.data);
+            else if (op.type === 'deleteGuest') await window.__cloudSync.deleteGuest(op.id);
+            else if (op.type === 'expense') await window.__cloudSync.pushExpense(op.data);
+            else if (op.type === 'deleteExpense') await window.__cloudSync.deleteExpense(op.id);
+            else if (op.type === 'meta') await window.__cloudSync.pushMeta(op.data);
           }
 
+          // Real-time listener for ALL guests across all mobiles
           onSnapshot(
-            tripDocRef,
-            (snap) => {
+            guestsCol,
+            (snapshot) => {
               setSyncBadge('🟢 Live Sync', true);
-              if (typeof window.__onRemoteStateSnapshot === 'function') {
-                window.__onRemoteStateSnapshot(snap.exists() ? snap.data() : null);
+              const remoteGuests = [];
+              snapshot.forEach((docSnap) => {
+                remoteGuests.push(docSnap.data());
+              });
+              if (typeof window.__onRemoteGuestsUpdate === 'function') {
+                window.__onRemoteGuestsUpdate(remoteGuests);
               }
             },
             (err) => {
-              console.error('Cloud sync listener error:', err);
+              console.error('Guests listener error:', err);
               setSyncBadge('⚠️ Sync Error', false);
+            }
+          );
+
+          // Real-time listener for ALL expenses across all mobiles
+          onSnapshot(
+            expensesCol,
+            (snapshot) => {
+              const remoteExpenses = [];
+              snapshot.forEach((docSnap) => {
+                remoteExpenses.push(docSnap.data());
+              });
+              remoteExpenses.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+              if (typeof window.__onRemoteExpensesUpdate === 'function') {
+                window.__onRemoteExpensesUpdate(remoteExpenses);
+              }
+            },
+            (err) => {
+              console.error('Expenses listener error:', err);
+            }
+          );
+
+          // Real-time listener for Admin PIN & Activity Logs
+          onSnapshot(
+            metaDoc,
+            (docSnap) => {
+              if (docSnap.exists() && typeof window.__onRemoteMetaUpdate === 'function') {
+                window.__onRemoteMetaUpdate(docSnap.data());
+              }
+            },
+            (err) => {
+              console.error('Meta listener error:', err);
             }
           );
         }
@@ -846,7 +939,7 @@
 
   <script>
     // ==================== STORAGE & CONSTANTS ====================
-    const STORAGE_KEY = 'sankranti_2027_live_state_v8';
+    const STORAGE_KEY = 'sankranti_2027_live_state_v9';
     const DB_NAME = 'Sankranti2027HdGalleryDB';
     const DB_STORE = 'hd_photos';
 
@@ -909,65 +1002,33 @@
     let isAdminUnlocked = false;
     let welcomeCountdownInterval = null;
     let isEditingTravelDetails = false;
-    let hasReceivedInitialCloudSnapshot = false;
 
-    window.__getLatestAppState = function() {
-      return appState;
+    window.__onRemoteGuestsUpdate = function(remoteGuests) {
+      if (!Array.isArray(remoteGuests)) return;
+      appState.guests = remoteGuests;
+      checkIncomingInviteLink();
+      renderAllUI();
     };
 
-    window.__onRemoteStateSnapshot = function(data) {
-      hasReceivedInitialCloudSnapshot = true;
-      if (!data) {
-        // First device to connect seeds the cloud document if it already has guests
-        if (appState.guests.length > 0 && window.__cloudSync?.ready) {
-          window.__cloudSync.push(appState);
-        }
-        checkIncomingInviteLink();
-        renderAllUI();
-        return;
-      }
-
-      try {
-        const remoteGuests = data.guestsJson ? JSON.parse(data.guestsJson) : [];
-        const remoteExpenses = data.expensesJson ? JSON.parse(data.expensesJson) : [];
-        const remoteLogs = data.logsJson ? JSON.parse(data.logsJson) : [];
-
-        // Merge any local guest updates made on this device before the snapshot arrived
-        let needsCloudMergePush = false;
-        appState.guests.forEach(localG => {
-          const remoteIdx = remoteGuests.findIndex(rg => rg.id === localG.id);
-          if (remoteIdx === -1) {
-            remoteGuests.push(localG);
-            needsCloudMergePush = true;
-          } else if (localG.rsvp !== 'pending' && remoteGuests[remoteIdx].rsvp === 'pending') {
-            remoteGuests[remoteIdx] = localG;
-            needsCloudMergePush = true;
-          } else if (localG.travelSubmitted && !remoteGuests[remoteIdx].travelSubmitted) {
-            remoteGuests[remoteIdx] = localG;
-            needsCloudMergePush = true;
-          }
-        });
-
-        appState = {
-          adminPin: data.adminPin || appState.adminPin || '0089',
-          guests: Array.isArray(remoteGuests) ? remoteGuests : [],
-          expenses: Array.isArray(remoteExpenses) ? remoteExpenses : [],
-          logs: Array.isArray(remoteLogs) ? remoteLogs : []
-        };
-
-        if (needsCloudMergePush && window.__cloudSync?.ready) {
-          window.__cloudSync.push(appState);
-        }
-
-        // Re-check incoming invite link against fresh cloud data
-        checkIncomingInviteLink();
-        renderAllUI();
-      } catch (e) {
-        console.error('Error parsing remote state:', e);
-      }
+    window.__onRemoteExpensesUpdate = function(remoteExpenses) {
+      if (!Array.isArray(remoteExpenses)) return;
+      appState.expenses = remoteExpenses;
+      renderAllUI();
     };
 
-    function saveAppState(logEntry = null) {
+    window.__onRemoteMetaUpdate = function(meta) {
+      if (!meta) return;
+      if (meta.adminPin) appState.adminPin = meta.adminPin;
+      if (meta.logsJson) {
+        try {
+          const parsedLogs = JSON.parse(meta.logsJson);
+          if (Array.isArray(parsedLogs)) appState.logs = parsedLogs;
+        } catch (e) {}
+      }
+      renderAllUI();
+    };
+
+    function saveAppState(logEntry = null, syncTarget = null) {
       if (logEntry) {
         appState.logs.unshift({
           id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -978,8 +1039,21 @@
           msg: logEntry.msg || ''
         });
       }
+
       if (window.__cloudSync) {
-        window.__cloudSync.push(appState);
+        if (syncTarget?.guest) {
+          window.__cloudSync.pushGuest(syncTarget.guest);
+        } else if (syncTarget?.deleteGuestId) {
+          window.__cloudSync.deleteGuest(syncTarget.deleteGuestId);
+        } else if (syncTarget?.expense) {
+          window.__cloudSync.pushExpense(syncTarget.expense);
+        } else if (syncTarget?.deleteExpenseId) {
+          window.__cloudSync.deleteExpense(syncTarget.deleteExpenseId);
+        } else if (syncTarget?.fullSync) {
+          appState.guests.forEach(g => window.__cloudSync.pushGuest(g));
+          appState.expenses.forEach(e => window.__cloudSync.pushExpense(e));
+        }
+        window.__cloudSync.pushMeta({ adminPin: appState.adminPin, logs: appState.logs });
       }
     }
 
@@ -1261,7 +1335,7 @@
         category: 'RSVP',
         action: 'Accepted Invite',
         msg: `${guest.name} accepted the Sankranti 2027 invitation!`
-      });
+      }, { guest });
 
       // Reveal main app shell and hide invite gate
       document.getElementById('invite-gate-modal').classList.add('hidden');
@@ -1283,7 +1357,7 @@
         category: 'RSVP',
         action: 'Declined Invite',
         msg: `${guest.name} declined the Sankranti 2027 invitation.`
-      });
+      }, { guest });
       openInviteGateForGuest(guest);
     }
 
@@ -1296,7 +1370,7 @@
         category: 'RSVP',
         action: 'Declined After Accepting',
         msg: `${guest.name} opted out / declined after previously accepting the invite.`
-      });
+      }, { guest });
       showToast(`❌ ${guest.name} marked as Declined.`, 'info');
       if (currentRole === guest.id) {
         currentRole = 'public';
@@ -1377,7 +1451,7 @@
         category: 'Invite',
         action: 'Added Guest',
         msg: `Added ${name} to the Sankranti 2027 invite list.`
-      });
+      }, { guest: newGuest });
 
       if (nameInput) nameInput.value = '';
       if (phoneInput) phoneInput.value = '';
@@ -1484,7 +1558,7 @@
         category: 'Invite',
         action: 'Removed Guest',
         msg: `Removed ${removed.name} from the squad list.`
-      });
+      }, { deleteGuestId: guestId });
       showToast(`🗑️ Removed ${removed.name}.`, 'info');
       renderAllUI();
     }
@@ -1497,12 +1571,15 @@
       guest.rsvp = 'pending';
       guest.travelSubmitted = false;
       if (currentRole === oldId) currentRole = guest.id;
+      if (window.__cloudSync) {
+        window.__cloudSync.deleteGuest(oldId);
+      }
       saveAppState({
         actor: 'Host Admin',
         category: 'Invite',
         action: 'Reset & Re-Invited Guest',
         msg: `Generated a fresh invite link and reset RSVP status for ${guest.name}.`
-      });
+      }, { guest });
       showToast(`🔄 Fresh invite ready for ${guest.name}! Tap Send WhatsApp Invite.`);
       renderAllUI();
     }
@@ -1534,7 +1611,7 @@
         category: 'Travel',
         action: 'Submitted Travel Details',
         msg: `${guest.name} confirmed route: ${guest.fromCity || 'TBD'} → ${guest.toCity || 'TBD'} (${guest.arrivalDate} to ${guest.departureDate}).`
-      });
+      }, { guest });
 
       showToast(`✅ Travel details saved & minimized for ${guest.name}!`);
       renderAllUI();
@@ -1558,7 +1635,7 @@
       } else {
         guest.packedItems.splice(idx, 1);
       }
-      saveAppState();
+      saveAppState(null, { guest });
       renderHomeGuestForms();
     }
 
@@ -1572,7 +1649,7 @@
       const id = 'custom_' + Date.now().toString(36);
       guest.customPackingItems.push({ id, label: '✨ ' + label });
       input.value = '';
-      saveAppState();
+      saveAppState(null, { guest });
       renderHomeGuestForms();
       showToast('🎒 Added to your packing list!');
     }
@@ -1586,7 +1663,7 @@
       else arr.splice(idx, 1);
       if (type === 'starters') guest.starters = arr;
       else guest.spirits = arr;
-      saveAppState();
+      saveAppState(null, { guest });
       renderHomeGuestForms();
     }
 
@@ -1612,7 +1689,7 @@
         category: 'Wishlist',
         action: 'Updated Feast & Bar Wishlist',
         msg: `${guest.name} updated starters & spirits preferences.`
-      });
+      }, { guest });
       showToast(`🍗🍻 Saved wishlist for ${guest.name}!`);
       renderHomeGuestForms();
     }
@@ -1739,7 +1816,7 @@
       }
 
       const payer = appState.guests.find(g => g.id === paidBy);
-      appState.expenses.unshift({
+      const newExp = {
         id: 'exp_' + Date.now(),
         category,
         item,
@@ -1747,14 +1824,15 @@
         amount,
         splitAmong,
         date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-      });
+      };
+      appState.expenses.unshift(newExp);
 
       saveAppState({
         actor: payer?.name || 'Squad',
         category: 'Expense',
         action: 'Added Expense',
         msg: `${payer?.name || 'Member'} logged ₹${amount} for ${item} (${category}).`
-      });
+      }, { expense: newExp });
 
       document.getElementById('exp-amount').value = '';
       if (document.getElementById('exp-custom-item-name')) document.getElementById('exp-custom-item-name').value = '';
@@ -1769,7 +1847,7 @@
         category: 'Expense',
         action: 'Deleted Expense',
         msg: 'Removed an expense entry from the ledger.'
-      });
+      }, { deleteExpenseId: expId });
       showToast('🗑️ Expense removed.', 'info');
       renderAllUI();
     }
@@ -1846,7 +1924,7 @@
           category: 'Sync',
           action: 'Imported Trip State',
           msg: 'Merged/imported trip state via JSON Sync.'
-        });
+        }, { fullSync: true });
         closeModal('sync-modal');
         showToast('✅ Trip state synced successfully!');
         renderAllUI();
@@ -2351,7 +2429,7 @@
           category: 'Invite',
           action: 'Opened Invite Link',
           msg: `${inviteName} opened their personalized Sankranti 2027 invite link.`
-        });
+        }, { guest });
       }
 
       if (guest) {

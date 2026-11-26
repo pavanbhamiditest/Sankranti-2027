@@ -107,7 +107,7 @@
                 <span>☀️ Sankranti 2027 Trip Companion</span>
               </div>
               <h2 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
-                Gear Up for the Ultimate <span class="text-amber-300">Sankranti Reunion</span>
+                Gear Up for the Ultimate <span class="text-amber-300">Sankranti</span>
               </h2>
               <p class="text-sm text-amber-100/90 max-w-2xl">
                 Confirm your travel dates, pack your essentials, and split squad bills effortlessly.
@@ -211,9 +211,6 @@
                 <select id="home-active-guest-select" onchange="handleRoleSwitch(this.value)" class="px-3.5 py-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
                   <!-- Populated dynamically -->
                 </select>
-                <button id="home-submit-travel-btn" type="button" onclick="saveGuestPreferences('home')" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-xs sm:text-sm shadow-lg transition">
-                  💾 Submit Travel Details
-                </button>
                 <button id="home-decline-after-accept-btn" type="button" onclick="declineAfterAccept(currentRole)" class="hidden px-3.5 py-2.5 rounded-2xl bg-red-50 hover:bg-red-100 text-red-800 border border-red-200 font-extrabold text-xs transition">
                   ❌ Decline / Can't Make It
                 </button>
@@ -1814,7 +1811,7 @@
         adminDashletsWrap?.classList.add('hidden');
       }
 
-      // 3. Confirmed Squad Strip on Home (Accepted only)
+      // 3. Confirmed Squad Strip on Home (Accepted only - Read-only for Guests, Interactive for Admin)
       const confirmedGuests = appState.guests.filter(g => g.rsvp === 'accepted');
       const confirmedCountEl = document.getElementById('confirmed-squad-count');
       const confirmedListEl = document.getElementById('home-confirmed-squad-list');
@@ -1825,11 +1822,19 @@
         } else {
           confirmedListEl.innerHTML = confirmedGuests.map(g => {
             const isSelected = getActiveGuestObj()?.id === g.id;
+            if (isAdminUnlocked) {
+              return `
+                <button type="button" onclick="handleRoleSwitch('${g.id}')" class="px-4 py-2 rounded-2xl border text-xs sm:text-sm font-extrabold flex items-center gap-2 transition ${isSelected ? 'bg-red-900 text-white border-red-900 shadow' : 'bg-emerald-50 text-emerald-950 border-emerald-200 hover:bg-emerald-100'}">
+                  <span>✅ ${g.name}</span>
+                  ${g.fromCity ? `<span class="text-[11px] opacity-80">(${g.fromCity})</span>` : ''}
+                </button>
+              `;
+            }
             return `
-              <button type="button" onclick="handleRoleSwitch('${g.id}')" class="px-4 py-2 rounded-2xl border text-xs sm:text-sm font-extrabold flex items-center gap-2 transition ${isSelected ? 'bg-red-900 text-white border-red-900 shadow' : 'bg-emerald-50 text-emerald-950 border-emerald-200 hover:bg-emerald-100'}">
+              <span class="px-4 py-2 rounded-2xl border text-xs sm:text-sm font-extrabold flex items-center gap-2 select-none ${isSelected ? 'bg-emerald-100 text-emerald-950 border-emerald-400' : 'bg-emerald-50/80 text-emerald-950 border-emerald-200'}">
                 <span>✅ ${g.name}</span>
                 ${g.fromCity ? `<span class="text-[11px] opacity-80">(${g.fromCity})</span>` : ''}
-              </button>
+              </span>
             `;
           }).join('');
         }
@@ -1881,11 +1886,12 @@
 
       const optionsHtml = appState.guests.length === 0
         ? `<option value="public">No guests added yet</option>`
-        : appState.guests.map(g =>
-            `<option value="${g.id}" ${getActiveGuestObj()?.id === g.id ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`
-          ).join('');
-
-      if (selectEl) selectEl.innerHTML = optionsHtml;
+        : appState.guests.map(g => `<option value="${g.id}" ${getActiveGuestObj()?.id === g.id ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`).join('');
+      if (selectEl) {
+        selectEl.innerHTML = optionsHtml;
+        if (isAdminUnlocked) selectEl.classList.remove('hidden');
+        else selectEl.classList.add('hidden');
+      }
       if (wishlistSelectEl) wishlistSelectEl.innerHTML = optionsHtml;
 
       const activeGuest = getActiveGuestObj();

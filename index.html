@@ -205,13 +205,13 @@
                 <h3 class="text-xl font-black text-red-950 mt-1">
                   ✈️ Travel Details for <span id="home-guest-name-heading" class="text-orange-700">Guest</span>
                 </h3>
-                <p class="text-xs text-stone-600">Fill in your departure & arrival details, and tick off your packing essentials below!</p>
+                <p id="home-travel-subtitle" class="text-xs text-stone-600">Fill in your departure & arrival details, and tick off your packing essentials below!</p>
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 <select id="home-active-guest-select" onchange="handleRoleSwitch(this.value)" class="px-3.5 py-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
                   <!-- Populated dynamically -->
                 </select>
-                <button type="button" onclick="saveGuestPreferences('home')" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-xs sm:text-sm shadow-lg transition">
+                <button id="home-submit-travel-btn" type="button" onclick="saveGuestPreferences('home')" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-green-600 hover:from-emerald-600 hover:to-green-500 text-white font-extrabold text-xs sm:text-sm shadow-lg transition">
                   💾 Submit Travel Details
                 </button>
                 <button id="home-decline-after-accept-btn" type="button" onclick="declineAfterAccept(currentRole)" class="hidden px-3.5 py-2.5 rounded-2xl bg-red-50 hover:bg-red-100 text-red-800 border border-red-200 font-extrabold text-xs transition">
@@ -220,8 +220,22 @@
               </div>
             </div>
 
+            <!-- Minimized Confirmed Travel Summary Bar (Shown after submitting) -->
+            <div id="home-travel-summary-bar" class="hidden p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 flex flex-wrap items-center justify-between gap-3 animate-panel">
+              <div class="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm font-extrabold text-red-950">
+                <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-black uppercase">✅ Confirmed</span>
+                <span id="summary-route-text">🛫 Origin → 🛬 Arrival Hub</span>
+                <span class="text-stone-400">•</span>
+                <span id="summary-dates-text" class="text-emerald-900">📅 2027-01-13 to 2027-01-17</span>
+              </div>
+              <button type="button" onclick="editTravelDetails()" title="Edit Travel Details" class="px-3.5 py-2 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-black flex items-center gap-1.5 shadow-sm transition">
+                <span>✏️</span>
+                <span>Edit</span>
+              </button>
+            </div>
+
             <!-- Travel Inputs Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="home-travel-inputs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label class="block text-xs font-extrabold text-red-950 uppercase tracking-wide mb-1.5">🛫 From City (Origin)</label>
                 <input id="home-from-city" type="text" placeholder="e.g., Hyderabad / Bengaluru" class="w-full px-4 py-3 rounded-2xl bg-amber-50/70 border border-amber-200 focus:border-orange-500 focus:bg-white outline-none text-sm font-semibold text-red-950" />
@@ -803,6 +817,7 @@
     let currentRole = 'public';
     let isAdminUnlocked = false;
     let welcomeCountdownInterval = null;
+    let isEditingTravelDetails = false;
 
     function saveAppState(logEntry = null) {
       if (logEntry) {
@@ -983,6 +998,7 @@
 
     function handleRoleSwitch(val) {
       currentRole = val || 'public';
+      isEditingTravelDetails = false;
       renderAllUI();
     }
 
@@ -1346,6 +1362,15 @@
     }
 
     // ==================== TRAVEL DETAILS, PACKING CHECKLIST & CRAVINGS ====================
+    function editTravelDetails() {
+      const guest = getActiveGuestObj();
+      if (!guest) return;
+      guest.travelSubmitted = false;
+      renderHomeGuestForms();
+      const fromInput = document.getElementById('home-from-city');
+      if (fromInput) fromInput.focus();
+    }
+
     function saveGuestPreferences() {
       const guest = getActiveGuestObj();
       if (!guest) {
@@ -1365,13 +1390,17 @@
         msg: `${guest.name} confirmed route: ${guest.fromCity || 'TBD'} → ${guest.toCity || 'TBD'} (${guest.arrivalDate} to ${guest.departureDate}).`
       });
 
-      showToast(`✅ Travel details saved for ${guest.name}! Packing bag unlocked!`);
+      showToast(`✅ Travel details saved & minimized for ${guest.name}!`);
       renderAllUI();
+    }
 
-      const packingBox = document.getElementById('home-packing-unlocked-box');
-      if (packingBox) {
-        packingBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+    function editTravelDetails() {
+      const guest = getActiveGuestObj();
+      if (!guest) return;
+      guest.travelSubmitted = false;
+      renderHomeGuestForms();
+      const fromEl = document.getElementById('home-from-city');
+      if (fromEl) fromEl.focus();
     }
 
     function togglePackingItem(itemId) {
@@ -1841,6 +1870,10 @@
       const headingEl = document.getElementById('home-guest-name-heading');
       const declineBtn = document.getElementById('home-decline-after-accept-btn');
       const packingBox = document.getElementById('home-packing-unlocked-box');
+      const inputsGrid = document.getElementById('home-travel-inputs-grid');
+      const summaryBar = document.getElementById('home-travel-summary-bar');
+      const submitBtn = document.getElementById('home-submit-travel-btn');
+      const editBtn = document.getElementById('home-edit-travel-btn');
 
       const optionsHtml = appState.guests.length === 0
         ? `<option value="public">No guests added yet</option>`
@@ -1852,9 +1885,18 @@
       if (wishlistSelectEl) wishlistSelectEl.innerHTML = optionsHtml;
 
       const activeGuest = getActiveGuestObj();
+      const travelGrid = document.getElementById('home-travel-inputs-grid');
+      const travelMinimizedBar = document.getElementById('home-travel-minimized-bar');
+      const submitTravelBtn = document.getElementById('home-submit-travel-btn');
+      const travelSubtitle = document.getElementById('home-travel-subtitle');
+
       if (!activeGuest) {
         if (headingEl) headingEl.textContent = 'Guest';
         declineBtn?.classList.add('hidden');
+        inputsGrid?.classList.remove('hidden');
+        summaryBar?.classList.add('hidden');
+        submitBtn?.classList.remove('hidden');
+        editBtn?.classList.add('hidden');
         if (packingBox) {
           packingBox.classList.remove('hidden');
           const progressEl = document.getElementById('packing-progress-text');
@@ -1887,6 +1929,28 @@
       if (toEl) toEl.value = activeGuest.toCity || '';
       if (arrEl) arrEl.value = activeGuest.arrivalDate || '2027-01-13';
       if (depEl) depEl.value = activeGuest.departureDate || '2027-01-17';
+
+      // Toggle Minimized Summary Bar vs Expanded 4-Field Form
+      const inputsGrid = document.getElementById('home-travel-inputs-grid');
+      const summaryBar = document.getElementById('home-travel-summary-bar');
+      const submitBtn = document.getElementById('home-submit-travel-btn');
+      const subtitleEl = document.getElementById('home-travel-subtitle');
+
+      if (activeGuest.travelSubmitted) {
+        inputsGrid?.classList.add('hidden');
+        submitBtn?.classList.add('hidden');
+        summaryBar?.classList.remove('hidden');
+        if (subtitleEl) subtitleEl.textContent = 'Your travel itinerary is locked in. Tap the pencil icon anytime to edit.';
+        const routeText = document.getElementById('summary-route-text');
+        const datesText = document.getElementById('summary-dates-text');
+        if (routeText) routeText.textContent = `🛫 ${activeGuest.fromCity || 'Origin TBD'} → 🛬 ${activeGuest.toCity || 'Arrival Hub TBD'}`;
+        if (datesText) datesText.textContent = `📅 ${activeGuest.arrivalDate || '2027-01-13'} to ${activeGuest.departureDate || '2027-01-17'}`;
+      } else {
+        inputsGrid?.classList.remove('hidden');
+        submitBtn?.classList.remove('hidden');
+        summaryBar?.classList.add('hidden');
+        if (subtitleEl) subtitleEl.textContent = 'Fill in your departure & arrival details, and tick off your packing essentials below!';
+      }
 
       // Step 2: Always show Packing Checklist on Home!
       if (packingBox) {

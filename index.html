@@ -71,14 +71,17 @@
           <button type="button" data-tab="home" onclick="switchMainTab('home')" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-amber-400 text-red-950 shadow">
             🏠 Home
           </button>
-          <button type="button" data-tab="rsvp" onclick="switchMainTab('rsvp')" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
-            💌 Invites & Preferences
+          <button type="button" data-tab="wishlist" onclick="switchMainTab('wishlist')" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
+            🍗 Feast & Bar
           </button>
           <button type="button" data-tab="expenses" onclick="switchMainTab('expenses')" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
             💸 Expenses & Split
           </button>
           <button type="button" data-tab="gallery" onclick="switchMainTab('gallery')" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
             📸 HD Photo Gallery
+          </button>
+          <button id="nav-tab-rsvp" type="button" data-tab="rsvp" onclick="switchMainTab('rsvp')" class="hidden nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
+            💌 Manage Invites
           </button>
           <button id="nav-tab-logs" type="button" data-tab="logs" onclick="switchMainTab('logs')" class="hidden nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition text-amber-100 hover:bg-white/10">
             📜 Activity Logs
@@ -107,7 +110,7 @@
                 Gear Up for the Ultimate <span class="text-amber-300">Sankranti Reunion</span>
               </h2>
               <p class="text-sm text-amber-100/90 max-w-2xl">
-                Confirm your travel dates, pack your essentials, lock in your favorite starters & spirits, and split squad bills effortlessly.
+                Confirm your travel dates, pack your essentials, and split squad bills effortlessly.
               </p>
 
               <!-- 3-Day Festive Chips (Destination-Free) -->
@@ -139,12 +142,12 @@
               <div class="text-xs sm:text-sm font-black text-white">Travel & Packing</div>
               <div class="text-[11px] text-amber-200/80">Dates & cheeky checklist</div>
             </button>
-            <button type="button" onclick="scrollToHomeSection('home-cravings-card')" class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition group">
+            <button type="button" onclick="switchMainTab('wishlist')" class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition group">
               <div class="text-2xl mb-1 group-hover:scale-110 transition-transform inline-block">🍗</div>
               <div class="text-xs sm:text-sm font-black text-white">Starters & Spirits</div>
               <div class="text-[11px] text-amber-200/80">Pick your feast & bar wishlist</div>
             </button>
-            <button type="button" onclick="scrollToHomeSection('home-quick-expense-card')" class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition group">
+            <button type="button" onclick="switchMainTab('expenses')" class="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition group">
               <div class="text-2xl mb-1 group-hover:scale-110 transition-transform inline-block">💸</div>
               <div class="text-xs sm:text-sm font-black text-white">Add an Expense</div>
               <div class="text-[11px] text-amber-200/80">Log fuel, food or drinks</div>
@@ -180,7 +183,7 @@
               </h3>
               <p class="text-xs text-stone-600">Only guests who have accepted their Sankranti 2027 invite appear here.</p>
             </div>
-            <button type="button" onclick="switchMainTab('rsvp')" class="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-red-950 text-xs font-extrabold transition">
+            <button id="home-manage-invites-btn" type="button" onclick="switchMainTab('rsvp')" class="hidden px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-red-950 text-xs font-extrabold transition">
               💌 Manage Invites →
             </button>
           </div>
@@ -202,7 +205,7 @@
                 <h3 class="text-xl font-black text-red-950 mt-1">
                   ✈️ Travel Details for <span id="home-guest-name-heading" class="text-orange-700">Guest</span>
                 </h3>
-                <p class="text-xs text-stone-600">Fill in your departure & arrival details, then submit to unlock your cheeky packing bag!</p>
+                <p class="text-xs text-stone-600">Fill in your departure & arrival details, and tick off your packing essentials below!</p>
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 <select id="home-active-guest-select" onchange="handleRoleSwitch(this.value)" class="px-3.5 py-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-xs sm:text-sm font-extrabold text-red-950">
@@ -237,12 +240,12 @@
               </div>
             </div>
 
-            <!-- Step 2: Cheeky Packing Checklist (Unlocks upon submitting travel details!) -->
-            <div id="home-packing-unlocked-box" class="hidden pt-5 border-t border-amber-200 space-y-4 animate-panel">
+            <!-- Step 2: Cheeky Packing Checklist (Always Visible!) -->
+            <div id="home-packing-unlocked-box" class="pt-5 border-t border-amber-200 space-y-4 animate-panel">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[11px] font-extrabold uppercase tracking-wider">
-                    Step 2 • Unlocked!
+                    Step 2 • Packing Bag
                   </span>
                   <h4 class="text-lg font-black text-red-950 mt-1">🎒 Travel Essentials Packing Checklist</h4>
                   <p class="text-xs text-stone-600">Tick off items as you toss them into your bag—zero last-minute borrowing!</p>
@@ -266,71 +269,41 @@
             </div>
           </div>
 
-          <!-- Starters & Spirits Wishlist Card (Separate from Travel Confirmation) -->
-          <div id="home-cravings-card" class="rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-5">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-amber-100">
-              <div>
-                <h3 class="text-lg sm:text-xl font-black text-red-950">🍗🍻 Feast & Bar Wishlist</h3>
-                <p class="text-xs text-stone-600">Tap your favorite starters & spirits so the shopping squad stocks enough for everyone.</p>
-              </div>
-              <button type="button" onclick="saveGuestCravings()" class="px-4 py-2 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
-                💾 Save Wishlist
-              </button>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- Starters -->
-              <div class="space-y-2.5">
-                <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🔥 Favorite Starters</label>
-                <div id="quick-starters-chips" class="flex flex-wrap gap-2"></div>
-                <input id="home-starters-input" type="text" placeholder="Other starters (comma-separated)..." class="w-full px-3.5 py-2.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
-              </div>
-
-              <!-- Spirits -->
-              <div class="space-y-2.5">
-                <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🥃 Preferred Spirits & Drinks</label>
-                <div id="quick-spirits-chips" class="flex flex-wrap gap-2"></div>
-                <input id="home-spirits-input" type="text" placeholder="Other brands/drinks (comma-separated)..." class="w-full px-3.5 py-2.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Expense Logger Card on Home -->
-          <div id="home-quick-expense-card" class="rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h3 class="text-lg sm:text-xl font-black text-red-950">💸 Quick Squad Expense</h3>
-                <p class="text-xs text-stone-600">Paid for fuel, starters, spirits, or essentials? Log it right here (splits equally among confirmed squad).</p>
-              </div>
-              <button type="button" onclick="switchMainTab('expenses')" class="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-red-950 text-xs font-extrabold transition">
-                Full Splitwise View →
-              </button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              <select id="home-exp-cat" onchange="syncHomeQuickExpItems()" class="px-3.5 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs sm:text-sm font-bold text-red-950">
-                <option value="Fuel">⛽ Fuel</option>
-                <option value="Starters & Food">🍗 Starters & Food</option>
-                <option value="Spirits & Alcohol">🍻 Spirits & Alcohol</option>
-                <option value="Essentials">🥤 Essentials</option>
-                <option value="Stay & Other">🏨 Stay & Other</option>
-              </select>
-              <select id="home-exp-item" class="px-3.5 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs sm:text-sm font-bold text-red-950">
-                <!-- Populated dynamically -->
-              </select>
-              <select id="home-exp-paidby" class="px-3.5 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs sm:text-sm font-bold text-red-950">
-                <!-- Populated dynamically -->
-              </select>
-              <input id="home-exp-amount" type="number" min="1" placeholder="Amount (₹)" class="px-3.5 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs sm:text-sm font-bold text-red-950 outline-none focus:border-orange-500" />
-              <button type="button" onclick="saveHomeQuickExpense()" class="px-5 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs sm:text-sm font-extrabold shadow transition">
-                + Log & Split
-              </button>
-            </div>
-          </div>
-
         </div>
       </section>
 
-      <!-- ==================== TAB 2: INVITES & PREFERENCES ==================== -->
+      <!-- ==================== TAB 2: FEAST & BAR WISHLIST ==================== -->
+      <section id="tab-wishlist" class="hidden tab-panel space-y-6 animate-panel">
+        <div id="home-cravings-card" class="rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-amber-100">
+            <div>
+              <h3 class="text-lg sm:text-xl font-black text-red-950">🍗🍻 Feast & Bar Wishlist</h3>
+              <p class="text-xs text-stone-600">Tap your favorite starters & spirits so the shopping squad stocks enough for everyone.</p>
+            </div>
+            <button type="button" onclick="saveGuestCravings()" class="px-4 py-2 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-extrabold shadow transition">
+              💾 Save Wishlist
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Starters -->
+            <div class="space-y-2.5">
+              <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🔥 Favorite Starters</label>
+              <div id="quick-starters-chips" class="flex flex-wrap gap-2"></div>
+              <input id="home-starters-input" type="text" placeholder="Other starters (comma-separated)..." class="w-full px-3.5 py-2.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+            </div>
+
+            <!-- Spirits -->
+            <div class="space-y-2.5">
+              <label class="block text-xs font-extrabold uppercase tracking-wider text-red-900">🥃 Preferred Spirits & Drinks</label>
+              <div id="quick-spirits-chips" class="flex flex-wrap gap-2"></div>
+              <input id="home-spirits-input" type="text" placeholder="Other brands/drinks (comma-separated)..." class="w-full px-3.5 py-2.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs sm:text-sm font-semibold text-red-950 outline-none focus:border-orange-500" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: MANAGE INVITES (ADMIN ONLY) ==================== -->
       <section id="tab-rsvp" class="hidden tab-panel space-y-6 animate-panel">
         <div class="rounded-3xl bg-white border border-amber-200 p-5 sm:p-7 shadow-sm space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-amber-100 pb-4">
@@ -986,7 +959,7 @@
 
     // ==================== NAVIGATION & ROLE SWITCHING ====================
     function switchMainTab(tabId) {
-      if ((tabId === 'logs' || tabId === 'admin') && !isAdminUnlocked) {
+      if ((tabId === 'rsvp' || tabId === 'logs' || tabId === 'admin') && !isAdminUnlocked) {
         openAdminPinModal();
         return;
       }
@@ -1514,11 +1487,11 @@
     }
 
     function syncHomeQuickExpItems() {
-      const cat = document.getElementById('home-exp-cat')?.value || 'Fuel';
-      const itemSelect = document.getElementById('home-exp-item');
-      if (!itemSelect) return;
-      const options = (EXPENSE_ITEM_CATALOG[cat] || ['Expense']).filter(o => o !== 'Custom / Other');
-      itemSelect.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
+      // Quick expense form moved exclusively to the Expenses & Split tab
+    }
+
+    function saveHomeQuickExpense() {
+      switchMainTab('expenses');
     }
 
     function saveHomeQuickExpense() {
@@ -1781,24 +1754,30 @@
       const adminBtn = document.getElementById('admin-toggle-btn');
       const adminLockIcon = document.getElementById('admin-lock-icon');
       const adminLabel = document.getElementById('admin-toggle-label');
+      const navRsvp = document.getElementById('nav-tab-rsvp');
       const navLogs = document.getElementById('nav-tab-logs');
       const navAdmin = document.getElementById('nav-tab-admin');
+      const homeManageBtn = document.getElementById('home-manage-invites-btn');
       const adminDashletsWrap = document.getElementById('admin-home-dashlets');
 
       if (isAdminUnlocked) {
         if (adminLockIcon) adminLockIcon.textContent = '🛡️';
         if (adminLabel) adminLabel.textContent = 'Admin Mode';
         if (adminBtn) adminBtn.className = 'px-3.5 py-2 rounded-2xl bg-emerald-500 text-emerald-950 border border-emerald-300 text-xs sm:text-sm font-black flex items-center gap-1.5 shadow transition';
+        navRsvp?.classList.remove('hidden');
         navLogs?.classList.remove('hidden');
         navAdmin?.classList.remove('hidden');
+        homeManageBtn?.classList.remove('hidden');
         adminDashletsWrap?.classList.remove('hidden');
         renderAdminDashlets();
       } else {
         if (adminLockIcon) adminLockIcon.textContent = '🔒';
         if (adminLabel) adminLabel.textContent = 'Guest Mode';
         if (adminBtn) adminBtn.className = 'px-3.5 py-2 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-300/40 text-amber-100 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 shadow-sm transition';
+        navRsvp?.classList.add('hidden');
         navLogs?.classList.add('hidden');
         navAdmin?.classList.add('hidden');
+        homeManageBtn?.classList.add('hidden');
         adminDashletsWrap?.classList.add('hidden');
       }
 
@@ -1809,7 +1788,7 @@
       if (confirmedCountEl) confirmedCountEl.textContent = confirmedGuests.length;
       if (confirmedListEl) {
         if (confirmedGuests.length === 0) {
-          confirmedListEl.innerHTML = `<p class="text-xs text-stone-500 italic">No confirmed guests yet. Send out WhatsApp invites from the Invites tab!</p>`;
+          confirmedListEl.innerHTML = `<p class="text-xs text-stone-500 italic">No confirmed guests yet. Waiting for squad members to accept their invite!</p>`;
         } else {
           confirmedListEl.innerHTML = confirmedGuests.map(g => {
             const isSelected = getActiveGuestObj()?.id === g.id;
@@ -1858,25 +1837,38 @@
 
     function renderHomeGuestForms() {
       const selectEl = document.getElementById('home-active-guest-select');
+      const wishlistSelectEl = document.getElementById('wishlist-active-guest-select');
       const headingEl = document.getElementById('home-guest-name-heading');
       const declineBtn = document.getElementById('home-decline-after-accept-btn');
       const packingBox = document.getElementById('home-packing-unlocked-box');
 
-      if (selectEl) {
-        if (appState.guests.length === 0) {
-          selectEl.innerHTML = `<option value="public">No guests added yet</option>`;
-        } else {
-          selectEl.innerHTML = appState.guests.map(g =>
+      const optionsHtml = appState.guests.length === 0
+        ? `<option value="public">No guests added yet</option>`
+        : appState.guests.map(g =>
             `<option value="${g.id}" ${getActiveGuestObj()?.id === g.id ? 'selected' : ''}>${g.name} (${g.rsvp})</option>`
           ).join('');
-        }
-      }
+
+      if (selectEl) selectEl.innerHTML = optionsHtml;
+      if (wishlistSelectEl) wishlistSelectEl.innerHTML = optionsHtml;
 
       const activeGuest = getActiveGuestObj();
       if (!activeGuest) {
         if (headingEl) headingEl.textContent = 'Guest';
         declineBtn?.classList.add('hidden');
-        packingBox?.classList.add('hidden');
+        if (packingBox) {
+          packingBox.classList.remove('hidden');
+          const progressEl = document.getElementById('packing-progress-text');
+          if (progressEl) progressEl.textContent = `0 / ${DEFAULT_PACKING_ITEMS.length}`;
+          const grid = document.getElementById('packing-checklist-grid');
+          if (grid) {
+            grid.innerHTML = DEFAULT_PACKING_ITEMS.map(item => `
+              <div class="p-3 rounded-2xl border bg-amber-50/60 border-amber-200 text-red-950 text-xs font-bold flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black shrink-0 bg-white border border-amber-300"></span>
+                <span>${item.label}</span>
+              </div>
+            `).join('');
+          }
+        }
         return;
       }
 
@@ -1896,35 +1888,31 @@
       if (arrEl) arrEl.value = activeGuest.arrivalDate || '2027-01-13';
       if (depEl) depEl.value = activeGuest.departureDate || '2027-01-17';
 
-      // Step 2: Show Packing Checklist once Travel Details are submitted!
+      // Step 2: Always show Packing Checklist on Home!
       if (packingBox) {
-        if (activeGuest.travelSubmitted) {
-          packingBox.classList.remove('hidden');
-          const allItems = [...DEFAULT_PACKING_ITEMS, ...(activeGuest.customPackingItems || [])];
-          const packedSet = new Set(activeGuest.packedItems || []);
-          const progressEl = document.getElementById('packing-progress-text');
-          if (progressEl) progressEl.textContent = `${packedSet.size} / ${allItems.length}`;
+        packingBox.classList.remove('hidden');
+        const allItems = [...DEFAULT_PACKING_ITEMS, ...(activeGuest.customPackingItems || [])];
+        const packedSet = new Set(activeGuest.packedItems || []);
+        const progressEl = document.getElementById('packing-progress-text');
+        if (progressEl) progressEl.textContent = `${packedSet.size} / ${allItems.length}`;
 
-          const grid = document.getElementById('packing-checklist-grid');
-          if (grid) {
-            grid.innerHTML = allItems.map(item => {
-              const checked = packedSet.has(item.id);
-              return `
-                <button type="button" onclick="togglePackingItem('${item.id}')" class="p-3 rounded-2xl border text-left text-xs font-bold flex items-center gap-2.5 transition ${checked ? 'bg-emerald-50 border-emerald-400 text-emerald-950 line-through opacity-80' : 'bg-amber-50/60 border-amber-200 text-red-950 hover:bg-amber-100'}">
-                  <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${checked ? 'bg-emerald-600 text-white' : 'bg-white border border-amber-300'}">
-                    ${checked ? '✓' : ''}
-                  </span>
-                  <span>${item.label}</span>
-                </button>
-              `;
-            }).join('');
-          }
-        } else {
-          packingBox.classList.add('hidden');
+        const grid = document.getElementById('packing-checklist-grid');
+        if (grid) {
+          grid.innerHTML = allItems.map(item => {
+            const checked = packedSet.has(item.id);
+            return `
+              <button type="button" onclick="togglePackingItem('${item.id}')" class="p-3 rounded-2xl border text-left text-xs font-bold flex items-center gap-2.5 transition ${checked ? 'bg-emerald-50 border-emerald-400 text-emerald-950 line-through opacity-80' : 'bg-amber-50/60 border-amber-200 text-red-950 hover:bg-amber-100'}">
+                <span class="w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${checked ? 'bg-emerald-600 text-white' : 'bg-white border border-amber-300'}">
+                  ${checked ? '✓' : ''}
+                </span>
+                <span>${item.label}</span>
+              </button>
+            `;
+          }).join('');
         }
       }
 
-      // Render Starters & Spirits chips
+      // Render Starters & Spirits chips (in Feast & Bar tab)
       const startersWrap = document.getElementById('quick-starters-chips');
       const spiritsWrap = document.getElementById('quick-spirits-chips');
       const guestStarters = new Set(activeGuest.starters || []);
@@ -1944,14 +1932,6 @@
           const active = guestSpirits.has(sp);
           return `<button type="button" onclick="toggleCravingChip('spirits', '${sp.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ${active ? 'bg-red-900 text-white border-red-900 shadow-sm' : 'bg-amber-50 text-red-950 border-amber-200 hover:bg-amber-100'}">${active ? '✓ ' : '+ '}${sp}</button>`;
         }).join('');
-      }
-
-      // Populate Home Quick Expense Payer dropdown
-      const homePaidBy = document.getElementById('home-exp-paidby');
-      if (homePaidBy) {
-        homePaidBy.innerHTML = appState.guests.length
-          ? appState.guests.map(g => `<option value="${g.id}" ${g.id === activeGuest.id ? 'selected' : ''}>Paid by ${g.name}</option>`).join('')
-          : `<option value="">Add guest first</option>`;
       }
     }
 

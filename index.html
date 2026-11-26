@@ -1512,7 +1512,24 @@
       const link = getInviteLinkForGuest(guest);
       const msg = `Hey ${guest.name}! Sankranti is around the corner. Just accept the invite. No excuses, no 'boss didn't approve leave,' and definitely no cancelling last minute! (#DhummuLeputunnam)\n\nTap to accept: ${link}`;
       const phone = formatIndianPhone(guest.phone);
-      return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `whatsapp://send?text=${encodeURIComponent(msg)}`;
+    }
+
+    function sendWhatsAppInvite(guestId) {
+      const guest = appState.guests.find(g => g.id === guestId);
+      if (!guest) return;
+      const link = getInviteLinkForGuest(guest);
+      const msg = `Hey ${guest.name}! Sankranti is around the corner. Just accept the invite. No excuses, no 'boss didn't approve leave,' and definitely no cancelling last minute! (#DhummuLeputunnam)\n\nTap to accept: ${link}`;
+      const phone = formatIndianPhone(guest.phone);
+      if (phone) {
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+      } else {
+        // Opens native WhatsApp app directly to the "Select Contact" picker on iOS & Android
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
+        setTimeout(() => {
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+        }, 1200);
+      }
     }
 
     function copyInviteLink(guestId) {
@@ -1544,7 +1561,15 @@
           }
         } else {
           window._pendingVcfContext = context;
-          showToast('iPhone blocks direct web contact access—pick a .vcf contact card or use iOS keyboard autofill!');
+          if (context === 'rsvp') {
+            const rsvpInput = document.getElementById('rsvp-phone-input');
+            if (rsvpInput) {
+              rsvpInput.focus();
+            }
+          } else {
+            document.getElementById('admin-new-guest-phone')?.focus();
+          }
+          showToast('Tap your contact suggestion above the iOS keyboard, or pick a .vcf contact card!');
           const vcfInput = document.getElementById('vcf-contact-input');
           if (vcfInput) vcfInput.click();
         }
@@ -1739,15 +1764,15 @@
               <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${guest.rsvp === 'accepted' ? 'bg-emerald-200 text-emerald-950' : 'bg-amber-200 text-amber-950'}">${guest.rsvp}</span>
             </div>
             <div class="flex flex-wrap items-center gap-2 pt-1">
-              <input id="rsvp-phone-input" type="tel" value="${guest.phone || ''}" placeholder="WhatsApp No. (e.g., 9876543210)" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950" />
+              <input id="rsvp-phone-input" name="tel" autocomplete="tel" type="tel" value="${guest.phone || ''}" placeholder="WhatsApp No. (e.g., 9876543210)" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-xs font-bold text-red-950" />
               <button type="button" onclick="saveRsvpGuestPhone('${guest.id}')" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold">Save No.</button>
               <button type="button" onclick="pickContactFromMobile('rsvp')" class="px-3 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-extrabold">📱 Pull from Contacts</button>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow flex items-center gap-1.5">
+            <button type="button" onclick="sendWhatsAppInvite('${guest.id}')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow flex items-center gap-1.5">
               <span>📲</span><span>Send WhatsApp Invite</span>
-            </a>
+            </button>
             <button type="button" onclick="copyInviteLink('${guest.id}')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-amber-100 text-red-950 border border-amber-300 text-xs font-extrabold">
               🔗 Copy Invite Link
             </button>

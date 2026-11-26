@@ -988,7 +988,12 @@
         : 'px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer';
     }
 
-    if (firebaseConfig) {
+    async function initCloudSync() {
+      if (!firebaseConfig) {
+        setSyncBadge('🟠 Local Only', false);
+        return;
+      }
+
       try {
         const fbApp = initializeApp(firebaseConfig);
         const auth = getAuth(fbApp);
@@ -1241,9 +1246,9 @@
         window.__cloudSync.lastError = err?.message || String(err);
         setSyncBadge('⚠️ Auth Error', false);
       }
-    } else {
-      setSyncBadge('🟠 Local Only', false);
     }
+
+    initCloudSync();
 
     // ==================== STATE, CONSTANTS & STORAGE ====================
     const STORAGE_KEY = 'sankranti_2027_trip_state_v3';
@@ -2946,6 +2951,25 @@
     });
 
     function initAppBoot() {
+      // Attach explicit DOM click listeners so tab navigation & admin modal always work
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        const tabKey = btn.getAttribute('data-tab');
+        if (tabKey) {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchMainTab(tabKey);
+          });
+        }
+      });
+
+      const adminBtn = document.getElementById('admin-toggle-btn');
+      if (adminBtn) {
+        adminBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openAdminPinModal();
+        });
+      }
+
       updateSankrantiCountdown();
       setInterval(updateSankrantiCountdown, 60000);
       checkIncomingInviteLink();
@@ -2971,6 +2995,6 @@
     } else {
       initAppBoot();
     }
-
-    // Expose functions globally for inline HTML event handlers inside <script type="module">
-// ... existing code ... -->
+  </script>
+</body>
+</html>
